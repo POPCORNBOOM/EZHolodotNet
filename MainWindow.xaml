@@ -6,7 +6,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:local="clr-namespace:EZHolodotNet"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="EZHolo" Height="450" Width="800" MinHeight="450" MinWidth="650">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="1*" />
@@ -15,49 +15,119 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="200" Width="*" />
             <ColumnDefinition Width="5" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition MinWidth="200" Width="*" />
             <ColumnDefinition Width="5" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition MinWidth="200" Width="*" />
         </Grid.ColumnDefinitions>
         <Border>
-            <ScrollViewer>
-                <StackPanel Margin="4">
-                    <Image Source="{Binding FilePath}" Stretch="Uniform" MaxHeight="300"/>
-                    <GroupBox Header="选择图片">
-                        <Button Content="点击选择图片" Command="{Binding ChooseImageCommand}"/>
-                    </GroupBox>
-                    <GroupBox Header="边缘识别">
-                        <StackPanel Margin="4">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="200" />
+                    <RowDefinition Height="1*" />
+                </Grid.RowDefinitions>
+                <Border Margin="8">
+                    <Image Source="{Binding FilePath}" Stretch="Uniform" MaxHeight="200">
+                        <Image.Effect>
+                            <DropShadowEffect ShadowDepth="1" Color="Black"/>
+                        </Image.Effect>
+                    </Image>
+                </Border>
+                <ScrollViewer Grid.Row="1">
+                    <StackPanel Margin="8">
+                        <Expander IsExpanded="True" Margin="8" Header="选择图片">
+                            <Button Content="点击选择图片" Command="{Binding ChooseImageCommand}"/>
+                        </Expander>
+                        <Expander IsExpanded="True" Margin="8" Header="边缘识别">
+                            <StackPanel Margin="8">
 
-                            <ui:TextBlock>
-                                <Run Text="下阈值"/>
-                                <Run Text="{Binding Threshold1,StringFormat={}{0:0}}"/>
-                            </ui:TextBlock>
+                                <ui:TextBlock>
+                                    <Run Text="下阈值"/>
+                                    <Run Text="{Binding Threshold1,StringFormat={}{0:0}}"/>
+                                </ui:TextBlock>
 
-                            <Slider Minimum="0" Maximum="255" 
-                        Value="{Binding Threshold1}" 
-                        TickFrequency="1" IsSnapToTickEnabled="True"/>
-                            <ui:TextBlock>
-                                <Run Text="上阈值"/>
-                                <Run Text="{Binding Threshold2,StringFormat={}{0:0}}"/>
-                            </ui:TextBlock>
-                            <Slider Minimum="0" Maximum="255" 
-                        Value="{Binding Threshold2}" 
-                        TickFrequency="1" IsSnapToTickEnabled="True"/>
-                        </StackPanel>
-                    </GroupBox>
-                    <GroupBox Header="深度估算">
-                        <StackPanel Margin="4">
-                            <Button Content="估算" Command="{Binding ProcessDepthCommand}"/>
-                        </StackPanel>
-                    </GroupBox>
-                </StackPanel>
-            </ScrollViewer>
+                                <Slider Minimum="0" Maximum="255" 
+                                        Value="{Binding Threshold1}" 
+                                        TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                <ui:TextBlock>
+                                    <Run Text="上阈值"/>
+                                    <Run Text="{Binding Threshold2,StringFormat={}{0:0}}"/>
+                                </ui:TextBlock>
+                                <Slider Minimum="0" Maximum="255" 
+                                        Value="{Binding Threshold2}" 
+                                        TickFrequency="1" IsSnapToTickEnabled="True"/>
+                            </StackPanel>
+                        </Expander>
+                        <Expander Visibility="Collapsed" Margin="8" Header="深度估算">
+                            <StackPanel Margin="8">
+                                <Button Content="估算" Command="{Binding ProcessDepthCommand}"/>
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+
+            </Grid>
         </Border>
         <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
         <GridSplitter Grid.Row="0" Grid.Column="3" Grid.RowSpan="2" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
         <Border Grid.Row="0" Grid.Column="2">
-            <Image Source="{Binding DisplayImage}" Stretch="Uniform"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*" />
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+                <Image Margin="8" Source="{Binding DisplayImageDepth}" Stretch="Uniform">
+                    <Image.Effect>
+                        <DropShadowEffect ShadowDepth="1" Color="Black"/>
+                    </Image.Effect>
+                </Image>
+                <Image MouseMove="Image_MouseMove" Margin="8" Source="{Binding DisplayImageContour}" Opacity="{Binding OverlayOpacity}" Stretch="Uniform"/>
+                <StackPanel Grid.Row="1" Margin="8">
+
+                    <ui:TextBlock>
+                        <Run Text="{Binding MousePointX,Mode=OneWay}"/>
+                        <Run Text=","/>
+                        <Run Text="{Binding MousePointY,Mode=OneWay}"/>
+                        <Run Text="{Binding MouseDepth,Mode=OneWay}"/>
+                    </ui:TextBlock>
+                    <ui:TextBlock>
+                        <Run Text="深度图色彩"/>
+                    </ui:TextBlock>
+                    <ComboBox SelectedIndex="{Binding DepthColor}">
+                        <ComboBoxItem Content="Autumn"/>
+                        <ComboBoxItem Content="Bone"/>
+                        <ComboBoxItem Content="Jet"/>
+                        <ComboBoxItem Content="Winter"/>
+                        <ComboBoxItem Content="Rainbow"/>
+                        <ComboBoxItem Content="Ocean"/>
+                        <ComboBoxItem Content="Summer"/>
+                        <ComboBoxItem Content="Spring"/>
+                        <ComboBoxItem Content="Cool"/>
+                        <ComboBoxItem Content="Hsv"/>
+                        <ComboBoxItem Content="Pink"/>
+                        <ComboBoxItem Content="Hot"/>
+                        <ComboBoxItem Content="Parula"/>
+                        <ComboBoxItem Content="Magma"/>
+                        <ComboBoxItem Content="Inferno"/>
+                        <ComboBoxItem Content="Plasma"/>
+                        <ComboBoxItem Content="Viridis"/>
+                        <ComboBoxItem Content="Cividis"/>
+                        <ComboBoxItem Content="Twilight"/>
+                        <ComboBoxItem Content="TwilightShifted"/>
+                        <ComboBoxItem Content="Turbo"/>
+                        <ComboBoxItem Content="DeepGreen"/>
+                    </ComboBox>
+                    <ui:TextBlock>
+                        <Run Text="深度图/轮廓图"/>
+                        <Run Text="{Binding OverlayOpacity,StringFormat={}{0:0}}"/>
+                    </ui:TextBlock>
+
+                    <Slider Minimum="0" Maximum="1" 
+                            Value="{Binding OverlayOpacity}" 
+                            TickFrequency="0.01" IsSnapToTickEnabled="True"/>
+
+                </StackPanel>
+
+            </Grid>
         </Border>
         <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
             <StackPanel>

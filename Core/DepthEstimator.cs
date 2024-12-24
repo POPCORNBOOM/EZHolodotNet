@@ -55,22 +55,17 @@ namespace EZHolodotNet.Core
         // 处理图像并进行深度估计
         public Mat ProcessImage(Mat image)
         {
-
             // 图像预处理
-            var inputTensor = PreprocessImage(image);
+            var inputTensor = PreprocessImage(image.Clone());
 
             // 推理
             var depthData = RunInference(inputTensor);
 
             // 后处理
             Mat depthMat = PostprocessDepth(depthData, image.Height, image.Width);
+            Cv2.ConvertScaleAbs(depthMat, depthMat, 1.0);
 
-            // 伪彩色映射
-            Mat colorDepthMat = ApplyColorMap(depthMat);
-
-            return colorDepthMat;
-            
-
+            return depthMat;
         }
 
         // 图像预处理：将图像调整为 (518, 518) 并转换为 RGB
@@ -81,9 +76,10 @@ namespace EZHolodotNet.Core
             int originalWidth = image.Width;
 
             // 调整大小
-            int newWidth = (int)(inputSize * originalWidth / Math.Max(originalHeight, originalWidth));
-            int newHeight = (int)(inputSize * originalHeight / Math.Max(originalHeight, originalWidth));
-            Cv2.Resize(image, image, new OpenCvSharp.Size(newWidth, newHeight), interpolation: InterpolationFlags.Linear);
+            //int newWidth = (int)(inputSize * originalWidth / Math.Max(originalHeight, originalWidth));
+            //int newHeight = (int)(inputSize * originalHeight / Math.Max(originalHeight, originalWidth));
+            //Cv2.Resize(image, image, new OpenCvSharp.Size(newWidth, newHeight), interpolation: InterpolationFlags.Linear);
+            Cv2.Resize(image, image, new Size(inputSize, inputSize), interpolation: InterpolationFlags.Linear);
 
             // 转换为 RGB
             Cv2.CvtColor(image, image, ColorConversionCodes.BGR2RGB);
@@ -127,7 +123,7 @@ namespace EZHolodotNet.Core
             return outputTensor;
         }
 
-        private Mat PostprocessDepth(float[] depth, int height, int width)
+        private Mat PostprocessDepth(float[] depth, int height, int width, int inputSize = 518)
         {
             // 归一化深度值到 [0, 255]
             float minDepth = depth.Min();
@@ -135,31 +131,24 @@ namespace EZHolodotNet.Core
             float[] normalizedDepth = depth.Select(d => (d - minDepth) / (maxDepth - minDepth) * 255.0f).ToArray();
 
             // 创建一个 Mat
-            Mat depthMat = new Mat(height, width, MatType.CV_32FC1);
+            Mat depthMat = new Mat(inputSize, inputSize, MatType.CV_32FC1);
 
             // 将 normalizedDepth 填充到 Mat 中
             int index = 0;
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < inputSize; y++)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < inputSize; x++)
                 {
                     depthMat.Set(y, x, normalizedDepth[index++]);
                 }
             }
-
-            // 调整大小
-            Mat resizedDepthMat = new Mat();
-            Cv2.Resize(depthMat, resizedDepthMat, new OpenCvSharp.Size(width, height), interpolation: InterpolationFlags.Linear);
-
-            return resizedDepthMat;
+            Cv2.Resize(depthMat, depthMat, new Size(width, height), interpolation: InterpolationFlags.Linear);
+            //Mat normalizedMat = new Mat();
+            //Cv2.Normalize(depthMat, normalizedMat, 0, 255, NormTypes.MinMax);
+            //return normalizedMat;
+            return depthMat;
         }
-        private Mat ApplyColorMap(Mat depthMat)
-        {
-            Mat colorDepthMat = new Mat();
-            Cv2.ConvertScaleAbs(depthMat, depthMat, 1.0);
-            Cv2.ApplyColorMap(depthMat, colorDepthMat, ColormapTypes.Jet);
-            return colorDepthMat;
-        }
+
 
     }
 }

@@ -58,5 +58,12 @@ namespace EZHolodotNet
             InitializeComponent();
             DataContext = ImageProcesser;
         }
+
+        private void Image_MouseMove(object sender, MouseEventArgs e)
+        {
+            var i = sender as Image;
+            var p = e.GetPosition(i);
+            ImageProcesser.MousePoint = new(p.X * ImageProcesser.OriginalImage.Cols/i.ActualWidth, p.Y * ImageProcesser.OriginalImage.Rows / i.ActualHeight);
+        }
     }
 }
