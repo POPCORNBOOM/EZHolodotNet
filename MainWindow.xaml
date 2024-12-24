@@ -1,0 +1,68 @@
+﻿<Window x:Class="EZHolodotNet.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:local="clr-namespace:EZHolodotNet"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition MinWidth="200" Width="*" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border>
+            <ScrollViewer>
+                <StackPanel Margin="4">
+                    <Image Source="{Binding FilePath}" Stretch="Uniform" MaxHeight="300"/>
+                    <GroupBox Header="选择图片">
+                        <Button Content="点击选择图片" Command="{Binding ChooseImageCommand}"/>
+                    </GroupBox>
+                    <GroupBox Header="边缘识别">
+                        <StackPanel Margin="4">
+
+                            <ui:TextBlock>
+                                <Run Text="下阈值"/>
+                                <Run Text="{Binding Threshold1,StringFormat={}{0:0}}"/>
+                            </ui:TextBlock>
+
+                            <Slider Minimum="0" Maximum="255" 
+                        Value="{Binding Threshold1}" 
+                        TickFrequency="1" IsSnapToTickEnabled="True"/>
+                            <ui:TextBlock>
+                                <Run Text="上阈值"/>
+                                <Run Text="{Binding Threshold2,StringFormat={}{0:0}}"/>
+                            </ui:TextBlock>
+                            <Slider Minimum="0" Maximum="255" 
+                        Value="{Binding Threshold2}" 
+                        TickFrequency="1" IsSnapToTickEnabled="True"/>
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Header="深度估算">
+                        <StackPanel Margin="4">
+                            <Button Content="估算" Command="{Binding ProcessDepthCommand}"/>
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+        <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
+        <GridSplitter Grid.Row="0" Grid.Column="3" Grid.RowSpan="2" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
+        <Border Grid.Row="0" Grid.Column="2">
+            <Image Source="{Binding DisplayImage}" Stretch="Uniform"/>
+        </Border>
+        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
+            <StackPanel>
+
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
