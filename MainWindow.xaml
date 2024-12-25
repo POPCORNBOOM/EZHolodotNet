@@ -23,38 +23,89 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="200" />
+                    <RowDefinition Height="auto" />
                     <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
-                <Border Margin="8">
+                <Border Margin="8,0">
                     <Image Source="{Binding FilePath}" Stretch="Uniform" MaxHeight="200">
                         <Image.Effect>
                             <DropShadowEffect ShadowDepth="1" Color="Black"/>
                         </Image.Effect>
                     </Image>
                 </Border>
-                <ScrollViewer Grid.Row="1">
+                <ui:Button Appearance="Primary" Grid.Row="1" Margin="8,0" HorizontalAlignment="Stretch" Content="点击选择图片" Command="{Binding ChooseImageCommand}"/>
+                
+                <ScrollViewer Grid.Row="2">
                     <StackPanel Margin="8">
-                        <Expander IsExpanded="True" Margin="8" Header="选择图片">
-                            <Button Content="点击选择图片" Command="{Binding ChooseImageCommand}"/>
-                        </Expander>
-                        <Expander IsExpanded="True" Margin="8" Header="边缘识别">
-                            <StackPanel Margin="8">
+                        <Expander IsExpanded="True" Margin="8" Header="采样策略">
+                            <StackPanel>
+                                <CheckBox Content="轮廓采样策略" IsChecked="{Binding IsContourMethodEnabled}"/>
+                                <Expander Visibility="{Binding IsContourMethodEnabled,Converter={StaticResource BooleanToVisibilityConverter}}" IsExpanded="True" Header="轮廓采样">
+                                    <StackPanel>
+                                        <ui:TextBlock>
+                                            <Run Text="轮廓采样间隔"/>
+                                            <Run Text="{Binding LineDensity,StringFormat={}{0:0}}"/>
+                                        </ui:TextBlock>
 
-                                <ui:TextBlock>
-                                    <Run Text="下阈值"/>
-                                    <Run Text="{Binding Threshold1,StringFormat={}{0:0}}"/>
-                                </ui:TextBlock>
+                                        <Slider Minimum="1" Maximum="50"
+                                        Value="{Binding LineDensity}" 
+                                        TickFrequency="1" IsSnapToTickEnabled="True"/>
 
-                                <Slider Minimum="0" Maximum="255" 
+                                        <ui:TextBlock>
+                                            <Run Text="模糊因数"/>
+                                            <Run Text="{Binding BlurFactor,StringFormat={}{0:0}}"/>
+                                        </ui:TextBlock>
+
+                                        <Slider Minimum="1" Maximum="50"
+                                        Value="{Binding BlurFactor}" 
+                                        TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                        <ui:TextBlock>
+                                            <Run Text="下阈值"/>
+                                            <Run Text="{Binding Threshold1,StringFormat={}{0:0}}"/>
+                                        </ui:TextBlock>
+
+                                        <Slider Minimum="0" Maximum="255" 
                                         Value="{Binding Threshold1}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
-                                <ui:TextBlock>
-                                    <Run Text="上阈值"/>
-                                    <Run Text="{Binding Threshold2,StringFormat={}{0:0}}"/>
-                                </ui:TextBlock>
-                                <Slider Minimum="0" Maximum="255" 
+                                        <ui:TextBlock>
+                                            <Run Text="上阈值"/>
+                                            <Run Text="{Binding Threshold2,StringFormat={}{0:0}}"/>
+                                        </ui:TextBlock>
+                                        <Slider Minimum="0" Maximum="255" 
                                         Value="{Binding Threshold2}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                    </StackPanel>
+                                </Expander>
+                                <CheckBox Content="明度采样策略" IsChecked="{Binding IsBrightnessMethodEnabled}"/>
+                                <Expander Visibility="{Binding IsBrightnessMethodEnabled,Converter={StaticResource BooleanToVisibilityConverter}}" IsExpanded="True" Header="明度采样">
+                                    <StackPanel>
+                                        <ui:TextBlock>
+                                            <Run Text="基础密度"/>
+                                            <Run Text="{Binding BrightnessBaseDensity,StringFormat={}{0:0%}}"/>
+                                        </ui:TextBlock>
+
+                                        <Slider Minimum="0.01" Maximum="1"
+                                        Value="{Binding BrightnessBaseDensity}" 
+                                        TickFrequency="0.011" IsSnapToTickEnabled="True"/>
+                                        <ui:TextBlock>
+                                            <Run Text="密度因数"/>
+                                            <Run Text="{Binding BrightnessDensityFactor,StringFormat={}{0:0.00}}"/>
+                                        </ui:TextBlock>
+
+                                        <Slider Minimum="-3" Maximum="3"
+                                        Value="{Binding BrightnessDensityFactor}" 
+                                        TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+                                        <ui:TextBlock>
+                                            <Run Text="对比度"/>
+                                            <Run Text="{Binding BrightnessEnhanceGamma,StringFormat={}{0:0.00}}"/>
+                                        </ui:TextBlock>
+
+                                        <Slider Minimum="-3" Maximum="10"
+                                        Value="{Binding BrightnessEnhanceGamma}" 
+                                        TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+
+                                    </StackPanel>
+                                </Expander>
                             </StackPanel>
                         </Expander>
                         <Expander Visibility="Collapsed" Margin="8" Header="深度估算">
@@ -82,12 +133,22 @@
                 </Image>
                 <Image MouseMove="Image_MouseMove" Margin="8" Source="{Binding DisplayImageContour}" Opacity="{Binding OverlayOpacity}" Stretch="Uniform"/>
                 <StackPanel Grid.Row="1" Margin="8">
+                    <Grid>
+                        <ui:TextBlock>
+                            <Run Text="像素"/>
+                            <Run Text="{Binding MousePointX,Mode=OneWay}"/>
+                            <Run Text=","/>
+                            <Run Text="{Binding MousePointY,Mode=OneWay}"/>
+                        </ui:TextBlock>
+                        <ui:TextBlock HorizontalAlignment="Right">
+                            <Run Text="高度"/>
+                            <Run Text="{Binding MouseDepth,Mode=OneWay}"/>
+                        </ui:TextBlock>
 
+                    </Grid>
                     <ui:TextBlock>
-                        <Run Text="{Binding MousePointX,Mode=OneWay}"/>
-                        <Run Text=","/>
-                        <Run Text="{Binding MousePointY,Mode=OneWay}"/>
-                        <Run Text="{Binding MouseDepth,Mode=OneWay}"/>
+                        <Run Text="采样点总数"/>
+                        <Run Text="{Binding PointCount,Mode=OneWay}"/>
                     </ui:TextBlock>
                     <ui:TextBlock>
                         <Run Text="深度图色彩"/>
@@ -129,10 +190,84 @@
 
             </Grid>
         </Border>
-        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
-            <StackPanel>
+        <Border Grid.Column="4">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*" />
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+                <Image Margin="8" Source="{Binding FilePath}" Stretch="Uniform">
+                    <Image.Effect>
+                        <DropShadowEffect ShadowDepth="1" Color="Black"/>
+                    </Image.Effect>
+                </Image>
+                <Image MouseMove="Image_MouseMove" Margin="8" Source="{Binding DisplayImageScratch}" Stretch="Uniform"/>
+                <StackPanel IsEnabled="{Binding IsNotProcessingSvg}" Grid.Row="1" Margin="8">
+                    <Grid>
+                        <ui:TextBlock>
+                            <Run Text="像素"/>
+                            <Run Text="{Binding MousePointX,Mode=OneWay}"/>
+                            <Run Text=","/>
+                            <Run Text="{Binding MousePointY,Mode=OneWay}"/>
+                        </ui:TextBlock>
+                        <ui:TextBlock HorizontalAlignment="Right">
+                            <Run Text="高度"/>
+                            <Run Text="{Binding MouseDepth,Mode=OneWay}"/>
+                        </ui:TextBlock>
 
-            </StackPanel>
+                    </Grid>
+
+                    <ui:TextBlock>
+                        <Run Text="仅保留大于零深度的点"/>
+                    </ui:TextBlock>
+                    <ui:ToggleSwitch IsChecked="{Binding IsPositiveDepthPointOnly}"/>
+
+                    <ui:TextBlock>
+                        <Run Text="零高度"/>
+                        <Run Text="{Binding ZeroDepth,StringFormat={}{0:0}}"/>
+                    </ui:TextBlock>
+                    <Slider Minimum="0" Maximum="255" 
+                            Value="{Binding ZeroDepth}" 
+                            TickFrequency="1" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
+
+                    <ui:TextBlock>
+                        <Run Text="a系数"/>
+                        <Run Text="{Binding AFactor,StringFormat={}{0:0.00}}"/>
+                    </ui:TextBlock>
+                    <Slider Minimum="0" Maximum="1" 
+                            Value="{Binding AFactor}" 
+                            TickFrequency="0.01" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
+
+                    <ui:TextBlock>
+                        <Run Text="b系数"/>
+                        <Run Text="{Binding BFactor,StringFormat={}{0:0}}"/>
+                    </ui:TextBlock>
+                    <Slider Minimum="500" Maximum="2000" 
+                            Value="{Binding BFactor}" 
+                            TickFrequency="0.01" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
+
+                    <ui:TextBlock>
+                        <Run Text="预览密度"/>
+                        <Run Text="{Binding PreviewDense,StringFormat={}{0:0}}"/>
+                    </ui:TextBlock>
+                    <Slider Minimum="0" Maximum="200" 
+                            Value="{Binding PreviewDense}" 
+                            TickFrequency="1" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button Content="预览(耗时)" HorizontalAlignment="Stretch" Command="{Binding CreateScratchCommand}"/>
+                        <Button Grid.Column="1" Content="导出刮擦轨迹(.svg)" Command="{Binding ExportScratchCommand}"/>
+
+                    </Grid>
+
+                </StackPanel>
+
+            </Grid>
+
         </Border>
     </Grid>
 </Window>

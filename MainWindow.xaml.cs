@@ -10,6 +10,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Wpf.Ui.Controls;
+using Image = System.Windows.Controls.Image;
 
 namespace EZHolodotNet
 {
@@ -64,6 +66,11 @@ namespace EZHolodotNet
             var i = sender as Image;
             var p = e.GetPosition(i);
             ImageProcesser.MousePoint = new(p.X * ImageProcesser.OriginalImage.Cols/i.ActualWidth, p.Y * ImageProcesser.OriginalImage.Rows / i.ActualHeight);
+        }
+
+        private void Slider_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            ImageProcesser.ProcessScratch();
         }
     }
 }
