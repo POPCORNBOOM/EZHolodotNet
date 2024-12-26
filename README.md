@@ -27,36 +27,41 @@ $$
   offset = \frac{(1 + 3 \times aFactor) \times curvature}{4}
 $$
 
+![原函数](https://github.com/user-attachments/assets/aed06f40-946c-4784-b0a5-fc8984c45566)
+
+![添加补偿](https://github.com/user-attachments/assets/408e37a4-d068-4e9f-a620-34fee6d28384)
+
+
 ---
 
 #### **2. 贝塞尔曲线控制点**
 
 使用**三次贝塞尔曲线**定义路径，曲线由起点、终点和两个控制点构成。
 
-- **原点**
+- **原点(补偿)**
 
 $$
-  \mathbf{C} = \begin{bmatrix} x \\\ y \end{bmatrix}
+  \mathbf{C} = \begin{bmatrix} x \\\ y \end{bmatrix} + \begin{bmatrix} 1 \\\ offset \end{bmatrix}
 $$
 
 - **起点和终点**
 
 $$
-  \mathbf{P_0} = C + curvature \times \begin{bmatrix}  - 1 \\\  - 1 \end{bmatrix} + \begin{bmatrix} 1 \\\ offset \end{bmatrix}
+  \mathbf{P_0} = C + curvature \times \begin{bmatrix}  - 1 \\\  - 1 \end{bmatrix}
 $$
 
 $$
-  \mathbf{P_3} = C + curvature \times \begin{bmatrix}  1 \\\ - 1 \end{bmatrix} + \begin{bmatrix} 1 \\\ offset \end{bmatrix}
+  \mathbf{P_3} = C + curvature \times \begin{bmatrix}  1 \\\ - 1 \end{bmatrix}
 $$
 
 - **控制点**
 
 $$
-  \mathbf{P_1} = C + curvature \times \begin{bmatrix} - 1 \\\ - 1 \end{bmatrix}  \times aFactor + \begin{bmatrix} 1 \\\ offset \end{bmatrix}
+  \mathbf{P_1} = C + curvature \times \begin{bmatrix} - 1 \\\ - 1 \end{bmatrix}  \times aFactor
 $$
 
 $$
-  \mathbf{P_2} = C + curvature \times \begin{bmatrix} 1 \\\ - 1 \end{bmatrix} \times aFactor + \begin{bmatrix} 1 \\\ offset \end{bmatrix}
+  \mathbf{P_2} = C + curvature \times \begin{bmatrix} 1 \\\ - 1 \end{bmatrix} \times aFactor
 $$
 
 ---
