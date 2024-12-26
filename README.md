@@ -29,11 +29,12 @@ $$
 
 - 原函数
 
-![原函数](https://github.com/user-attachments/assets/aed06f40-946c-4784-b0a5-fc8984c45566)
+![原函数](https://github.com/user-attachments/assets/644e49ac-1081-4be3-a704-3025e4440fca)
 
 - 添加补偿后
 
-![添加补偿](https://github.com/user-attachments/assets/408e37a4-d068-4e9f-a620-34fee6d28384)
+![添加补偿后](https://github.com/user-attachments/assets/218fd7d7-90b7-4e14-8cd3-3115389c5088)
+
 
 
 ---
