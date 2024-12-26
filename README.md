@@ -94,6 +94,6 @@ $$
 \text{<path d="M P0.x,P0.y C P1.x,P1.y P2.x,P2.y P3.x,P3.y" />}
 $$
 
-- **M (Move To)**：移动到曲线的起始点 \( \mathbf{P_0} \)  
-- **C (Cubic Bézier Curve)**：定义控制点和终点 \( \mathbf{P_1} \), \( \mathbf{P_2} \), \( \mathbf{P_3} \)
+- **M (Move To)**：移动到曲线的起始点 $P_0$
+- **C (Cubic Bézier Curve)**：定义控制点和终点 $P_1$, $P_2$,$P_3$
 
