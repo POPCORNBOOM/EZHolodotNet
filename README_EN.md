@@ -1,5 +1,7 @@
 ### Scratch Mark Calculation and Analysis
 
+[English](https://github.com/POPCORNBOOM/EZHolodotNet/edit/main/README_EN.md)|[中文](https://github.com/POPCORNBOOM/EZHolodotNet/edit/main/README.md)
+
 Since SVG does not directly support hyperbolic segments, our goal is to generate an SVG scratch path using cubic Bézier curves.
 
 ---
