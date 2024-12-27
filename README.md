@@ -1,6 +1,6 @@
 ### 刮擦痕迹计算解析
 
-[English](https://github.com/POPCORNBOOM/EZHolodotNet/edit/main/README_EN.md)|[中文](https://github.com/POPCORNBOOM/EZHolodotNet/edit/main/README.md)
+[English](https://github.com/POPCORNBOOM/EZHolodotNet/blob/main/README_EN.md)|[中文](https://github.com/POPCORNBOOM/EZHolodotNet/blob/main/README.md)
 
 由于Svg没有直接的双曲线型线段，我们的目标是通过三次贝塞尔曲线生成SVG刮擦路径。
 
