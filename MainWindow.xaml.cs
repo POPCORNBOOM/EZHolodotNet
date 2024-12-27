@@ -17,12 +17,12 @@ namespace EZHolodotNet
 {
     public class RelayCommand : ICommand
     {
-        private readonly Action _execute;
-        private readonly Func<bool> _canExecute;
+        private readonly Action<object> _execute; // 支持参数的 Action
+        private readonly Func<object, bool> _canExecute; // 支持参数的 Func
 
-        public RelayCommand(Action execute, Func<bool> canExecute = null)
+        public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
         {
-            _execute = execute;
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
 
@@ -30,12 +30,12 @@ namespace EZHolodotNet
 
         public bool CanExecute(object parameter)
         {
-            return _canExecute == null || _canExecute();
+            return _canExecute == null || _canExecute(parameter);
         }
 
         public void Execute(object parameter)
         {
-            _execute();
+            _execute(parameter);
         }
 
         public void RaiseCanExecuteChanged()
@@ -53,11 +53,12 @@ namespace EZHolodotNet
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-        public ImageProcesser ImageProcesser = new();
+        public ImageProcesser ImageProcesser;
 
         public MainWindow()
         {
             InitializeComponent();
+            ImageProcesser = new(this);
             DataContext = ImageProcesser;
         }
 
@@ -65,12 +66,15 @@ namespace EZHolodotNet
         {
             var i = sender as Image;
             var p = e.GetPosition(i);
+            if (ImageProcesser.OriginalImage == null) return;
             ImageProcesser.MousePoint = new(p.X * ImageProcesser.OriginalImage.Cols/i.ActualWidth, p.Y * ImageProcesser.OriginalImage.Rows / i.ActualHeight);
         }
 
         private void Slider_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            ImageProcesser.ProcessScratch();
+            if(ImageProcesser.IsAutoGeneratePreview)
+                ImageProcesser.ProcessScratch();
+
         }
     }
 }

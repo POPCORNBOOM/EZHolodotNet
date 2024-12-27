@@ -23,13 +23,39 @@ namespace EZHolodotNet.Core
 {
     public class ImageProcesser:INotifyPropertyChanged
     {
+        private MainWindow mainWindow;
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+        public ImageProcesser(MainWindow mainWindow)
+        {
+            //遍历所有.onnx文件
+            // 获取所有 .onnx 文件
+            string runningDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string[] onnxFiles = Directory.GetFiles(runningDirectory, "*.onnx", SearchOption.AllDirectories);
+            if (onnxFiles.Length == 0)
+            {
+                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
+                {
+                    Title = "错误",
+                    Content = "未发现深度识别模型，请将(.onnx)模型与软件放在同一文件夹后重试",
+                    CloseButtonText = "了解",
+                };
 
-        public RelayCommand ChooseImageCommand => new RelayCommand(() =>
+                uiMessageBox.ShowDialogAsync();
+                Application.Current.Shutdown(0);
+                return;
+            }
+            ModelFilePath = onnxFiles[0].Split("\\").Last();
+            DepthEstimation = new DepthEstimation(onnxFiles[0]);
+            this.mainWindow = mainWindow;
+        }
+
+        public RelayCommand ChangePreviewCommand => new RelayCommand((p) => ChangePreviewExecute((string)p));
+        public RelayCommand CloseWarningCommand => new RelayCommand((p) => mainWindow.WarningFlyout.Hide());
+        public RelayCommand ChooseImageCommand => new RelayCommand((p) =>
         {
             Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
             openFileDialog.Filter = "Image files (*.jpg, *.jpeg, *.png) | *.jpg; *.jpeg; *.png";
@@ -37,13 +63,40 @@ namespace EZHolodotNet.Core
             {
                 LoadImage(openFileDialog.FileName);
                 RefreshDisplay();
-                ProcessScratch();
+                if (IsAutoGeneratePreview)
+                    ProcessScratch();
             }
         });
-        public RelayCommand ProcessDepthCommand => new RelayCommand(ProcessDepth);
-        public RelayCommand CreateScratchCommand => new RelayCommand(ProcessScratch);
-        public RelayCommand ExportScratchCommand => new RelayCommand(ProcessExportScratch);
+        public RelayCommand ProcessDepthCommand => new RelayCommand((p) => ProcessDepth());
+        public RelayCommand CreateScratchCommand => new RelayCommand((p) => ProcessScratch());
+        public RelayCommand ExportScratchCommand => new RelayCommand((p) => ProcessExportScratch((string)p));
+        public RelayCommand OpenCustomMessageBoxCommand => new RelayCommand((p) => OpenCustomMessageBox());
+        private void OpenCustomMessageBox()
+        {
+            var uiMessageBox = new Wpf.Ui.Controls.MessageBox
+            {
+                Title = "开源信息",
+                Content =
+                    "Copyright \u00a9 2024 Yigu Wang\r\n\r\nLicensed under the Apache License, Version 2.0 (the \"License\");\r\nyou may not use this file except in compliance with the License.\r\nYou may obtain a copy of the License at\r\n\r\n    http://www.apache.org/licenses/LICENSE-2.0\r\n\r\nUnless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\r\nSee the License for the specific language governing permissions and limitations under the License.\r\nMore information at https://github.com/POPCORNBOOM/EZHolodotNet",
+                CloseButtonText ="了解",
+            };
 
+            uiMessageBox.ShowDialogAsync();
+        }
+
+        private string _modelFilePath = "";
+        public string ModelFilePath
+        {
+            get => _modelFilePath;
+            set
+            {
+                if (!Equals(_modelFilePath, value))
+                {
+                    _modelFilePath = value;
+                    OnPropertyChanged(nameof(ModelFilePath));
+                }
+            }
+        }       
         private string _filePath = "";
         public string FilePath
         {
@@ -54,7 +107,6 @@ namespace EZHolodotNet.Core
                 {
                     _filePath = value;
                     OnPropertyChanged(nameof(FilePath));
-                    Trace.WriteLine("wtf");
                 }
             }
         }
@@ -105,22 +157,74 @@ namespace EZHolodotNet.Core
                 }
             }
         }        
-        private WriteableBitmap _displayImageScratch;
-        public WriteableBitmap DisplayImageScratch
+        private WriteableBitmap _displayImageScratchL;
+        public WriteableBitmap DisplayImageScratchL
         {
-            get => _displayImageScratch;
+            get => _displayImageScratchL;
             set
             {
-                if (!Equals(_displayImageScratch, value))
+                if (!Equals(_displayImageScratchL, value))
                 {
-                    _displayImageScratch = value;
-                    OnPropertyChanged(nameof(DisplayImageScratch));
+                    _displayImageScratchL = value;
+                    OnPropertyChanged(nameof(DisplayImageScratchL));
+                }
+            }
+        }        
+        private WriteableBitmap _displayImageScratchR;
+        public WriteableBitmap DisplayImageScratchR
+        {
+            get => _displayImageScratchR;
+            set
+            {
+                if (!Equals(_displayImageScratchR, value))
+                {
+                    _displayImageScratchR = value;
+                    OnPropertyChanged(nameof(DisplayImageScratchR));
+                }
+            }
+        }        
+        private WriteableBitmap _displayImageScratchO;
+        public WriteableBitmap DisplayImageScratchO
+        {
+            get => _displayImageScratchO;
+            set
+            {
+                if (!Equals(_displayImageScratchO, value))
+                {
+                    _displayImageScratchO = value;
+                    OnPropertyChanged(nameof(DisplayImageScratchO));
+                }
+            }
+        }     
+        private WriteableBitmap _displayImageScratchLine;
+        public WriteableBitmap DisplayImageScratchLine
+        {
+            get => _displayImageScratchLine;
+            set
+            {
+                if (!Equals(_displayImageScratchLine, value))
+                {
+                    _displayImageScratchLine = value;
+                    OnPropertyChanged(nameof(DisplayImageScratchLine));
+                }
+            }
+        }        
+        private WriteableBitmap _displayImageScratchStep;
+        public WriteableBitmap DisplayImageScratchStep
+        {
+            get => _displayImageScratchStep;
+            set
+            {
+                if (!Equals(_displayImageScratchStep, value))
+                {
+                    _displayImageScratchStep = value;
+                    OnPropertyChanged(nameof(DisplayImageScratchStep));
                 }
             }
         }
         public double AreaDensity { get; set; } = 10;
         public List<Point2d> Points { get; set; } = new List<Point2d>();
-        public DepthEstimation DepthEstimation = new DepthEstimation();
+        public DepthEstimation DepthEstimation;
         private Point _mousePoint = new(0, 0);
         public int MousePointX
         { 
@@ -130,7 +234,19 @@ namespace EZHolodotNet.Core
         { 
             get => MousePoint.Y; 
         }
-        public int MaximumPointCount = 50000;
+        private int _maximumPointCount = 50000;
+        public int MaximumPointCount
+        {
+            get => _maximumPointCount;
+            set
+            {
+                if (!Equals(_maximumPointCount, value))
+                {
+                    _maximumPointCount = value;
+                    OnPropertyChanged(nameof(MaximumPointCount));
+                }
+            }
+        }
 
         public Point MousePoint
         {
@@ -178,7 +294,9 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private int _depthColor = 0;  
+        private int _depthColor = 0;
+        private double _overlayOpacity = 0.5;
+
         public double OverlayOpacity
         {
             get => _overlayOpacity;
@@ -188,6 +306,23 @@ namespace EZHolodotNet.Core
                 {
                     _overlayOpacity = value;
                     OnPropertyChanged(nameof(OverlayOpacity));
+                }
+            }
+        }        
+        private double _previewT = 0.5;
+
+        public double PreviewT
+        {
+            get => _previewT;
+            set
+            {
+                if (!Equals(_previewT, value))
+                {
+                    _previewT = value;
+                    if (_previewT > 1) _previewT = 1;
+                    if (_previewT < 0) _previewT = 0;
+                    OnPropertyChanged(nameof(PreviewT));
+                    ProcessScratchStep();
                 }
             }
         }
@@ -243,7 +378,6 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private double _overlayOpacity = 0.5;  
         public double Threshold1
         {
             get => _threshold1;
@@ -268,6 +402,20 @@ namespace EZHolodotNet.Core
                 {
                     _lineDensity = value;
                     OnPropertyChanged(nameof(LineDensity));
+                    RefreshDisplay();
+                }
+            }
+        }      
+        private int _lineOffsetFactor = 5;  
+        public int LineOffsetFactor
+        {
+            get => _lineOffsetFactor;
+            set
+            {
+                if (!Equals(_lineOffsetFactor, value))
+                {
+                    _lineOffsetFactor = value;
+                    OnPropertyChanged(nameof(LineOffsetFactor));
                     RefreshDisplay();
                 }
             }
@@ -301,6 +449,20 @@ namespace EZHolodotNet.Core
                 }
             }
         }       
+        private double _approximationFactor = 1;
+        public double ApproximationFactor
+        {
+            get => _approximationFactor;
+            set
+            {
+                if (!Equals(_approximationFactor, value))
+                {
+                    _approximationFactor = value;
+                    OnPropertyChanged(nameof(ApproximationFactor));
+                    RefreshDisplay();
+                }
+            }
+        }       
         private bool _isNotProcessingSvg = true;
         public bool IsNotProcessingSvg
         {
@@ -314,6 +476,113 @@ namespace EZHolodotNet.Core
                 }
             }
         }       
+        private bool _isWarningPointsOverflow = false;
+        public bool IsWarningPointsOverflow
+        {
+            get => _isWarningPointsOverflow;
+            set
+            {
+                if (!Equals(_isWarningPointsOverflow, value))
+                {
+                    _isWarningPointsOverflow = value;
+                    OnPropertyChanged(nameof(IsWarningPointsOverflow));
+                }
+            }
+        }
+        
+        private bool _isPreviewingOriginImage = true;
+        public bool IsPreviewingOriginImage
+        {
+            get => _isPreviewingOriginImage;
+            set
+            {
+                if (!Equals(_isPreviewingOriginImage, value))
+                {
+                    _isPreviewingOriginImage = value;
+                    OnPropertyChanged(nameof(IsPreviewingOriginImage));
+                }
+            }
+        }       
+        private bool _isPreviewingLeft = true;
+        public bool IsPreviewingLeft
+        {
+            get => _isPreviewingLeft;
+            set
+            {
+                if (!Equals(_isPreviewingLeft, value))
+                {
+                    _isPreviewingLeft = value;
+                    OnPropertyChanged(nameof(IsPreviewingLeft));
+                }
+            }
+        }       
+        private bool _isPreviewingRight = true;
+        public bool IsPreviewingRight
+        {
+            get => _isPreviewingRight;
+            set
+            {
+                if (!Equals(_isPreviewingRight, value))
+                {
+                    _isPreviewingRight = value;
+                    OnPropertyChanged(nameof(IsPreviewingRight));
+                }
+            }
+        }       
+        private bool _isPreviewingOrigin = true;
+        public bool IsPreviewingOrigin
+        {
+            get => _isPreviewingOrigin;
+            set
+            {
+                if (!Equals(_isPreviewingOrigin, value))
+                {
+                    _isPreviewingOrigin = value;
+                    OnPropertyChanged(nameof(IsPreviewingOrigin));
+                }
+            }
+        }           
+        private bool _isPreviewingLine = true;
+        public bool IsPreviewingLine
+        {
+            get => _isPreviewingLine;
+            set
+            {
+                if (!Equals(_isPreviewingLine, value))
+                {
+                    _isPreviewingLine = value;
+                    OnPropertyChanged(nameof(IsPreviewingLine));
+                }
+            }
+        }       
+        private bool _isPreviewingStep = true;
+        public bool IsPreviewingStep
+        {
+            get => _isPreviewingStep;
+            set
+            {
+                if (!Equals(_isPreviewingStep, value))
+                {
+                    _isPreviewingStep = value;
+                    OnPropertyChanged(nameof(IsPreviewingStep));
+                }
+            }
+        }          
+        private string _previewColorful = "c";
+        public string PreviewColorful
+        {
+            get => _previewColorful;
+            set
+            {
+                if (!Equals(_previewColorful, value))
+                {
+                    _previewColorful = value;
+                    OnPropertyChanged(nameof(PreviewColorful)); 
+                    if (IsAutoGeneratePreview)
+                        ProcessScratch();
+                }
+            }
+        }       
         private bool _isPositiveDepthPointOnly = false;
         public bool IsPositiveDepthPointOnly
         {
@@ -324,6 +593,22 @@ namespace EZHolodotNet.Core
                 {
                     _isPositiveDepthPointOnly = value;
                     OnPropertyChanged(nameof(IsPositiveDepthPointOnly));
+                    if (IsAutoGeneratePreview)
+                        ProcessScratch();
+                }
+            }
+        }        
+        private bool _isAutoGeneratePreview = true;
+        public bool IsAutoGeneratePreview
+        {
+            get => _isAutoGeneratePreview;
+            set
+            {
+                if (!Equals(_isAutoGeneratePreview, value))
+                {
+                    _isAutoGeneratePreview = value;
+                    OnPropertyChanged(nameof(IsAutoGeneratePreview));
+                    if(value)ProcessScratch();
                 }
             }
         }
@@ -351,6 +636,20 @@ namespace EZHolodotNet.Core
                 {
                     _isBrightnessMethodEnabled = value;
                     OnPropertyChanged(nameof(IsBrightnessMethodEnabled));
+                    RefreshDisplay();
+                }
+            }
+        }
+        private bool _isDarknessMode = false;
+        public bool IsDarknessMode
+        {
+            get => _isDarknessMode;
+            set
+            {
+                if (!Equals(_isDarknessMode, value))
+                {
+                    _isDarknessMode = value;
+                    OnPropertyChanged(nameof(IsDarknessMode));
                     RefreshDisplay();
                 }
             }
@@ -406,32 +705,31 @@ namespace EZHolodotNet.Core
             DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
         }
 
-        public List<Point> ExtractContours(int density = 1)
+        public List<Point> ExtractContours()
         {
             if (OriginalImage == null) return new();
+
             Mat blurred = new Mat();
-            Cv2.GaussianBlur(OriginalImage, blurred, new OpenCvSharp.Size(_blurFactor * 2 - 1,_blurFactor * 2 - 1), 0);
+            Cv2.GaussianBlur(OriginalImage, blurred, new OpenCvSharp.Size(_blurFactor * 2 - 1, _blurFactor * 2 - 1), 0);
 
-            // 边缘检测 (使用 Canny 算法)
             Mat edges = new Mat();
-            Cv2.Canny(blurred, edges, Threshold1, Threshold2);
+            Cv2.Canny(blurred, edges, Threshold1, Threshold2,3,true);
 
-            // 查找轮廓 FindContours
             var contours = new List<Point>();
             Point[][] contourPoints;
             HierarchyIndex[] hierarchy;
-            Cv2.FindContours(edges, out contourPoints, out hierarchy, RetrievalModes.Tree, ContourApproximationModes.ApproxSimple);
-
-            foreach (var contour in contourPoints)
+            Cv2.FindContours(edges, out contourPoints, out hierarchy, RetrievalModes.List, ContourApproximationModes.ApproxSimple);
+            for (int i = 0; i < contourPoints.Length; i++)
             {
-                for (int i = 0; i < contour.Length; i += _lineDensity) // 根据 density 间隔采样
+                for (int j = 0; j < contourPoints[i].Length; j += _lineDensity) // 根据 density 间隔采样
                 {
-                    contours.Add(contour[i]); // 添加采样的轮廓点
+                    contours.Add(contourPoints[i][j]); // 添加采样的轮廓点
                 }
             }
 
             return contours;
         }
+
         public void RefreshDisplay()
         {
             if (OriginalImage == null || OriginalImage.Cols == 0) return;
@@ -478,39 +776,120 @@ namespace EZHolodotNet.Core
             List<Point> points = new List<Point>();
             int step =(int)(1 / _brightnessBaseDensity);
             // 遍历灰度图的每个像素
-            for (int y = 0; y < grayImageEnhanced.Rows; y+= step)
+            if(IsDarknessMode)
             {
-                for (int x = 0; x < grayImageEnhanced.Cols; x+=step)
+                for (int y = 0; y < grayImageEnhanced.Rows; y += step)
                 {
-                    // 获取当前像素的亮度值 (0-255)
-                    byte brightness = grayImageEnhanced.At<byte>(y, x);
-
-                    // 随机采样生成点
-                    Random random = new Random();
-                    if (random.Next(0, 255) < brightness * Math.Exp(_brightnessDensityFactor))
+                    for (int x = 0; x < grayImageEnhanced.Cols; x += step)
                     {
-                        points.Add(new Point(x, y));
+                        // 获取当前像素的亮度值 (0-255)
+                        byte brightness = grayImageEnhanced.At<byte>(y, x);
+
+                        // 随机采样生成点
+                        Random random = new Random();
+                        if (random.Next(0, 255) > brightness * Math.Exp(_brightnessDensityFactor))
+                        {
+                            points.Add(new Point(x, y));
+                        }
+                    }
+                }
+            }    
+            else
+            {
+                for (int y = 0; y < grayImageEnhanced.Rows; y += step)
+                {
+                    for (int x = 0; x < grayImageEnhanced.Cols; x += step)
+                    {
+                        // 获取当前像素的亮度值 (0-255)
+                        byte brightness = grayImageEnhanced.At<byte>(y, x);
+
+                        // 随机采样生成点
+                        Random random = new Random();
+                        if (random.Next(0, 255) < brightness * Math.Exp(_brightnessDensityFactor))
+                        {
+                            points.Add(new Point(x, y));
+                        }
                     }
                 }
             }
 
             return points;
         }
+        private void ChangePreviewExecute(string t)
+        {
+            switch (t)
+            {
+                case "0":
+                    PreviewT = 0;
+                    break;
+                case "1":
+                    PreviewT -= 0.05;
+                    break;
+                case "3":
+                    PreviewT = 1;
+                    break;
+                case "2":
+                    PreviewT += 0.05;
+                    break;
+                default:
+                    PreviewT = 0.5;
+                    break;
+            }
+        }
         public void ProcessDepth()
         {
             Cv2.ImShow("r", DepthImage);
         }        
+        private bool CheckOverflow()
+        {
+            if(SampledPoints.Count > MaximumPointCount)
+            {
+                mainWindow.WarningFlyout.Show();
+            }
+            return SampledPoints.Count < MaximumPointCount;
+
+        }
         public async void ProcessScratch()
         {
             if (OriginalImage == null) return;
-            if (OriginalImage.Width == 0) return; 
-            if (SampledPoints.Count > MaximumPointCount) return;
-            Mat scratchImage = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
+            if (OriginalImage.Width == 0) return;
+            if (!CheckOverflow()) return;
+            Mat scratchImageL = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
+            Mat scratchImageR = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
+            Mat scratchImageO = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
+            Mat scratchImageLine = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
             try
             {
                 IsNotProcessingSvg = false;
-                string mysvg = await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly, scratchImage);
-                DisplayImageScratch = scratchImage.ToWriteableBitmap();
+                await SvgPainter.PreviewPath(SampledPoints, DepthImage, ZeroDepth, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly, scratchImageL,scratchImageR,scratchImageO, scratchImageLine);
+                DisplayImageScratchL = scratchImageL.ToWriteableBitmap();
+                DisplayImageScratchR = scratchImageR.ToWriteableBitmap();
+                DisplayImageScratchO = scratchImageO.ToWriteableBitmap();
+                DisplayImageScratchLine = scratchImageLine.ToWriteableBitmap();
+                ProcessScratchStep();
+
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e.Message);
+            }
+            finally
+            {
+                IsNotProcessingSvg = true;
+            }
+        }             
+        public async void ProcessScratchStep()
+        {
+            if (OriginalImage == null) return;
+            if (OriginalImage.Width == 0) return;
+            if (!CheckOverflow()) return;
+
+            Mat scratchImageStep = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
+            try
+            {
+                IsNotProcessingSvg = false;
+                await SvgPainter.PreviewPath(SampledPoints, DepthImage, OriginalImage, scratchImageStep,_previewT, ZeroDepth, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly,PreviewColorful);
+                DisplayImageScratchStep = scratchImageStep.ToWriteableBitmap();
             }
             catch (Exception e)
             {
@@ -521,11 +900,11 @@ namespace EZHolodotNet.Core
                 IsNotProcessingSvg = true;
             }
         }      
-        public async void ProcessExportScratch()
+        public async void ProcessExportScratch(string p)
         {
             if (OriginalImage == null) return;
             if (OriginalImage.Width == 0) return;
-            if (SampledPoints.Count > MaximumPointCount) return;
+            if (!CheckOverflow()) return;
 
             Mat scratchImage = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
             try
@@ -533,7 +912,6 @@ namespace EZHolodotNet.Core
                 IsNotProcessingSvg = false;
                 string mysvg = await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly);
                 SaveSvgToFile(mysvg);
-                DisplayImageScratch = scratchImage.ToWriteableBitmap();
             }
             catch (Exception e)
             {

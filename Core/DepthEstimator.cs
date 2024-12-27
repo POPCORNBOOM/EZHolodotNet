@@ -22,13 +22,23 @@ namespace EZHolodotNet.Core
     using Microsoft.ML.OnnxRuntime;
     using Microsoft.ML.OnnxRuntime.Tensors;
     using OpenCvSharp;  // 引入OpenCVSharp用于图像处理
+    using System.ComponentModel;
 
-    public class DepthEstimation
+    public class DepthEstimation:INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
         private InferenceSession _onnxSession;
 
         public DepthEstimation(string modelPath = @"depth_anything_v2_vitb.onnx")
         {
+            if (string.IsNullOrWhiteSpace(modelPath))
+            {
+                throw new ArgumentException("Model path cannot be null or empty.", nameof(modelPath));
+            }
             // 加载模型
             LoadModel(modelPath);
         }
@@ -36,6 +46,11 @@ namespace EZHolodotNet.Core
         // 加载ONNX模型
         public void LoadModel(string modelPath)
         {
+            //检查 modelPath 是否存在
+            if (!File.Exists(modelPath))
+            {
+                throw new FileNotFoundException($"The model file was not found at the specified path: {modelPath}");
+            }
             SessionOptions options = new SessionOptions
             {
                 LogSeverityLevel = OrtLoggingLevel.ORT_LOGGING_LEVEL_INFO

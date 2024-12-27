@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <None Update="depth_anything_v2_vitb.onnx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

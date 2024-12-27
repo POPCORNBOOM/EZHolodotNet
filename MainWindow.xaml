@@ -6,7 +6,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:local="clr-namespace:EZHolodotNet"
         mc:Ignorable="d"
-        Title="EZHolo" Height="450" Width="800" MinHeight="450" MinWidth="650">
+        Title="EZHolo" Height="720" Width="800" MinHeight="450" MinWidth="750">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="1*" />
@@ -22,17 +22,21 @@
         <Border>
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="200" />
+                    <RowDefinition Height="auto" />
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
-                <Border Margin="8,0">
-                    <Image Source="{Binding FilePath}" Stretch="Uniform" MaxHeight="200">
-                        <Image.Effect>
+                <Viewbox MaxHeight="300" Margin="8" VerticalAlignment="Stretch" Stretch="UniformToFill">
+                    <Border Width="200" 
+                            Height="200"
+                            Background="{StaticResource ChessboardBrush}">
+                        <Border.Effect>
                             <DropShadowEffect ShadowDepth="1" Color="Black"/>
-                        </Image.Effect>
-                    </Image>
-                </Border>
+                        </Border.Effect>
+
+                    </Border>
+                </Viewbox>
+                <Image MaxHeight="300" Margin="16" Source="{Binding FilePath}" Stretch="Uniform"/>
                 <ui:Button Appearance="Primary" Grid.Row="1" Margin="8,0" HorizontalAlignment="Stretch" Content="点击选择图片" Command="{Binding ChooseImageCommand}"/>
                 
                 <ScrollViewer Grid.Row="2">
@@ -79,6 +83,7 @@
                                 <CheckBox Content="明度采样策略" IsChecked="{Binding IsBrightnessMethodEnabled}"/>
                                 <Expander Visibility="{Binding IsBrightnessMethodEnabled,Converter={StaticResource BooleanToVisibilityConverter}}" IsExpanded="True" Header="明度采样">
                                     <StackPanel>
+                                        <CheckBox Content="暗度模式(取反)" IsChecked="{Binding IsDarknessMode}"/>
                                         <ui:TextBlock>
                                             <Run Text="基础密度"/>
                                             <Run Text="{Binding BrightnessBaseDensity,StringFormat={}{0:0%}}"/>
@@ -118,156 +123,301 @@
 
             </Grid>
         </Border>
-        <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
-        <GridSplitter Grid.Row="0" Grid.Column="3" Grid.RowSpan="2" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
+        <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
+        <GridSplitter Grid.Row="0" Grid.Column="3" Grid.RowSpan="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
         <Border Grid.Row="0" Grid.Column="2">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="1*" />
                     <RowDefinition Height="auto" />
+                    <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
-                <Image Margin="8" Source="{Binding DisplayImageDepth}" Stretch="Uniform">
-                    <Image.Effect>
-                        <DropShadowEffect ShadowDepth="1" Color="Black"/>
-                    </Image.Effect>
-                </Image>
-                <Image MouseMove="Image_MouseMove" Margin="8" Source="{Binding DisplayImageContour}" Opacity="{Binding OverlayOpacity}" Stretch="Uniform"/>
-                <StackPanel Grid.Row="1" Margin="8">
-                    <Grid>
-                        <ui:TextBlock>
-                            <Run Text="像素"/>
-                            <Run Text="{Binding MousePointX,Mode=OneWay}"/>
-                            <Run Text=","/>
-                            <Run Text="{Binding MousePointY,Mode=OneWay}"/>
-                        </ui:TextBlock>
-                        <ui:TextBlock HorizontalAlignment="Right">
-                            <Run Text="高度"/>
-                            <Run Text="{Binding MouseDepth,Mode=OneWay}"/>
-                        </ui:TextBlock>
+                <Viewbox MaxHeight="300" Margin="8" VerticalAlignment="Stretch" Stretch="UniformToFill">
+                    <Border Width="200" 
+                            Height="200"
+                            Background="{StaticResource ChessboardBrush}">
+                        <Border.Effect>
+                            <DropShadowEffect ShadowDepth="1" Color="Black"/>
+                        </Border.Effect>
+                    </Border>
+                </Viewbox>
+                <Image MouseMove="Image_MouseMove"
+                        MaxHeight="300" Margin="16" Source="{Binding DisplayImageDepth}" Stretch="Uniform" IsHitTestVisible="True"/>
+                <Image Margin="16" MaxHeight="300" Source="{Binding DisplayImageContour}" Opacity="{Binding OverlayOpacity}" Stretch="Uniform" IsHitTestVisible="False"/>
+                <ScrollViewer Grid.Row="1">
+                    <StackPanel Margin="8">
+                        <Expander Header="预览" IsExpanded="True" Margin="8">
+                            <StackPanel>
+                                <ui:TextBlock>
+                                    <Run Text="深度图色彩"/>
+                                </ui:TextBlock>
+                                <ComboBox SelectedIndex="{Binding DepthColor}">
+                                    <ComboBoxItem Content="Autumn"/>
+                                    <ComboBoxItem Content="Bone"/>
+                                    <ComboBoxItem Content="Jet"/>
+                                    <ComboBoxItem Content="Winter"/>
+                                    <ComboBoxItem Content="Rainbow"/>
+                                    <ComboBoxItem Content="Ocean"/>
+                                    <ComboBoxItem Content="Summer"/>
+                                    <ComboBoxItem Content="Spring"/>
+                                    <ComboBoxItem Content="Cool"/>
+                                    <ComboBoxItem Content="Hsv"/>
+                                    <ComboBoxItem Content="Pink"/>
+                                    <ComboBoxItem Content="Hot"/>
+                                    <ComboBoxItem Content="Parula"/>
+                                    <ComboBoxItem Content="Magma"/>
+                                    <ComboBoxItem Content="Inferno"/>
+                                    <ComboBoxItem Content="Plasma"/>
+                                    <ComboBoxItem Content="Viridis"/>
+                                    <ComboBoxItem Content="Cividis"/>
+                                    <ComboBoxItem Content="Twilight"/>
+                                    <ComboBoxItem Content="TwilightShifted"/>
+                                    <ComboBoxItem Content="Turbo"/>
+                                    <ComboBoxItem Content="DeepGreen"/>
+                                </ComboBox>
+                                <ui:TextBlock>
+                                    <Run Text="轮廓图/深度图"/>
+                                    <Run Text="{Binding OverlayOpacity,StringFormat={}{0:0%}}"/>
+                                </ui:TextBlock>
 
-                    </Grid>
-                    <ui:TextBlock>
-                        <Run Text="采样点总数"/>
-                        <Run Text="{Binding PointCount,Mode=OneWay}"/>
-                    </ui:TextBlock>
-                    <ui:TextBlock>
-                        <Run Text="深度图色彩"/>
-                    </ui:TextBlock>
-                    <ComboBox SelectedIndex="{Binding DepthColor}">
-                        <ComboBoxItem Content="Autumn"/>
-                        <ComboBoxItem Content="Bone"/>
-                        <ComboBoxItem Content="Jet"/>
-                        <ComboBoxItem Content="Winter"/>
-                        <ComboBoxItem Content="Rainbow"/>
-                        <ComboBoxItem Content="Ocean"/>
-                        <ComboBoxItem Content="Summer"/>
-                        <ComboBoxItem Content="Spring"/>
-                        <ComboBoxItem Content="Cool"/>
-                        <ComboBoxItem Content="Hsv"/>
-                        <ComboBoxItem Content="Pink"/>
-                        <ComboBoxItem Content="Hot"/>
-                        <ComboBoxItem Content="Parula"/>
-                        <ComboBoxItem Content="Magma"/>
-                        <ComboBoxItem Content="Inferno"/>
-                        <ComboBoxItem Content="Plasma"/>
-                        <ComboBoxItem Content="Viridis"/>
-                        <ComboBoxItem Content="Cividis"/>
-                        <ComboBoxItem Content="Twilight"/>
-                        <ComboBoxItem Content="TwilightShifted"/>
-                        <ComboBoxItem Content="Turbo"/>
-                        <ComboBoxItem Content="DeepGreen"/>
-                    </ComboBox>
-                    <ui:TextBlock>
-                        <Run Text="深度图/轮廓图"/>
-                        <Run Text="{Binding OverlayOpacity,StringFormat={}{0:0}}"/>
-                    </ui:TextBlock>
-
-                    <Slider Minimum="0" Maximum="1" 
+                                <Slider Minimum="0" Maximum="1" 
                             Value="{Binding OverlayOpacity}" 
                             TickFrequency="0.01" IsSnapToTickEnabled="True"/>
 
-                </StackPanel>
+                            </StackPanel>
+                        </Expander>
+                        <Expander Header="轨迹生成" IsExpanded="True" Margin="8">
 
+                            <StackPanel IsEnabled="{Binding IsNotProcessingSvg}" Grid.Row="1" Margin="8,0">
+                                <ui:Flyout Margin="0"
+                                    x:Name="WarningFlyout"
+                                    Placement="Top">
+                                    <StackPanel>
+                                        <TextBlock Text="噢！" FontWeight="Bold" FontSize="24" Margin="0,0,0,4"/>
+                                        <TextBlock LineHeight="20"
+                                            Width="280"
+                                            HorizontalAlignment="Left"
+                                            TextWrapping="WrapWithOverflow">
+                                            <Run Text="采样点量超出上限值 ("/>
+                                            <Run Text="{Binding PointCount,Mode=OneWay}"/>
+                                            <Run Text=" > "/>
+                                            <Run Text="{Binding MaximumPointCount,Mode=OneWay}"/>
+                                            <Run Text=")"/>
+                                            <LineBreak/>
+                                            <Run Text="采样点量决定着刮擦痕迹的数量，过多的密集的轨迹将会影响成像质量"/>
+                                            <LineBreak/>
+                                            <LineBreak/>
+                                            <Run Text="请试着调整与"/>
+                                            <Run FontWeight="Bold" Text="“密度”"/>
+                                            <Run Text="和"/>
+                                            <Run FontWeight="Bold" Text="“间隔”"/>
+                                            <Run Text="有关的因子"/>
+                                            <LineBreak/>
+                                            <Run Text="或者，你可以在下方修改最大采样点数"/>
+                                        </TextBlock>
+                                        <ui:NumberBox Value="{Binding MaximumPointCount,UpdateSourceTrigger=PropertyChanged}" Minimum="1"/>
+                                        <ui:Button Appearance="Primary" Margin="0,8,0,0" Content="好的" Command="{Binding CloseWarningCommand}"/>
+                                    </StackPanel>
+                                </ui:Flyout>
+                                <ui:Button Margin="0,-20,0,0" Content="生成轨迹预览>>" Appearance="Primary" Command="{Binding CreateScratchCommand}"/>
+                                <CheckBox Grid.Column="1" Content="自动更新预览" IsChecked="{Binding IsAutoGeneratePreview}"/>
+                                <Rectangle HorizontalAlignment="Stretch" Fill="#DFDFDF" Height="1" Margin="-8,8"/>
+
+                                <ui:TextBlock>
+                                    <Run Text="仅保留大于零深度的点"/>
+                                </ui:TextBlock>
+                                <ui:ToggleSwitch IsChecked="{Binding IsPositiveDepthPointOnly}"/>
+
+                                <ui:TextBlock>
+                                    <Run Text="零高度"/>
+                                    <Run Text="{Binding ZeroDepth,StringFormat={}{0:0}}"/>
+                                </ui:TextBlock>
+                                <Slider Minimum="0" Maximum="255" 
+                            Value="{Binding ZeroDepth}" 
+                            TickFrequency="1" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
+
+                                <ui:TextBlock>
+                                    <Run Text="a系数"/>
+                                    <Run Text="{Binding AFactor,StringFormat={}{0:0.00}}"/>
+                                </ui:TextBlock>
+                                <Slider Minimum="0" Maximum="1" 
+                            Value="{Binding AFactor}" 
+                            TickFrequency="0.01" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
+
+                                <ui:TextBlock>
+                                    <Run Text="b系数"/>
+                                    <Run Text="{Binding BFactor,StringFormat={}{0:0}}"/>
+                                </ui:TextBlock>
+                                <Slider Minimum="500" Maximum="2000" 
+                            Value="{Binding BFactor}" 
+                            TickFrequency="0.01" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
+
+                                <ui:TextBlock>
+                                    <Run Text="预览密度"/>
+                                    <Run Text="{Binding PreviewDense,StringFormat={}{0:0}}"/>
+                                </ui:TextBlock>
+                                <Slider Minimum="0" Maximum="200" 
+                            Value="{Binding PreviewDense}" 
+                            TickFrequency="1" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
+                            </StackPanel>
+                        </Expander>
+
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
         </Border>
         <Border Grid.Column="4">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" MinHeight="200" />
                     <RowDefinition Height="1*" />
-                    <RowDefinition Height="auto" />
                 </Grid.RowDefinitions>
-                <Image Margin="8" Source="{Binding FilePath}" Stretch="Uniform">
-                    <Image.Effect>
-                        <DropShadowEffect ShadowDepth="1" Color="Black"/>
-                    </Image.Effect>
+                <Viewbox MaxHeight="300" Margin="8" Stretch="UniformToFill">
+                    <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="200" Height="200"
+                       Background="{StaticResource ChessboardBrush}">
+                        <Border.Effect>
+                            <DropShadowEffect ShadowDepth="1" Color="Black"/>
+                        </Border.Effect>
+                    </Border>
+                </Viewbox>
+                <Image  MaxHeight="300"
+                        Margin="16"                       
+                        Visibility="{Binding IsPreviewingOriginImage,Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Source="{Binding FilePath}"
+                        Stretch="Uniform" MouseMove="Image_MouseMove">
                 </Image>
-                <Image MouseMove="Image_MouseMove" Margin="8" Source="{Binding DisplayImageScratch}" Stretch="Uniform"/>
-                <StackPanel IsEnabled="{Binding IsNotProcessingSvg}" Grid.Row="1" Margin="8">
-                    <Grid>
-                        <ui:TextBlock>
-                            <Run Text="像素"/>
-                            <Run Text="{Binding MousePointX,Mode=OneWay}"/>
-                            <Run Text=","/>
-                            <Run Text="{Binding MousePointY,Mode=OneWay}"/>
-                        </ui:TextBlock>
-                        <ui:TextBlock HorizontalAlignment="Right">
-                            <Run Text="高度"/>
-                            <Run Text="{Binding MouseDepth,Mode=OneWay}"/>
-                        </ui:TextBlock>
+                <Image MaxHeight="300" Margin="16"
+                       Source="{Binding DisplayImageScratchLine}" 
+                       Visibility="{Binding IsPreviewingLine,Converter={StaticResource BooleanToVisibilityConverter}}"
+                       Stretch="Uniform"
+                       MouseMove="Image_MouseMove"/>
+                <Image MaxHeight="300" Margin="16"
+                       Source="{Binding DisplayImageScratchL}" 
+                       Visibility="{Binding IsPreviewingLeft,Converter={StaticResource BooleanToVisibilityConverter}}"
+                       Stretch="Uniform"
+                       MouseMove="Image_MouseMove"/>
+                <Image MaxHeight="300" Margin="16"
+                       Source="{Binding DisplayImageScratchR}"
+                       Visibility="{Binding IsPreviewingRight,Converter={StaticResource BooleanToVisibilityConverter}}"
+                       Stretch="Uniform"
+                       MouseMove="Image_MouseMove"/>
+                <Image MaxHeight="300" Margin="16"
+                       Source="{Binding DisplayImageScratchO}"
+                       Visibility="{Binding IsPreviewingOrigin,Converter={StaticResource BooleanToVisibilityConverter}}"
+                       Stretch="Uniform"
+                       MouseMove="Image_MouseMove"/>
+                <Image MaxHeight="300" Margin="16"
+                       Source="{Binding DisplayImageScratchStep}"
+                       Visibility="{Binding IsPreviewingStep,Converter={StaticResource BooleanToVisibilityConverter}}"
+                       Stretch="Uniform"
+                       MouseMove="Image_MouseMove"/>
+                <ScrollViewer Grid.Row="1">
+                    <StackPanel Margin="8">
+                        <Expander Header="预览" IsExpanded="True" Margin="8">
 
-                    </Grid>
+                            <StackPanel IsEnabled="{Binding IsNotProcessingSvg}" Grid.Row="1" Margin="8">
+                                <CheckBox Content="原图" IsChecked="{Binding IsPreviewingOriginImage}"/>
+                                <CheckBox Content="起点" IsChecked="{Binding IsPreviewingLeft}"/>
+                                <CheckBox Content="终点" IsChecked="{Binding IsPreviewingRight}"/>
+                                <CheckBox Content="原点" IsChecked="{Binding IsPreviewingOrigin}"/>
+                                <CheckBox Content="轨迹" IsChecked="{Binding IsPreviewingLine}"/>
+                                <CheckBox Content="动态" IsChecked="{Binding IsPreviewingStep}"/>
 
-                    <ui:TextBlock>
-                        <Run Text="仅保留大于零深度的点"/>
-                    </ui:TextBlock>
-                    <ui:ToggleSwitch IsChecked="{Binding IsPositiveDepthPointOnly}"/>
-
-                    <ui:TextBlock>
-                        <Run Text="零高度"/>
-                        <Run Text="{Binding ZeroDepth,StringFormat={}{0:0}}"/>
-                    </ui:TextBlock>
-                    <Slider Minimum="0" Maximum="255" 
-                            Value="{Binding ZeroDepth}" 
-                            TickFrequency="1" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
-
-                    <ui:TextBlock>
-                        <Run Text="a系数"/>
-                        <Run Text="{Binding AFactor,StringFormat={}{0:0.00}}"/>
-                    </ui:TextBlock>
-                    <Slider Minimum="0" Maximum="1" 
-                            Value="{Binding AFactor}" 
-                            TickFrequency="0.01" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
-
-                    <ui:TextBlock>
-                        <Run Text="b系数"/>
-                        <Run Text="{Binding BFactor,StringFormat={}{0:0}}"/>
-                    </ui:TextBlock>
-                    <Slider Minimum="500" Maximum="2000" 
-                            Value="{Binding BFactor}" 
-                            TickFrequency="0.01" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
-
-                    <ui:TextBlock>
-                        <Run Text="预览密度"/>
-                        <Run Text="{Binding PreviewDense,StringFormat={}{0:0}}"/>
-                    </ui:TextBlock>
-                    <Slider Minimum="0" Maximum="200" 
-                            Value="{Binding PreviewDense}" 
-                            TickFrequency="1" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="auto" />
-                        </Grid.ColumnDefinitions>
-                        <Button Content="预览(耗时)" HorizontalAlignment="Stretch" Command="{Binding CreateScratchCommand}"/>
-                        <Button Grid.Column="1" Content="导出刮擦轨迹(.svg)" Command="{Binding ExportScratchCommand}"/>
-
-                    </Grid>
-
-                </StackPanel>
-
+                                <ui:TextBlock Visibility="{Binding IsPreviewingStep,Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Run Text="预览"/>
+                                    <Run Text="{Binding PreviewT,StringFormat={}{0:0.00}}"/>
+                                </ui:TextBlock>
+                                <Slider Minimum="0"
+                                        Maximum="1" 
+                                        Value="{Binding PreviewT}"
+                                        Visibility="{Binding IsPreviewingStep,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                        TickFrequency="0.05"
+                                        TickPlacement="BottomRight"
+                                        IsSnapToTickEnabled="True"/>
+                                <Grid Visibility="{Binding IsPreviewingStep,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                      Margin="0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ui:Button Padding="2" HorizontalAlignment="Stretch" Margin="2,0" Icon="{ui:SymbolIcon Symbol=ArrowPrevious24}" Grid.Column="0" Command="{Binding ChangePreviewCommand}" CommandParameter="0"/>
+                                    <ui:Button Padding="2" HorizontalAlignment="Stretch" Margin="2,0" Icon="{ui:SymbolIcon Symbol=ArrowLeft24}" Grid.Column="1" Command="{Binding ChangePreviewCommand}" CommandParameter="1"/>
+                                    <ui:Button Padding="2" HorizontalAlignment="Stretch" Margin="2,0" Icon="{ui:SymbolIcon Symbol=CenterHorizontal24}" Grid.Column="2" Command="{Binding ChangePreviewCommand}" CommandParameter="4"/>
+                                    <ui:Button Padding="2" HorizontalAlignment="Stretch" Margin="2,0" Icon="{ui:SymbolIcon Symbol=ArrowRight24}" Grid.Column="3" Command="{Binding ChangePreviewCommand}" CommandParameter="2"/>
+                                    <ui:Button Padding="2" HorizontalAlignment="Stretch" Margin="2,0" Icon="{ui:SymbolIcon Symbol=ArrowNext24}" Grid.Column="4" Command="{Binding ChangePreviewCommand}" CommandParameter="3"/>
+                                </Grid>
+                                <Grid Visibility="{Binding IsPreviewingStep,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                      Margin="0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" Text="点颜色"/>
+                                    <ui:Button Margin="4,0" Icon="{ui:SymbolIcon Symbol=Question24}" Appearance="Transparent" Grid.Column="1" Padding="0" ToolTip="单色HEX：#色号 原色：c 深度：d"/>
+                                    <ui:TextBox PlaceholderText="# / c / d" Grid.Column="2" Visibility="{Binding IsPreviewingStep,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                            Text="{Binding PreviewColorful,UpdateSourceTrigger=LostFocus}"/>
+                                </Grid>
+                            </StackPanel>
+                        </Expander>
+                        <Expander Header="导出" IsExpanded="True" Margin="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button Margin="0,0,2,0" Content="导出刮擦轨迹(.dwg)" IsEnabled="False" Command="{Binding ExportScratchCommand}" CommandParameter="d"/>
+                                <ui:Button Margin="2,0,0,0" Grid.Column="1" Appearance="Primary" Content="导出刮擦轨迹(.svg)" Command="{Binding ExportScratchCommand}"/>
+                            </Grid>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
 
         </Border>
+
+        <StackPanel Grid.Row="1" Grid.ColumnSpan="5" Orientation="Horizontal">
+            <ui:Button Command="{Binding OpenCustomMessageBoxCommand}" Padding="0" Width="24" Height="24" Margin="4" Icon="{ui:SymbolIcon Symbol=BookInformation20}"/>
+            <ui:HyperlinkButton Margin="0" Padding="0" FontSize="12"
+                                Icon="{ui:SymbolIcon Symbol=Code24}"
+                                NavigateUri="https://github.com/POPCORNBOOM/EZHolodotNet"/>
+            <ui:HyperlinkButton Margin="0" Padding="0" FontSize="12"
+                                Icon="{ui:SymbolIcon Symbol=VideoClip24}"
+                                NavigateUri="https://www.bilibili.com/video/BV1reCAYbEdM"/>
+            <TextBlock Foreground="LightGray" FontSize="8" VerticalAlignment="Center" Text="EZHolo @ v1.1"/>
+            <TextBlock Margin="8,0" Foreground="LightGray" FontSize="8" VerticalAlignment="Center">
+                <Run Text="输出上限:"/>
+                <Run Text="{Binding MaximumPointCount}"/>
+                <Run Text="点"/>
+            </TextBlock>
+            <TextBlock Foreground="LightGray" FontSize="8" VerticalAlignment="Center">
+                <Run Text="已加载:"/>
+                <Run Text="{Binding ModelFilePath}"/>
+            </TextBlock>
+        </StackPanel>        
+        <Grid Margin="0,0,8,0" Grid.Row="1" Grid.ColumnSpan="5" HorizontalAlignment="Right">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+            <ui:TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Run Text="采样点总数"/>
+                <Run Text="{Binding PointCount,Mode=OneWay}"/>
+            </ui:TextBlock>
+            <ui:TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Run Text="   像素"/>
+                <Run Text="{Binding MousePointX,Mode=OneWay}"/>
+                <Run Text=","/>
+                <Run Text="{Binding MousePointY,Mode=OneWay}"/>
+            </ui:TextBlock>
+            <ui:TextBlock VerticalAlignment="Center" Grid.Column="2" HorizontalAlignment="Center">
+                <Run Text="   高度"/>
+                <Run Text="{Binding MouseDepth,Mode=OneWay}"/>
+            </ui:TextBlock>
+
+        </Grid>
     </Grid>
 </Window>

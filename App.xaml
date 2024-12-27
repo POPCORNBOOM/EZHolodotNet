@@ -11,6 +11,18 @@
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-        </ResourceDictionary>
+            <DrawingBrush x:Key="ChessboardBrush" ViewportUnits="Absolute"  Viewport="0,0,20,20" TileMode="Tile">
+                <DrawingBrush.Drawing>
+                    <DrawingGroup>
+                        <GeometryDrawing Brush="#222">
+                            <GeometryDrawing.Geometry>
+                                <RectangleGeometry Rect="0,0,1,1" />
+                            </GeometryDrawing.Geometry>
+                        </GeometryDrawing>
+                        <GeometryDrawing Brush="#333"
+                                         Geometry="M 0,0 L0,0.5 0.5,0.5 0.5,1 1,1 1,0.5 0.5,0.5 0.5,0" />
+                    </DrawingGroup>
+                </DrawingBrush.Drawing>
+            </DrawingBrush>        </ResourceDictionary>
     </Application.Resources>
 </Application>
