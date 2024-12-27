@@ -11,23 +11,23 @@ Since SVG does not directly support hyperbolic segments, our goal is to generate
 - **Height Value Calculation**  
   The height of each point is determined by the pixel value from the `depthImage` and subtracting a baseline height `zeroHeight`.
 
-  $$
+$$
   depth = depthImage(y, x) - zeroHeight
-  $$
+$$
 
 - **Curvature**  
   Curvature is mapped by translating the height value to the image width. Points with a height greater than zero will produce an upward curve, while points with a negative height will curve downward. The formula for curvature is:
 
-  $$
+$$
   curvature = \frac{depth \times imageWidth}{bFactor}
-  $$
+$$
 
 - **Offset**  
   Since cubic functions do not pass through the origin at the vertex, we substitute \( t = 0.5 \) into the following equation to obtain an offset:
 
-  $$
+$$
   offset = \frac{(1 + 3 \times aFactor) \times curvature}{4}
-  $$
+$$
 
 - **Original Function**
 
@@ -94,7 +94,5 @@ $$
 \text{<path d="M P0.x,P0.y C P1.x,P1.y P2.x,P2.y P3.x,P3.y" />}
 $$
 
-- **M (Move To)**: Move to the start point \( P_0 \)
-- **C (Cubic Bézier Curve)**: Define control points and endpoint \( P_1, P_2, P_3 \)
-
-This process allows for generating a detailed scratch path in SVG format, which can be used for various visualizations such as topographical representations or texture mappings.
+- **M (Move To)**: Move to the start point $( P_0 )$
+- **C (Cubic Bézier Curve)**: Define control points and endpoint $( P_1, P_2, P_3 )$
