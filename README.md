@@ -1,3 +1,7 @@
+### 下载
+
+[windows_anycpu最新发行版本](https://github.com/POPCORNBOOM/EZHolodotNet/releases/latest)
+
 ### 刮擦痕迹计算解析
 
 [English](https://github.com/POPCORNBOOM/EZHolodotNet/blob/main/README_EN.md)|[中文](https://github.com/POPCORNBOOM/EZHolodotNet/blob/main/README.md)

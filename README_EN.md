@@ -1,3 +1,7 @@
+### Download
+
+[windows_anycpu Latest Release](https://github.com/POPCORNBOOM/EZHolodotNet/releases/latest)
+
 ### Scratch Mark Calculation and Analysis
 
 [English](https://github.com/POPCORNBOOM/EZHolodotNet/blob/main/README_EN.md)|[中文](https://github.com/POPCORNBOOM/EZHolodotNet/blob/main/README.md)
