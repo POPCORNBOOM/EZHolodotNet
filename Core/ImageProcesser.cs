@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using EZHolodotNet.Views;
 using Microsoft.Win32;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
@@ -23,6 +24,29 @@ namespace EZHolodotNet.Core
 {
     public class ImageProcesser:INotifyPropertyChanged
     {
+
+        public async Task<TimeSpan> ExecuteWithMinimumDuration(Func<Task> taskFunc, TimeSpan minimumDuration)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            // 执行主要任务
+            var mainTask = taskFunc();
+
+            await mainTask;
+
+            var elapsed = stopwatch.Elapsed;
+
+            // 如果主要任务提前完成，等待剩余的时间
+            if (elapsed < minimumDuration)
+            {
+                await Task.Delay(minimumDuration - elapsed);
+            }
+            stopwatch.Stop();
+
+            //Trace.WriteLine($"Task finished in: {stopwatch.ElapsedMilliseconds} ms");
+            return stopwatch.Elapsed;
+        }
+
         private MainWindow mainWindow;
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged(string propertyName)
@@ -53,6 +77,7 @@ namespace EZHolodotNet.Core
             this.mainWindow = mainWindow;
         }
 
+        public RelayCommand Open3DPreviewCommand => new RelayCommand((p) => new ThreeDPreviewWindow(this).Show());
         public RelayCommand ChangePreviewCommand => new RelayCommand((p) => ChangePreviewExecute((string)p));
         public RelayCommand CloseWarningCommand => new RelayCommand((p) => mainWindow.WarningFlyout.Hide());
         public RelayCommand ChooseImageCommand => new RelayCommand((p) =>
@@ -221,6 +246,19 @@ namespace EZHolodotNet.Core
                     OnPropertyChanged(nameof(DisplayImageScratchStep));
                 }
             }
+        }        
+        private WriteableBitmap _displayImageScratch3D;
+        public WriteableBitmap DisplayImageScratch3D
+        {
+            get => _displayImageScratch3D;
+            set
+            {
+                if (!Equals(_displayImageScratch3D, value))
+                {
+                    _displayImageScratch3D = value;
+                    OnPropertyChanged(nameof(DisplayImageScratch3D));
+                }
+            }
         }
         public double AreaDensity { get; set; } = 10;
         public List<Point2d> Points { get; set; } = new List<Point2d>();
@@ -325,6 +363,48 @@ namespace EZHolodotNet.Core
                     ProcessScratchStep();
                 }
             }
+        }        
+        private double _previewStepDistance = 0.2;
+
+        public double PreviewStepDistance
+        {
+            get => _previewStepDistance;
+            set
+            {
+                if (!Equals(_previewStepDistance, value))
+                {
+                    _previewStepDistance = value;
+                    if (_previewStepDistance > 1) _previewStepDistance = 1;
+                    if (_previewStepDistance < 0) _previewStepDistance = 0;
+                    OnPropertyChanged(nameof(PreviewStepDistance));
+                    ProcessScratchStep3D();
+                }
+            }
+        }
+        private double _previewStep = 0.5;
+
+        public double PreviewStep
+        {
+            get => _previewStep;
+            set
+            {
+                if (!Equals(_previewStep, value))
+                {
+                    _previewStep = value;
+                    if (_previewStep > 1)
+                    {
+                        _previewStep = 1;
+                        inverse = -1;
+                    }
+                    if (_previewStep < 0)
+                    {
+                        _previewStep = 0;
+                        inverse = 1;
+                    }
+                    OnPropertyChanged(nameof(PreviewStep));
+                    ProcessScratchStep3D();
+                }
+            }
         }
         private int _zeroDepth = 128;  
         public int ZeroDepth
@@ -336,6 +416,19 @@ namespace EZHolodotNet.Core
                 {
                     _zeroDepth = value;
                     OnPropertyChanged(nameof(ZeroDepth));
+                }
+            }
+        }                
+        private int _ignoreZeroDepthDistance = 2;  
+        public int IgnoreZeroDepthDistance
+        {
+            get => _ignoreZeroDepthDistance;
+            set
+            {
+                if (!Equals(_ignoreZeroDepthDistance, value))
+                {
+                    _ignoreZeroDepthDistance = value;
+                    OnPropertyChanged(nameof(IgnoreZeroDepthDistance));
                 }
             }
         }        
@@ -486,6 +579,21 @@ namespace EZHolodotNet.Core
                 {
                     _isWarningPointsOverflow = value;
                     OnPropertyChanged(nameof(IsWarningPointsOverflow));
+                }
+            }
+        }        
+        private bool _isAutoPlay3D = false;
+        public bool IsAutoPlay3D
+        {
+            get => _isAutoPlay3D;
+            set
+            {
+                if (!Equals(_isAutoPlay3D, value))
+                {
+                    _isAutoPlay3D = value;
+                    OnPropertyChanged(nameof(IsAutoPlay3D));
+                    if(value)
+                        ProcessScratchStep3D();
                 }
             }
         }
@@ -695,6 +803,53 @@ namespace EZHolodotNet.Core
                     RefreshDisplay();
                 }
             }
+        }        
+        private double _autoPlayMaxFps = 1.5;
+        public double AutoPlayMaxFps
+        {
+            get => _autoPlayMaxFps;
+            set
+            {
+                if (!Equals(_autoPlayMaxFps, value))
+                {
+                    _autoPlayMaxFps = value;
+                    OnPropertyChanged(nameof(AutoPlayMaxFps));
+                }
+            }
+        }
+        private double _realTimeFps = 0;
+        private readonly int _historySize = 10;  // 滑动窗口大小，即存储多少帧的FPS数据
+        private readonly Queue<double> _fpsHistory = new Queue<double>();
+
+        public double RealTimeFps
+        {
+            get => _realTimeFps;
+            set
+            {
+                if (!Equals(_realTimeFps, value))
+                {
+                    _realTimeFps = value;
+                    OnPropertyChanged(nameof(RealTimeFps));
+                }
+            }
+        }
+
+        public void UpdateFps(TimeSpan spf)
+        {
+            // 计算当前帧的FPS
+            double currentFps = 1 / spf.TotalSeconds;
+
+            // 将当前帧FPS值添加到队列
+            _fpsHistory.Enqueue(currentFps);
+
+            // 保证队列的大小不超过滑动窗口大小
+            if (_fpsHistory.Count > _historySize)
+            {
+                _fpsHistory.Dequeue();
+            }
+
+            // 计算滑动平均FPS
+            RealTimeFps = _fpsHistory.Average();
         }
 
         public void LoadImage(string filepath)
@@ -831,6 +986,21 @@ namespace EZHolodotNet.Core
                 case "2":
                     PreviewT += 0.05;
                     break;
+                case "5":
+                    PreviewStep = 0;
+                    break;
+                case "6":
+                    PreviewStep -= 0.05;
+                    break;
+                case "7":
+                    PreviewStep = 0.5;
+                    break;
+                case "8":
+                    PreviewStep += 0.05;
+                    break;
+                case "9":
+                    PreviewStep = 1;
+                    break;
                 default:
                     PreviewT = 0.5;
                     break;
@@ -861,7 +1031,7 @@ namespace EZHolodotNet.Core
             try
             {
                 IsNotProcessingSvg = false;
-                await SvgPainter.PreviewPath(SampledPoints, DepthImage, ZeroDepth, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly, scratchImageL,scratchImageR,scratchImageO, scratchImageLine);
+                await SvgPainter.PreviewPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly, scratchImageL,scratchImageR,scratchImageO, scratchImageLine);
                 DisplayImageScratchL = scratchImageL.ToWriteableBitmap();
                 DisplayImageScratchR = scratchImageR.ToWriteableBitmap();
                 DisplayImageScratchO = scratchImageO.ToWriteableBitmap();
@@ -888,7 +1058,7 @@ namespace EZHolodotNet.Core
             try
             {
                 IsNotProcessingSvg = false;
-                await SvgPainter.PreviewPath(SampledPoints, DepthImage, OriginalImage, scratchImageStep,_previewT, ZeroDepth, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly,PreviewColorful);
+                await SvgPainter.PreviewPath(SampledPoints, DepthImage, OriginalImage, scratchImageStep,_previewT, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly,PreviewColorful);
                 DisplayImageScratchStep = scratchImageStep.ToWriteableBitmap();
             }
             catch (Exception e)
@@ -899,7 +1069,46 @@ namespace EZHolodotNet.Core
             {
                 IsNotProcessingSvg = true;
             }
-        }      
+        }
+        int inverse = 1;
+        public async void ProcessScratchStep3D()
+        {
+            if (OriginalImage == null) return;
+            if (OriginalImage.Width == 0) return;
+            if (!CheckOverflow()) return;
+
+
+            Mat scratchImageL = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
+            Mat scratchImageR = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
+            try
+            {
+                IsNotProcessingSvg = false;
+                var spf = await ExecuteWithMinimumDuration(async () =>
+                    {
+                        await SvgPainter.PreviewPathParallel(SampledPoints, DepthImage, OriginalImage, scratchImageL,
+                                scratchImageR, PreviewStep, PreviewStepDistance, ZeroDepth, IgnoreZeroDepthDistance, AFactor,
+                                BFactor, PreviewDense, IsPositiveDepthPointOnly, PreviewColorful);
+
+                        // 水平拼接两张图片
+                        Mat concatenated = new Mat();
+                        Cv2.HConcat(new Mat[] { scratchImageL, scratchImageR }, concatenated);
+                        DisplayImageScratch3D = concatenated.ToWriteableBitmap();
+                    }, TimeSpan.FromSeconds(IsAutoPlay3D ? 1 / _autoPlayMaxFps : 0));
+                //RealTimeFps = 1/spf.TotalSeconds;
+                UpdateFps(spf);
+
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e.Message);
+            }
+            finally
+            {
+                IsNotProcessingSvg = true;
+                if (IsAutoPlay3D)
+                    PreviewStep += 0.01 * inverse;
+            }
+        }
         public async void ProcessExportScratch(string p)
         {
             if (OriginalImage == null) return;
@@ -910,7 +1119,7 @@ namespace EZHolodotNet.Core
             try
             {
                 IsNotProcessingSvg = false;
-                string mysvg = await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly);
+                string mysvg = await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly);
                 SaveSvgToFile(mysvg);
             }
             catch (Exception e)

@@ -57,9 +57,23 @@ namespace EZHolodotNet
 
         public MainWindow()
         {
-            InitializeComponent();
-            ImageProcesser = new(this);
-            DataContext = ImageProcesser;
+            try
+            {
+                InitializeComponent();
+                ImageProcesser = new(this);
+                DataContext = ImageProcesser;
+            }
+            catch (Exception e)
+            {
+                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
+                {
+                    Title = "OhSh*t！启动时发生错误，麻烦你汇报一下TT",
+                    Content = e.Message,
+                    CloseButtonText = "了解",
+                };
+
+                uiMessageBox.ShowDialogAsync();
+            }
         }
 
         private void Image_MouseMove(object sender, MouseEventArgs e)

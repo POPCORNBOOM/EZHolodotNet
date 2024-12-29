@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:EZHolodotNet"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:core="clr-namespace:EZHolodotNet.Core"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -10,7 +11,9 @@
                 <ui:ThemesDictionary Theme="Light" />
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
-            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <core:BooleanInverseConverter x:Key="BooleanInverseConverter"/>
+            <core:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <DrawingBrush x:Key="ChessboardBrush" ViewportUnits="Absolute"  Viewport="0,0,20,20" TileMode="Tile">
                 <DrawingBrush.Drawing>
                     <DrawingGroup>

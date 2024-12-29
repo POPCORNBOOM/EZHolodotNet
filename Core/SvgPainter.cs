@@ -31,7 +31,8 @@ namespace EZHolodotNet.Core
         public static async Task<string> BuildSvgPath(
             List<Point> points,
             Mat? depthImage,
-            int zeroHeight = 128,
+            int zeroHeight = 128, 
+            int ignoreHeightDistance = 0,
             double aFactor = 0.16,
             double bFactor = 1000,
             int previewDense = 10,
@@ -55,8 +56,9 @@ namespace EZHolodotNet.Core
                 {
                     int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
                     if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
+                    if (Math.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
 
-                    double curvature = (depth - zeroHeight) * curvatureFactor;
+                    double curvature = (depth - zeroHeight) * imageWidth / bFactor;
 
                     double offset = offsetFactor * curvature;
                     double curvatureAFactor = curvature * aFactor;
@@ -77,7 +79,7 @@ namespace EZHolodotNet.Core
                 return sb.ToString();
             });
         }
-        public static async Task PreviewPath(List<Point> points, Mat? depthImage, int zeroHeight = 128, double aFactor = 0.16, double bFactor = 1000, int previewDense = 10, bool isPositiveDepthPointOnly = false, Mat? originalImageL = null, Mat? originalImageR = null, Mat? originalImageO = null, Mat? originalImageLine = null)
+        public static async Task PreviewPath(List<Point> points, Mat? depthImage, int zeroHeight = 128, int ignoreHeightDistance = 0, double aFactor = 0.16, double bFactor = 1000, int previewDense = 10, bool isPositiveDepthPointOnly = false, Mat? originalImageL = null, Mat? originalImageR = null, Mat? originalImageO = null, Mat? originalImageLine = null)
         {
             await Task.Run(() =>
             {
@@ -93,6 +95,7 @@ namespace EZHolodotNet.Core
                 {
                     int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
                     if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
+                    if (Math.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
 
                     double curvature = (depth - zeroHeight) * imageWidth / bFactor;
 
@@ -113,15 +116,124 @@ namespace EZHolodotNet.Core
                             double y = Math.Pow((1 - t), 3) * y0 + 3 * Math.Pow((1 - t), 2) * t * h_y + 3 * (1 - t) * Math.Pow(t, 2) * h_y + Math.Pow(t, 3) * y0;
                             Cv2.Circle(originalImageLine, new(x, y), 1, new Scalar(depth, depth, depth, 255));
                         }
-                        Cv2.Circle(originalImageL, new(x0, y0), 1, new Scalar(0, 255, 0, 255));
-                        Cv2.Circle(originalImageR, new(x1, y0), 1, new Scalar(0, 0, 255, 255));
+                        Cv2.Circle(originalImageL, new(x0, y0), 1, new Scalar(255, 255, 0, 255));
+                        Cv2.Circle(originalImageR, new(x1, y0), 1, new Scalar(255, 0, 255, 255));
 
                         Cv2.Circle(originalImageO, point, 1, new Scalar(255, 0, 0, 255));
+                        //Cv2.Circle(originalImageO, new (h_x0,h_y), 1, new Scalar(255, 255, 128, 255));
+                        //Cv2.Circle(originalImageO, new(h_x1, h_y), 1, new Scalar(255, 128, 255, 255));
+                        //Cv2.Circle(originalImageO, new(x0, y0), 1, new Scalar(255, 255, 0, 255));
+                        //Cv2.Circle(originalImageO, new(x1, y0), 1, new Scalar(255, 0, 255, 255));
                     }
                 }
             });
         }
-        public static async Task PreviewPath(List<Point> points, Mat? depthImage, Mat? originalImage, Mat? outImage, double step, int zeroHeight = 128, double aFactor = 0.16, double bFactor = 1000, int previewDense = 10, bool isPositiveDepthPointOnly = false,string color = "c")
+        public static async Task PreviewPathParallel(List<Point> points, Mat? depthImage, Mat? originalImage, Mat? outImageLeft, Mat? outImageRight, double step, double stepSpan, int zeroHeight = 128, int ignoreHeightDistance = 0, double aFactor = 0.16, double bFactor = 1000, int previewDense = 10, bool isPositiveDepthPointOnly = false, string color = "c")
+        {
+            await Task.Run(() =>
+            {
+                step *= (1 - stepSpan);
+                if (depthImage == null)
+                {
+                    throw new ArgumentNullException(nameof(depthImage));
+                }
+                int imageWidth = depthImage.Width;
+
+                if (color.StartsWith("c"))
+                {
+                    foreach (var point in points)
+                    {
+                        int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
+                        Vec3b mcolor = originalImage.Get<Vec3b>(point.Y, point.X);
+                        if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
+                        if (Math.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
+
+                        double curvature = (depth - zeroHeight) * imageWidth / bFactor;
+
+                        double offset = (1 + 3 * aFactor) * curvature / 4;
+                        double x0 = point.X - curvature;
+                        double x1 = point.X + curvature;
+                        double y0 = point.Y - curvature + offset;
+                        double h_x0 = point.X - curvature * aFactor;
+                        double h_x1 = point.X + curvature * aFactor;
+                        double h_y = point.Y - curvature * aFactor + offset;
+
+                        Point Cal(double t)
+                        {
+                            double x = Math.Pow((1 - t), 3) * x0 + 3 * Math.Pow((1 - t), 2) * t * h_x0 +
+                                       3 * (1 - t) * Math.Pow(t, 2) * h_x1 + Math.Pow(t, 3) * x1;
+                            double y = Math.Pow((1 - t), 3) * y0 + 3 * Math.Pow((1 - t), 2) * t * h_y +
+                                       3 * (1 - t) * Math.Pow(t, 2) * h_y + Math.Pow(t, 3) * y0;
+                            return new(x, y);
+                        }
+                        Cv2.Circle(outImageLeft, Cal(step), 1, new Scalar(mcolor[0], mcolor[1], mcolor[2], 255));
+                        Cv2.Circle(outImageRight, Cal(step + stepSpan), 1, new Scalar(mcolor[0], mcolor[1], mcolor[2], 255));
+                    }
+                }
+                else if (color.StartsWith("d"))
+                {
+                    foreach (var point in points)
+                    {
+                        int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
+                        if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
+
+                        double curvature = (depth - zeroHeight) * imageWidth / bFactor;
+
+                        double offset = (1 + 3 * aFactor) * curvature / 4;
+                        double x0 = point.X - curvature;
+                        double x1 = point.X + curvature;
+                        double y0 = point.Y - curvature + offset;
+                        double h_x0 = point.X - curvature * aFactor;
+                        double h_x1 = point.X + curvature * aFactor;
+                        double h_y = point.Y - curvature * aFactor + offset;
+
+                        Point Cal(double t)
+                        {
+                            double x = Math.Pow((1 - t), 3) * x0 + 3 * Math.Pow((1 - t), 2) * t * h_x0 +
+                                       3 * (1 - t) * Math.Pow(t, 2) * h_x1 + Math.Pow(t, 3) * x1;
+                            double y = Math.Pow((1 - t), 3) * y0 + 3 * Math.Pow((1 - t), 2) * t * h_y +
+                                       3 * (1 - t) * Math.Pow(t, 2) * h_y + Math.Pow(t, 3) * y0;
+                            return new(x, y);
+                        }
+                        Cv2.Circle(outImageLeft, Cal(step), 1, new Scalar(depth, depth, depth, 255)); 
+                        Cv2.Circle(outImageRight, Cal(step + stepSpan), 1, new Scalar(depth, depth, depth, 255)); 
+
+                    }
+                }
+                else
+                {
+                    var mcolor = HexToScalar(color);
+                    foreach (var point in points)
+                    {
+                        int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
+                        if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
+
+                        double curvature = (depth - zeroHeight) * imageWidth / bFactor;
+
+                        double offset = (1 + 3 * aFactor) * curvature / 4;
+                        double x0 = point.X - curvature;
+                        double x1 = point.X + curvature;
+                        double y0 = point.Y - curvature + offset;
+                        double h_x0 = point.X - curvature * aFactor;
+                        double h_x1 = point.X + curvature * aFactor;
+                        double h_y = point.Y - curvature * aFactor + offset;
+
+                        Point Cal(double t)
+                        {
+                            double x = Math.Pow((1 - t), 3) * x0 + 3 * Math.Pow((1 - t), 2) * t * h_x0 +
+                                       3 * (1 - t) * Math.Pow(t, 2) * h_x1 + Math.Pow(t, 3) * x1;
+                            double y = Math.Pow((1 - t), 3) * y0 + 3 * Math.Pow((1 - t), 2) * t * h_y +
+                                       3 * (1 - t) * Math.Pow(t, 2) * h_y + Math.Pow(t, 3) * y0;
+                            return new(x, y);
+                        }
+                        Cv2.Circle(outImageLeft, Cal(step), 1, mcolor);
+                        Cv2.Circle(outImageRight, Cal(step + stepSpan), 1, mcolor);
+                    }
+                }
+            });
+
+        }
+        public static async Task PreviewPath(List<Point> points, Mat? depthImage, Mat? originalImage, Mat? outImage, double step, int zeroHeight = 128, int ignoreHeightDistance = 0, double aFactor = 0.16, double bFactor = 1000, int previewDense = 10, bool isPositiveDepthPointOnly = false,string color = "c")
         {
             await Task.Run(() =>
             {
@@ -138,6 +250,7 @@ namespace EZHolodotNet.Core
                         int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
                         Vec3b mcolor = originalImage.Get<Vec3b>(point.Y, point.X);
                         if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
+                        if (Math.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
 
                         double curvature = (depth - zeroHeight) * imageWidth / bFactor;
 
