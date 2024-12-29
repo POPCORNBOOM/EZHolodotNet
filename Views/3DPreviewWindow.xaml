@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:EZHolodotNet.Views"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
-        Title="3DPreviewWindow" Height="450" Width="800" Icon="/Views/ezholo.png">
+        Title="3DPreviewWindow" Height="650" Width="800" Icon="/Views/ezholo.png">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>

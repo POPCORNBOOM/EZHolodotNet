@@ -78,9 +78,9 @@ namespace EZHolodotNet
 
         private void Image_MouseMove(object sender, MouseEventArgs e)
         {
+            if (ImageProcesser.OriginalImage == null) return;
             var i = sender as Image;
             var p = e.GetPosition(i);
-            if (ImageProcesser.OriginalImage == null) return;
             ImageProcesser.MousePoint = new(p.X * ImageProcesser.OriginalImage.Cols/i.ActualWidth, p.Y * ImageProcesser.OriginalImage.Rows / i.ActualHeight);
         }
 
@@ -88,6 +88,19 @@ namespace EZHolodotNet
         {
             if(ImageProcesser.IsAutoGeneratePreview)
                 ImageProcesser.ProcessScratch();
+
+        }
+
+        private void Image_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (ImageProcesser.OriginalImage == null) return;
+            ImageProcesser.ProcessManual();
+        }
+
+        private void Image_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (ImageProcesser.OriginalImage == null) return;
+            ImageProcesser.ProcessManual(false);
 
         }
     }

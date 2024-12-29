@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -77,6 +78,8 @@ namespace EZHolodotNet.Core
             this.mainWindow = mainWindow;
         }
 
+        public RelayCommand ExportDepthCommand => new RelayCommand((p) => ExportDepth());
+        public RelayCommand ImportDepthCommand => new RelayCommand((p) => ImportDepth());
         public RelayCommand Open3DPreviewCommand => new RelayCommand((p) => new ThreeDPreviewWindow(this).Show());
         public RelayCommand ChangePreviewCommand => new RelayCommand((p) => ChangePreviewExecute((string)p));
         public RelayCommand CloseWarningCommand => new RelayCommand((p) => mainWindow.WarningFlyout.Hide());
@@ -135,11 +138,13 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        private List<Point> _manualPointsStored = new();
+        private List<Point> _manualPoints = new();
         private List<Point> _contourPoints = new();
         private List<Point> _brightnessPoints = new();
         public List<Point> SampledPoints
         {
-            get => _contourPoints.Concat(_brightnessPoints).ToList();
+            get => _contourPoints.Concat(_brightnessPoints).Concat(_manualPoints).ToList();
         }
         public Mat? OriginalImage { get; set; }
         public Mat? _depthImage = new Mat();
@@ -152,6 +157,7 @@ namespace EZHolodotNet.Core
                 {
                     _depthImage = value;
                     OnPropertyChanged(nameof(DepthImage));
+                    DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
                 }
             }
         }
@@ -556,6 +562,20 @@ namespace EZHolodotNet.Core
                 }
             }
         }       
+        private double _manualDensity = 0.1;
+        public double ManualDensity
+        {
+            get => _manualDensity;
+            set
+            {
+                if (!Equals(_manualDensity, value))
+                {
+                    _manualDensity = value;
+                    OnPropertyChanged(nameof(ManualDensity));
+                    RefreshDisplay();
+                }
+            }
+        }       
         private bool _isNotProcessingSvg = true;
         public bool IsNotProcessingSvg
         {
@@ -734,6 +754,20 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        private bool _isManualMethodEnabled = false;
+        public bool IsManualMethodEnabled
+        {
+            get => _isManualMethodEnabled;
+            set
+            {
+                if (!Equals(_isManualMethodEnabled, value))
+                {
+                    _isManualMethodEnabled = value;
+                    OnPropertyChanged(nameof(IsManualMethodEnabled));
+                    RefreshDisplay();
+                }
+            }
+        }       
         private bool _isBrightnessMethodEnabled = false;
         public bool IsBrightnessMethodEnabled
         {
@@ -857,7 +891,7 @@ namespace EZHolodotNet.Core
             FilePath = filepath;
             OriginalImage = new Mat(filepath);
             DepthImage = DepthEstimation.ProcessImage(OriginalImage);
-            DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
+            //DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
         }
 
         public List<Point> ExtractContours()
@@ -892,6 +926,7 @@ namespace EZHolodotNet.Core
             // 应用采样策略逻辑
             _contourPoints = IsContourMethodEnabled ? ExtractContours() : new();
             _brightnessPoints = IsBrightnessMethodEnabled ? GetPointsByLuminance() : new();
+            _manualPoints = IsManualMethodEnabled ? _manualPointsStored : new();
             // 绘图
             OnPropertyChanged(nameof(PointCount));
 
@@ -970,6 +1005,84 @@ namespace EZHolodotNet.Core
 
             return points;
         }
+        private void ExportDepth()
+        {
+            // 使用保存对话框选择保存路径
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "PNG 文件 (*.png)|*.png",
+                DefaultExt = "png",
+                AddExtension = true,
+                FileName = $"{Path.GetFileNameWithoutExtension(FilePath)}_DepthMap.png"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    if (DepthImage == null)
+                    {
+                        MessageBox.Show("深度图像为空，无法导出。");
+                        return;
+                    }
+
+                    // 归一化深度图像到 0-65535 范围
+                    Mat normalizedDepth = new Mat();
+                    double minVal, maxVal;
+                    Cv2.MinMaxLoc(DepthImage, out minVal, out maxVal);
+                    DepthImage.ConvertTo(normalizedDepth, MatType.CV_16UC1, 65535.0 / (maxVal - minVal), -minVal * 65535.0 / (maxVal - minVal));
+
+                    // 保存为 PNG
+                    Cv2.ImWrite(saveFileDialog.FileName, normalizedDepth);
+
+                    MessageBox.Show("深度图像成功导出。");
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"导出深度图像时出错: {e.Message}");
+                }
+            }
+        }
+        private void ImportDepth()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "PNG 文件 (*.png)|*.png|JPEG 文件 (*.jpg;*.jpeg)|*.jpg;*.jpeg|BMP 文件 (*.bmp)|*.bmp|TIFF 文件 (*.tiff;*.tif)|*.tiff;*.tif|所有文件 (*.*)|*.*",
+                DefaultExt = "png"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    Mat loadedDepth = Cv2.ImRead(openFileDialog.FileName, ImreadModes.Grayscale);
+                    if (loadedDepth.Empty())
+                    {
+                        MessageBox.Show("无法读取深度图像");
+                        return;
+                    }
+                    loadedDepth.ConvertTo(loadedDepth, MatType.CV_8UC1);  // 确保是 CV_8UC1 类型
+
+                    // 如果图像尺寸与原始图像不一致，则调整为原始图像的尺寸
+                    if (loadedDepth.Rows != OriginalImage.Rows || loadedDepth.Cols != OriginalImage.Cols)
+                    {
+                        Mat resizedDepth = new Mat();
+                        Cv2.Resize(loadedDepth, resizedDepth, OriginalImage.Size());
+                        loadedDepth = resizedDepth;
+                    }
+
+                    DepthImage = loadedDepth;
+
+                    MessageBox.Show("深度图像成功导入");
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"导入深度图像时出错: {e.Message}");
+                }
+            }
+        }
+
+
         private void ChangePreviewExecute(string t)
         {
             switch (t)
@@ -1018,6 +1131,46 @@ namespace EZHolodotNet.Core
             }
             return SampledPoints.Count < MaximumPointCount;
 
+        }
+        Point? StartMousePoint;
+        public void ProcessManual(bool isMouseDown = true)
+        {
+            if (!_isManualMethodEnabled) return;
+            if (isMouseDown)
+            {
+                StartMousePoint = MousePoint;
+            }
+            else
+            {
+                if(StartMousePoint != null)
+                {
+                    var interpolated = GetUniformInterpolatedPoints(StartMousePoint.Value, MousePoint,_manualDensity);
+                    if (interpolated.Count == 2) _manualPointsStored.Add(StartMousePoint.Value);
+                    else _manualPointsStored.AddRange(interpolated);
+                    RefreshDisplay();
+                }
+            }
+        }
+        private static List<Point> GetUniformInterpolatedPoints(Point p1, Point p2, double density)
+        {
+            List<Point> points = new List<Point>();
+            points.Add(p1);
+            // 计算两点之间的欧几里得距离
+            double distance = Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
+
+            // 根据密度计算插值点数量（不包括起点和终点）
+            int numberOfPoints = (int)(distance * density);
+
+            for (int i = 1; i <= numberOfPoints; i++)
+            {
+                float t = (float)i / (numberOfPoints + 1); // 计算比例 t
+                float x = (1 - t) * p1.X + t * p2.X;
+                float y = (1 - t) * p1.Y + t * p2.Y;
+
+                points.Add(new Point(x, y));
+            }
+            points.Add(p2);
+            return points;
         }
         public async void ProcessScratch()
         {
