@@ -82,6 +82,7 @@ namespace EZHolodotNet
             var i = sender as Image;
             var p = e.GetPosition(i);
             ImageProcesser.MousePoint = new(p.X * ImageProcesser.OriginalImage.Cols/i.ActualWidth, p.Y * ImageProcesser.OriginalImage.Rows / i.ActualHeight);
+            ImageProcesser.ProcessManual(null);
         }
 
         private void Slider_MouseUp(object sender, MouseButtonEventArgs e)
@@ -94,13 +95,22 @@ namespace EZHolodotNet
         private void Image_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (ImageProcesser.OriginalImage == null) return;
-            ImageProcesser.ProcessManual();
+            ImageProcesser.ProcessManual(true);
         }
 
         private void Image_MouseUp(object sender, MouseButtonEventArgs e)
         {
             if (ImageProcesser.OriginalImage == null) return;
             ImageProcesser.ProcessManual(false);
+
+        }
+
+        private void Image_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (ImageProcesser.OriginalImage == null) return;
+            ImageProcesser.ProcessManual(false);
+            ImageProcesser.MousePoint = new OpenCvSharp.Point(0,0);
+
 
         }
     }

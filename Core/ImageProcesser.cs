@@ -65,7 +65,7 @@ namespace EZHolodotNet.Core
                 var uiMessageBox = new Wpf.Ui.Controls.MessageBox
                 {
                     Title = "错误",
-                    Content = "未发现深度识别模型，请将(.onnx)模型与软件放在同一文件夹后重试",
+                    Content = "未发现深度识别模型，请将(.onnx)模型与软件(.exe)放在同一文件夹后重试",
                     CloseButtonText = "了解",
                 };
 
@@ -78,6 +78,8 @@ namespace EZHolodotNet.Core
             this.mainWindow = mainWindow;
         }
 
+        public RelayCommand UndoStepCommand => new RelayCommand((p) => Undo());
+        public RelayCommand SetManualToolCommand => new RelayCommand((p) => ManualTool=int.Parse(p.ToString()??"0"));
         public RelayCommand ExportDepthCommand => new RelayCommand((p) => ExportDepth());
         public RelayCommand ImportDepthCommand => new RelayCommand((p) => ImportDepth());
         public RelayCommand Open3DPreviewCommand => new RelayCommand((p) => new ThreeDPreviewWindow(this).Show());
@@ -277,6 +279,14 @@ namespace EZHolodotNet.Core
         public int MousePointY 
         { 
             get => MousePoint.Y; 
+        }        
+        public int OriginImageWidth
+        { 
+            get => OriginalImage?.Cols ?? 0; 
+        }
+        public int OriginImageHeight
+        { 
+            get => OriginalImage?.Rows ?? 0; 
         }
         private int _maximumPointCount = 50000;
         public int MaximumPointCount
@@ -300,6 +310,8 @@ namespace EZHolodotNet.Core
                 _mousePoint = value;
                 OnPropertyChanged(nameof(MousePoint));
                 OnPropertyChanged(nameof(MouseDepth));
+                OnPropertyChanged(nameof(EraserCenterY));
+                OnPropertyChanged(nameof(EraserCenterX));
                 OnPropertyChanged(nameof(MousePointX));
                 OnPropertyChanged(nameof(MousePointY));
 
@@ -339,6 +351,20 @@ namespace EZHolodotNet.Core
             }
         }
         private int _depthColor = 0;
+        public int ManualTool
+        {
+            get => _manualTool;
+            set
+            {
+                if (!Equals(_manualTool, value))
+                {
+                    _manualTool = value;
+                    OnPropertyChanged(nameof(ManualTool));
+
+                }
+            }
+        }
+        private int _manualTool = 0;
         private double _overlayOpacity = 0.5;
 
         public double OverlayOpacity
@@ -576,6 +602,29 @@ namespace EZHolodotNet.Core
                 }
             }
         }       
+        private double _eraserRadius = 10;
+        public double EraserRadius
+        {
+            get => _eraserRadius;
+            set
+            {
+                if (!Equals(_eraserRadius, value))
+                {
+                    _eraserRadius = value;
+                    OnPropertyChanged(nameof(EraserRadius));
+                    OnPropertyChanged(nameof(EraserDiameter));
+                    RefreshDisplay();
+                }
+            }
+        }          
+        public double EraserCenterX
+        {
+            get => _mousePoint.X - EraserRadius;
+        }       
+        public double EraserCenterY
+        {
+            get => _mousePoint.Y - EraserRadius;
+        }       
         private bool _isNotProcessingSvg = true;
         public bool IsNotProcessingSvg
         {
@@ -767,6 +816,20 @@ namespace EZHolodotNet.Core
                     RefreshDisplay();
                 }
             }
+        }               
+        private bool _isPostProcessEnabled = false;
+        public bool IsPostProcessEnabled
+        {
+            get => _isPostProcessEnabled;
+            set
+            {
+                if (!Equals(_isPostProcessEnabled, value))
+                {
+                    _isPostProcessEnabled = value;
+                    OnPropertyChanged(nameof(IsPostProcessEnabled));
+                    RefreshDisplay();
+                }
+            }
         }       
         private bool _isBrightnessMethodEnabled = false;
         public bool IsBrightnessMethodEnabled
@@ -838,7 +901,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }        
-        private double _autoPlayMaxFps = 1.5;
+        private double _autoPlayMaxFps = 30;
         public double AutoPlayMaxFps
         {
             get => _autoPlayMaxFps;
@@ -890,6 +953,8 @@ namespace EZHolodotNet.Core
         {
             FilePath = filepath;
             OriginalImage = new Mat(filepath);
+            OnPropertyChanged(nameof(OriginImageHeight));
+            OnPropertyChanged(nameof(OriginImageWidth));
             DepthImage = DepthEstimation.ProcessImage(OriginalImage);
             //DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
         }
@@ -1121,7 +1186,10 @@ namespace EZHolodotNet.Core
         }
         public void ProcessDepth()
         {
-            Cv2.ImShow("r", DepthImage);
+            if (OriginalImage == null) return;
+            if (OriginalImage.Width == 0) return;
+            DepthImage = DepthEstimation.ProcessImage(OriginalImage);
+            //Cv2.ImShow("r", DepthImage);
         }        
         private bool CheckOverflow()
         {
@@ -1132,24 +1200,123 @@ namespace EZHolodotNet.Core
             return SampledPoints.Count < MaximumPointCount;
 
         }
-        Point? StartMousePoint;
-        public void ProcessManual(bool isMouseDown = true)
+        private Point? _startMousePoint;
+        public Point? StartMousePoint
         {
-            if (!_isManualMethodEnabled) return;
-            if (isMouseDown)
+            get => _startMousePoint;
+            set
             {
-                StartMousePoint = MousePoint;
-            }
-            else
-            {
-                if(StartMousePoint != null)
+                if (!Equals(_startMousePoint, value))
                 {
-                    var interpolated = GetUniformInterpolatedPoints(StartMousePoint.Value, MousePoint,_manualDensity);
-                    if (interpolated.Count == 2) _manualPointsStored.Add(StartMousePoint.Value);
-                    else _manualPointsStored.AddRange(interpolated);
-                    RefreshDisplay();
+                    _startMousePoint = value;
+                    OnPropertyChanged(nameof(StartMousePoint));
+                    OnPropertyChanged(nameof(StartMousePointX));
+                    OnPropertyChanged(nameof(StartMousePointY));
+                    OnPropertyChanged(nameof(IsManualEditing));
                 }
             }
+        }
+        public double EraserDiameter
+        {
+            get => 2 * EraserRadius;
+        }
+        public int StartMousePointX
+        {
+            get => StartMousePoint.GetValueOrDefault(new Point(0, 0)).X;
+        }
+        public int StartMousePointY
+        {
+            get => StartMousePoint.GetValueOrDefault(new Point(0, 0)).Y;
+        }
+        int LastStepAmount = 0;
+        public void Undo()
+        {
+            if (LastStepAmount <= 0)
+                return;
+            // 确保移除数量不超过列表中的点的数量
+            LastStepAmount = Math.Min(LastStepAmount, _manualPointsStored.Count);
+
+            // 移除最后 amount 个点
+            _manualPointsStored.RemoveRange(_manualPointsStored.Count - LastStepAmount, LastStepAmount);
+            RefreshDisplay();
+            LastStepAmount = 0;
+
+        }
+        public bool IsManualEditing => StartMousePoint != null;
+        double _penPathLength = 0;
+        Point? LastPoint;
+        public void ProcessManual(bool? isMouseDown = null)
+        {
+            if (!_isManualMethodEnabled) return;
+            if (isMouseDown == null) // moving
+            {
+                if (IsManualEditing)
+                {
+                    switch (ManualTool)
+                    {
+                        case 1:
+                            _penPathLength += Math.Sqrt(Math.Pow(MousePoint.X - LastPoint.Value.X, 2) + Math.Pow(MousePoint.Y - LastPoint.Value.Y, 2));
+                            if (_penPathLength > 1 / _manualDensity)
+                            {
+                                _manualPointsStored.Add(MousePoint);
+                                LastStepAmount ++;
+                                _penPathLength -= 1 / _manualDensity;
+                            }
+                            break;
+                        case 2:
+                            RemovePointsInRadius(ref _manualPointsStored, MousePoint, EraserRadius);
+                            break;
+
+
+                    }
+                    RefreshDisplay();
+                    LastPoint = MousePoint;
+                }
+            }
+            else if (isMouseDown == true) // start
+            {
+                LastStepAmount = 0;
+                StartMousePoint = MousePoint;
+                LastPoint = MousePoint;
+                _penPathLength = 0;
+            }
+            else //end
+            {
+                if (IsManualEditing)
+                {
+                    if(ManualTool==3)
+                    {
+                        var interpolated =
+                            GetUniformInterpolatedPoints(StartMousePoint.Value, MousePoint, _manualDensity);
+                        if (interpolated.Count == 2)
+                        {
+                            _manualPointsStored.Add(StartMousePoint.Value);
+                            LastStepAmount = 1;
+                        }
+                        else
+                        {
+                            _manualPointsStored.AddRange(interpolated);
+                            LastStepAmount = interpolated.Count;
+                        }
+                        RefreshDisplay();
+                    }
+                }
+                StartMousePoint = null;
+                LastPoint = null;
+                _penPathLength = 0;
+            }
+        }
+        public static void RemovePointsInRadius(ref List<Point> points, Point center, double radius)
+        {
+            if (points == null)
+                throw new ArgumentNullException(nameof(points));
+
+            points = points.Where(point =>
+            {
+                // 计算当前点与圆心之间的距离
+                double distance = Math.Sqrt(Math.Pow(point.X - center.X, 2) + Math.Pow(point.Y - center.Y, 2));
+                return distance > radius; // 如果距离大于半径，则保留该点
+            }).ToList();
         }
         private static List<Point> GetUniformInterpolatedPoints(Point p1, Point p2, double density)
         {

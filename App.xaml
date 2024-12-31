@@ -13,6 +13,8 @@
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <core:BooleanInverseConverter x:Key="BooleanInverseConverter"/>
+            <core:IntToBooleanConverter x:Key="IntToBooleanConverter"/>
+            <core:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
             <core:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <DrawingBrush x:Key="ChessboardBrush" ViewportUnits="Absolute"  Viewport="0,0,20,20" TileMode="Tile">
                 <DrawingBrush.Drawing>
