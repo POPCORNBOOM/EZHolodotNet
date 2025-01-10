@@ -25,7 +25,7 @@ namespace EZHolodotNet.Core
 
     public class SvgPainter
     {
-        private const string SvgHeader = "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n";
+        private const string SvgHeader = "<svg width=\"%wpx\" height=\"%hpx\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n";
         private const string SvgFooter = "</svg>";
 
         public static async Task<string> BuildSvgPath(
@@ -46,7 +46,7 @@ namespace EZHolodotNet.Core
             return await Task.Run(() =>
             {
                 var sb = new StringBuilder();
-                sb.Append(SvgHeader);
+                sb.Append(SvgHeader.Replace("%w",depthImage.Cols.ToString()).Replace("%h",depthImage.Rows.ToString()));
 
                 int imageWidth = depthImage.Width;
                 double curvatureFactor = imageWidth / bFactor;
@@ -71,7 +71,7 @@ namespace EZHolodotNet.Core
                     double h_y = point.Y - curvatureAFactor + offset;
 
                     sb.AppendFormat(
-                        "<path d=\"M {0},{1} C {2},{3} {4},{5} {6},{7}\" stroke=\"black\" fill=\"none\" stroke-width=\"1\"/>\n",
+                        "<path d=\"M {0:0.00},{1:0.00} C {2:0.00},{3:0.00} {4:0.00},{5:0.00} {6:0.00},{7:0.00}\" stroke=\"black\" fill=\"none\" stroke-width=\"1\"/>\n",
                         x0, y0, h_x0, h_y, h_x1, h_y, x1, y0);
                 }
 

@@ -5,11 +5,13 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Xml.Serialization;
 using EZHolodotNet.Views;
 using Microsoft.Win32;
 using OpenCvSharp;
@@ -25,7 +27,10 @@ namespace EZHolodotNet.Core
 {
     public class ImageProcesser:INotifyPropertyChanged
     {
+        public ImageProcesser()
+        {
 
+        }
         public async Task<TimeSpan> ExecuteWithMinimumDuration(Func<Task> taskFunc, TimeSpan minimumDuration)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -78,10 +83,17 @@ namespace EZHolodotNet.Core
             this.mainWindow = mainWindow;
         }
 
+        public RelayCommand ConvertToManualCommand => new RelayCommand((p) => ConvertToManualPoint(p.ToString()??"c"));
+        public RelayCommand ClearManualPointsCommand => new RelayCommand((p) => AddOperation(new(_manualPointsStored),false));
         public RelayCommand UndoStepCommand => new RelayCommand((p) => Undo());
+        public RelayCommand RedoStepCommand => new RelayCommand((p) => Redo());
         public RelayCommand SetManualToolCommand => new RelayCommand((p) => ManualTool=int.Parse(p.ToString()??"0"));
+        public RelayCommand ImportConfigCommand => new RelayCommand((p) => ImportConfig());
+        public RelayCommand ExportConfigCommand => new RelayCommand((p) => ExportConfig());
         public RelayCommand ExportDepthCommand => new RelayCommand((p) => ExportDepth());
         public RelayCommand ImportDepthCommand => new RelayCommand((p) => ImportDepth());
+        public RelayCommand ExportPointsCommand => new RelayCommand((p) => ExportPoints((string)p));
+        public RelayCommand ImportPointsCommand => new RelayCommand((p) => ImportPoints());
         public RelayCommand Open3DPreviewCommand => new RelayCommand((p) => new ThreeDPreviewWindow(this).Show());
         public RelayCommand ChangePreviewCommand => new RelayCommand((p) => ChangePreviewExecute((string)p));
         public RelayCommand CloseWarningCommand => new RelayCommand((p) => mainWindow.WarningFlyout.Hide());
@@ -92,6 +104,7 @@ namespace EZHolodotNet.Core
             if (openFileDialog.ShowDialog() == true)
             {
                 LoadImage(openFileDialog.FileName);
+                _manualPointsStored = new();
                 RefreshDisplay();
                 if (IsAutoGeneratePreview)
                     ProcessScratch();
@@ -107,7 +120,7 @@ namespace EZHolodotNet.Core
             {
                 Title = "开源信息",
                 Content =
-                    "Copyright \u00a9 2024 Yigu Wang\r\n\r\nLicensed under the Apache License, Version 2.0 (the \"License\");\r\nyou may not use this file except in compliance with the License.\r\nYou may obtain a copy of the License at\r\n\r\n    http://www.apache.org/licenses/LICENSE-2.0\r\n\r\nUnless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\r\nSee the License for the specific language governing permissions and limitations under the License.\r\nMore information at https://github.com/POPCORNBOOM/EZHolodotNet",
+                    "Copyright \u00a9 2025 Yigu Wang\r\n\r\nLicensed under the Apache License, Version 2.0 (the \"License\");\r\nyou may not use this file except in compliance with the License.\r\nYou may obtain a copy of the License at\r\n\r\n    http://www.apache.org/licenses/LICENSE-2.0\r\n\r\nUnless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\r\nSee the License for the specific language governing permissions and limitations under the License.\r\nMore information at https://github.com/POPCORNBOOM/EZHolodotNet",
                 CloseButtonText ="了解",
             };
 
@@ -115,6 +128,7 @@ namespace EZHolodotNet.Core
         }
 
         private string _modelFilePath = "";
+        [XmlIgnore]
         public string ModelFilePath
         {
             get => _modelFilePath;
@@ -128,6 +142,7 @@ namespace EZHolodotNet.Core
             }
         }       
         private string _filePath = "";
+        [XmlIgnore]
         public string FilePath
         {
             get => _filePath;
@@ -144,13 +159,26 @@ namespace EZHolodotNet.Core
         private List<Point> _manualPoints = new();
         private List<Point> _contourPoints = new();
         private List<Point> _brightnessPoints = new();
-        public List<Point> SampledPoints
+        [XmlIgnore]public List<Point> SampledPoints
         {
-            get => _contourPoints.Concat(_brightnessPoints).Concat(_manualPoints).ToList();
+            get
+            {
+                if (IsPostProcessEnabled)
+                {
+                    return PostProcessPoints(_contourPoints.Concat(_brightnessPoints).Concat(_manualPoints).ToList());
+                }
+                else
+                {
+                    ExcludedPointCount = 0;
+                    return _contourPoints.Concat(_brightnessPoints).Concat(_manualPoints).ToList();
+
+                }
+
+            }
         }
-        public Mat? OriginalImage { get; set; }
-        public Mat? _depthImage = new Mat();
-        public Mat? DepthImage
+        [XmlIgnore]public Mat? OriginalImage { get; set; }
+        [XmlIgnore]public Mat? _depthImage = new Mat();
+        [XmlIgnore]public Mat? DepthImage
         {
             get => _depthImage;
             set
@@ -163,9 +191,11 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        public Mat ContoursOverDepthImage { get; set; } = new Mat();
+        private readonly Mat _gradient = CreateGradientMat(100, 100);
+        [XmlIgnore]public WriteableBitmap GradientColor => ApplyColorMap(_gradient).ToWriteableBitmap();
+        [XmlIgnore]public Mat ContoursOverDepthImage { get; set; } = new Mat();
         private WriteableBitmap _displayImageDepth;
-        public WriteableBitmap DisplayImageDepth
+        [XmlIgnore]public WriteableBitmap DisplayImageDepth
         {
             get => _displayImageDepth;
             set
@@ -178,7 +208,7 @@ namespace EZHolodotNet.Core
             }
         }     
         private WriteableBitmap _displayImageContour;
-        public WriteableBitmap DisplayImageContour
+        [XmlIgnore]public WriteableBitmap DisplayImageContour
         {
             get => _displayImageContour;
             set
@@ -191,7 +221,7 @@ namespace EZHolodotNet.Core
             }
         }        
         private WriteableBitmap _displayImageScratchL;
-        public WriteableBitmap DisplayImageScratchL
+        [XmlIgnore]public WriteableBitmap DisplayImageScratchL
         {
             get => _displayImageScratchL;
             set
@@ -204,7 +234,7 @@ namespace EZHolodotNet.Core
             }
         }        
         private WriteableBitmap _displayImageScratchR;
-        public WriteableBitmap DisplayImageScratchR
+        [XmlIgnore]public WriteableBitmap DisplayImageScratchR
         {
             get => _displayImageScratchR;
             set
@@ -217,7 +247,7 @@ namespace EZHolodotNet.Core
             }
         }        
         private WriteableBitmap _displayImageScratchO;
-        public WriteableBitmap DisplayImageScratchO
+        [XmlIgnore]public WriteableBitmap DisplayImageScratchO
         {
             get => _displayImageScratchO;
             set
@@ -230,7 +260,7 @@ namespace EZHolodotNet.Core
             }
         }     
         private WriteableBitmap _displayImageScratchLine;
-        public WriteableBitmap DisplayImageScratchLine
+        [XmlIgnore]public WriteableBitmap DisplayImageScratchLine
         {
             get => _displayImageScratchLine;
             set
@@ -243,7 +273,7 @@ namespace EZHolodotNet.Core
             }
         }        
         private WriteableBitmap _displayImageScratchStep;
-        public WriteableBitmap DisplayImageScratchStep
+        [XmlIgnore]public WriteableBitmap DisplayImageScratchStep
         {
             get => _displayImageScratchStep;
             set
@@ -256,7 +286,7 @@ namespace EZHolodotNet.Core
             }
         }        
         private WriteableBitmap _displayImageScratch3D;
-        public WriteableBitmap DisplayImageScratch3D
+        [XmlIgnore]public WriteableBitmap DisplayImageScratch3D
         {
             get => _displayImageScratch3D;
             set
@@ -270,6 +300,7 @@ namespace EZHolodotNet.Core
         }
         public double AreaDensity { get; set; } = 10;
         public List<Point2d> Points { get; set; } = new List<Point2d>();
+        [XmlIgnore]
         public DepthEstimation DepthEstimation;
         private Point _mousePoint = new(0, 0);
         public int MousePointX
@@ -301,7 +332,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-
+        [XmlIgnore]
         public Point MousePoint
         {
             get => _mousePoint;
@@ -317,7 +348,7 @@ namespace EZHolodotNet.Core
 
             }
         }
-
+        [XmlIgnore]
         public double MouseDepth
         {
             get
@@ -328,14 +359,18 @@ namespace EZHolodotNet.Core
                 //Trace.WriteLine(normalizedValue[0]);
                 return normalizedValue[0];
             }
-        }        
-        public double PointCount
+        }
+        [XmlIgnore]
+        public int PointCount
         {
             get
             {
                 return SampledPoints.Count;
             }
         }
+        public int ContourPointCount => _contourPoints.Count;
+        public int BrightnessPointCount => _brightnessPoints.Count;
+        public int ManualPointCount => _manualPointsStored.Count;
         public int DepthColor
         {
             get => _depthColor;
@@ -345,7 +380,9 @@ namespace EZHolodotNet.Core
                 {
                     _depthColor = value;
                     OnPropertyChanged(nameof(DepthColor));
-                    DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
+                    OnPropertyChanged(nameof(GradientColor));
+                    if(DepthImage.Cols!=0)
+                        DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
 
                 }
             }
@@ -464,7 +501,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }        
-        private double _aFactor = 0.16;  
+        private double _aFactor = 0.69;  
         public double AFactor
         {
             get => _aFactor;
@@ -477,7 +514,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }             
-        private double _bFactor = 1000;  
+        private double _bFactor = 800;  
         public double BFactor
         {
             get => _bFactor;
@@ -531,6 +568,19 @@ namespace EZHolodotNet.Core
                 }
             }
         }      
+        private int _excludedPointCount = 0;  
+        public int ExcludedPointCount
+        {
+            get => _excludedPointCount;
+            set
+            {
+                if (!Equals(_excludedPointCount, value))
+                {
+                    _excludedPointCount = value;
+                    OnPropertyChanged(nameof(ExcludedPointCount));
+                }
+            }
+        }        
         private int _lineOffsetFactor = 5;  
         public int LineOffsetFactor
         {
@@ -602,7 +652,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }       
-        private double _eraserRadius = 10;
+        private double _eraserRadius = 25;
         public double EraserRadius
         {
             get => _eraserRadius;
@@ -803,7 +853,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private bool _isManualMethodEnabled = false;
+        private bool _isManualMethodEnabled = true;
         public bool IsManualMethodEnabled
         {
             get => _isManualMethodEnabled;
@@ -817,7 +867,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }               
-        private bool _isPostProcessEnabled = false;
+        private bool _isPostProcessEnabled = true;
         public bool IsPostProcessEnabled
         {
             get => _isPostProcessEnabled;
@@ -855,6 +905,34 @@ namespace EZHolodotNet.Core
                 {
                     _isDarknessMode = value;
                     OnPropertyChanged(nameof(IsDarknessMode));
+                    RefreshDisplay();
+                }
+            }
+        }    
+        private bool _isDublicateRemoveEnabled = true;
+        public bool IsDublicateRemoveEnabled
+        {
+            get => _isDublicateRemoveEnabled;
+            set
+            {
+                if (!Equals(_isDublicateRemoveEnabled, value))
+                {
+                    _isDublicateRemoveEnabled = value;
+                    OnPropertyChanged(nameof(IsDublicateRemoveEnabled));
+                    RefreshDisplay();
+                }
+            }
+        }        
+        private bool _isExcludeMaskEnabled = false;
+        public bool IsExcludeMaskEnabled
+        {
+            get => _isExcludeMaskEnabled;
+            set
+            {
+                if (!Equals(_isExcludeMaskEnabled, value))
+                {
+                    _isExcludeMaskEnabled = value;
+                    OnPropertyChanged(nameof(IsExcludeMaskEnabled));
                     RefreshDisplay();
                 }
             }
@@ -918,6 +996,7 @@ namespace EZHolodotNet.Core
         private readonly int _historySize = 10;  // 滑动窗口大小，即存储多少帧的FPS数据
         private readonly Queue<double> _fpsHistory = new Queue<double>();
 
+        [XmlIgnore]
         public double RealTimeFps
         {
             get => _realTimeFps;
@@ -993,15 +1072,21 @@ namespace EZHolodotNet.Core
             _brightnessPoints = IsBrightnessMethodEnabled ? GetPointsByLuminance() : new();
             _manualPoints = IsManualMethodEnabled ? _manualPointsStored : new();
             // 绘图
-            OnPropertyChanged(nameof(PointCount));
+            OnPropertyChanged(nameof(ContourPointCount));
+            OnPropertyChanged(nameof(BrightnessPointCount));
+            OnPropertyChanged(nameof(ManualPointCount));
 
             ContoursOverDepthImage = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 255));
+
+
 
             foreach (var point in SampledPoints)
             {
                 Cv2.Circle(ContoursOverDepthImage, point, 1, Scalar.Red);
             }
             DisplayImageContour = ContoursOverDepthImage.ToWriteableBitmap();
+            OnPropertyChanged(nameof(PointCount));
+
         }
         public Mat EnhanceContrastGamma(Mat inputImage, double gamma = 1.5)
         {
@@ -1147,6 +1232,177 @@ namespace EZHolodotNet.Core
             }
         }
 
+        private void ExportPoints(string type)
+        {
+            if (OriginalImage == null)
+            {
+                MessageBox.Show("请先选择一张处理图片");
+                return;
+            }            
+            if (OriginalImage.Cols == 0)
+            {
+                MessageBox.Show("请先选择一张处理图片");
+                return;
+            }
+            // 使用保存对话框选择保存路径
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "PNG 文件 (*.png)|*.png",
+                DefaultExt = "png",
+                AddExtension = true,
+                FileName = $"{Path.GetFileNameWithoutExtension(FilePath)}{(type =="a" ? "_A":"_M")}_PointMap.png"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+
+                    //Todo: Create a new white Mat,with the same size of OriginalImage, foreach point in _manualPointsStored,Set to Black
+                    // 创建与原始图片相同大小的单通道白色 Mat
+                    Mat pointMap = new Mat(OriginalImage.Rows, OriginalImage.Cols, MatType.CV_8UC1, new Scalar(255));
+
+                    foreach (var point in type=="a"? SampledPoints: _manualPointsStored)
+                    {
+                        if (point.X >= 0 && point.X < pointMap.Cols && point.Y >= 0 && point.Y < pointMap.Rows)
+                        {
+                            pointMap.Set(point.Y, point.X, (byte)0); // 设置为黑色
+                        }
+                    }
+                    // 保存为 PNG
+                    Cv2.ImWrite(saveFileDialog.FileName, pointMap);
+
+                    MessageBox.Show("点图成功导出。");
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"导出点图时出错: {e.Message}");
+                }
+            }
+        }
+        private void ImportPoints()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "PNG 文件 (*.png)|*.png|JPEG 文件 (*.jpg;*.jpeg)|*.jpg;*.jpeg|BMP 文件 (*.bmp)|*.bmp|TIFF 文件 (*.tiff;*.tif)|*.tiff;*.tif|所有文件 (*.*)|*.*",
+                DefaultExt = "png"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    Mat pointMap = Cv2.ImRead(openFileDialog.FileName, ImreadModes.Grayscale);
+                    if (pointMap.Empty())
+                    {
+                        MessageBox.Show("无法读取点图");
+                        return;
+                    }
+                    pointMap.ConvertTo(pointMap, MatType.CV_8UC1);  // 确保是 CV_8UC1 类型
+
+                    // 如果图像尺寸与原始图像不一致，则调整为原始图像的尺寸
+                    if (pointMap.Rows != OriginalImage.Rows || pointMap.Cols != OriginalImage.Cols)
+                    {
+                        Mat resizedPointMap = new Mat();
+                        Cv2.Resize(pointMap, resizedPointMap, OriginalImage.Size());
+                        pointMap = resizedPointMap;
+                    }
+                    List<Point> result = new();
+                    //Todo:不为白色就添加点
+
+                    for (int y = 0; y < pointMap.Rows; y++)
+                    {
+                        for (int x = 0; x < pointMap.Cols; x++)
+                        {
+                            byte pixelValue = pointMap.At<byte>(y, x);
+                            if (pixelValue < 255)
+                            {
+                                result.Add(new Point(x, y));
+                            }
+                        }
+                    }
+
+                    AddOperation(result);
+
+                    MessageBox.Show($"成功从点图导入 {result.Count} 个点");
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"导入点图时出错: {e.Message}");
+                }
+            }
+        }
+        private void ExportConfig()
+        {
+            // 使用保存对话框选择保存路径
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Xml 文件 (*.xml)|*.xml",
+                DefaultExt = "xml",
+                AddExtension = true,
+                FileName = $"{(Path.GetFileNameWithoutExtension(FilePath)==""? "EZHolo":Path.GetFileNameWithoutExtension(FilePath))}_Config.xml"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(ImageProcesser));
+                    using (StreamWriter fileWriter = new StreamWriter(saveFileDialog.FileName))
+                    {
+                        serializer.Serialize(fileWriter, this);
+                    }
+
+                    MessageBox.Show("配置成功导出。");
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"导出配置时出错: {e.Message}");
+                }
+            }
+        }
+        private void ImportConfig()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "Xml 文件 (*.xml)|*.xml",
+                DefaultExt = "xml",
+                Multiselect = false
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(ImageProcesser));
+                    using (FileStream fs = new FileStream(openFileDialog.FileName, FileMode.Open))
+                    {
+                        ImageProcesser ipp = (ImageProcesser)serializer.Deserialize(fs);
+                        mainWindow.ImageProcesser = ipp;
+                        ipp.DepthEstimation = DepthEstimation;
+                        //ipp.RefreshBinding();
+                    }
+
+                    MessageBox.Show($"成功打开配置文件");
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"打开配置文件时出错: {e.Message}");
+                }
+            }
+        }
+        private void RefreshBinding()
+        {
+            // 使用反射遍历所有属性并手动触发 PropertyChanged
+            var properties = this.GetType().GetProperties()
+                .Where(p => p.CanRead && p.CanWrite); // 确保是公共属性
+
+            foreach (var property in properties)
+            {
+                // 手动触发 PropertyChanged 事件
+                OnPropertyChanged(property.Name);
+            }
+        }
 
         private void ChangePreviewExecute(string t)
         {
@@ -1201,6 +1457,7 @@ namespace EZHolodotNet.Core
 
         }
         private Point? _startMousePoint;
+        [XmlIgnore]
         public Point? StartMousePoint
         {
             get => _startMousePoint;
@@ -1228,20 +1485,7 @@ namespace EZHolodotNet.Core
         {
             get => StartMousePoint.GetValueOrDefault(new Point(0, 0)).Y;
         }
-        int LastStepAmount = 0;
-        public void Undo()
-        {
-            if (LastStepAmount <= 0)
-                return;
-            // 确保移除数量不超过列表中的点的数量
-            LastStepAmount = Math.Min(LastStepAmount, _manualPointsStored.Count);
 
-            // 移除最后 amount 个点
-            _manualPointsStored.RemoveRange(_manualPointsStored.Count - LastStepAmount, LastStepAmount);
-            RefreshDisplay();
-            LastStepAmount = 0;
-
-        }
         public bool IsManualEditing => StartMousePoint != null;
         double _penPathLength = 0;
         Point? LastPoint;
@@ -1259,23 +1503,25 @@ namespace EZHolodotNet.Core
                             if (_penPathLength > 1 / _manualDensity)
                             {
                                 _manualPointsStored.Add(MousePoint);
-                                LastStepAmount ++;
+                                AddOperation([MousePoint]);
+                                //LastStepAmount ++;
                                 _penPathLength -= 1 / _manualDensity;
                             }
                             break;
                         case 2:
-                            RemovePointsInRadius(ref _manualPointsStored, MousePoint, EraserRadius);
+                            var p = RemovePointsInRadius(MousePoint, EraserRadius);
+                            if (p.Count!=0)
+                                AddOperation(p, false);
                             break;
 
 
                     }
-                    RefreshDisplay();
                     LastPoint = MousePoint;
                 }
             }
             else if (isMouseDown == true) // start
             {
-                LastStepAmount = 0;
+                //LastStepAmount = 0;
                 StartMousePoint = MousePoint;
                 LastPoint = MousePoint;
                 _penPathLength = 0;
@@ -1290,15 +1536,16 @@ namespace EZHolodotNet.Core
                             GetUniformInterpolatedPoints(StartMousePoint.Value, MousePoint, _manualDensity);
                         if (interpolated.Count == 2)
                         {
-                            _manualPointsStored.Add(StartMousePoint.Value);
-                            LastStepAmount = 1;
+                            AddOperation([StartMousePoint.Value]);
+                            //_manualPointsStored.Add(StartMousePoint.Value);
+                            //LastStepAmount = 1;
                         }
                         else
                         {
-                            _manualPointsStored.AddRange(interpolated);
-                            LastStepAmount = interpolated.Count;
+                            AddOperation(interpolated);
+                            //_manualPointsStored.AddRange(interpolated);
+                            //LastStepAmount = interpolated.Count;
                         }
-                        RefreshDisplay();
                     }
                 }
                 StartMousePoint = null;
@@ -1306,16 +1553,16 @@ namespace EZHolodotNet.Core
                 _penPathLength = 0;
             }
         }
-        public static void RemovePointsInRadius(ref List<Point> points, Point center, double radius)
+        public List<Point> RemovePointsInRadius(Point center, double radius)
         {
-            if (points == null)
-                throw new ArgumentNullException(nameof(points));
+            if (_manualPointsStored == null)
+                return new();
 
-            points = points.Where(point =>
+            return _manualPointsStored.Where(point =>
             {
                 // 计算当前点与圆心之间的距离
                 double distance = Math.Sqrt(Math.Pow(point.X - center.X, 2) + Math.Pow(point.Y - center.Y, 2));
-                return distance > radius; // 如果距离大于半径，则保留该点
+                return distance < radius;
             }).ToList();
         }
         private static List<Point> GetUniformInterpolatedPoints(Point p1, Point p2, double density)
@@ -1338,6 +1585,80 @@ namespace EZHolodotNet.Core
             }
             points.Add(p2);
             return points;
+        }
+        private class Operation
+        {
+            public List<Point> Points { get; }
+            public bool IsAddOperation { get; }
+
+            public Operation(List<Point> points, bool isAddOperation)
+            {
+                Points = new List<Point>(points);
+                IsAddOperation = isAddOperation;
+            }
+        }
+
+        private readonly Stack<Operation> _undoStack = new Stack<Operation>();
+        private readonly Stack<Operation> _redoStack = new Stack<Operation>();
+
+        public void AddOperation(List<Point> points, bool isAddOperation = true)
+        {
+            // 执行操作
+            if (isAddOperation)
+                _manualPointsStored.AddRange(points);
+            else
+                _manualPointsStored.RemoveAll(p => points.Contains(p));
+
+            // 记录操作
+            _undoStack.Push(new Operation(points, isAddOperation));
+            _redoStack.Clear(); // 每次新操作后清空 redo 栈
+
+            RefreshDisplay();
+        }
+        public void ConvertToManualPoint(string type)
+        {
+            switch (type)
+            {
+                case "c": // contour
+                    AddOperation(_contourPoints);
+                    IsContourMethodEnabled = false;
+                    IsManualMethodEnabled = true;
+                    break;
+                case "b": // brightness
+                    AddOperation(_brightnessPoints);
+                    IsBrightnessMethodEnabled = false;
+                    IsManualMethodEnabled = true;
+                    break;
+            }
+        }
+        public void Undo()
+        {
+            if (_undoStack.Count == 0) return;
+
+            var operation = _undoStack.Pop();
+            if (operation.IsAddOperation)
+                _manualPointsStored.RemoveAll(p => operation.Points.Contains(p));
+            else
+                _manualPointsStored.AddRange(operation.Points);
+
+            _redoStack.Push(operation);
+            RefreshDisplay();
+
+        }
+
+        public void Redo()
+        {
+            if (_redoStack.Count == 0) return;
+
+            var operation = _redoStack.Pop();
+            if (operation.IsAddOperation)
+                _manualPointsStored.AddRange(operation.Points);
+            else
+                _manualPointsStored.RemoveAll(p => operation.Points.Contains(p));
+
+            _undoStack.Push(operation);
+            RefreshDisplay();
+
         }
         public async void ProcessScratch()
         {
@@ -1451,11 +1772,11 @@ namespace EZHolodotNet.Core
                 IsNotProcessingSvg = true;
             }
         }
-        private Mat ApplyColorMap(Mat depthMat)
+        private Mat ApplyColorMap(Mat originMat)
         {
-            Mat colorDepthMat = new Mat();
-            Cv2.ApplyColorMap(depthMat, colorDepthMat, (ColormapTypes)_depthColor);
-            return colorDepthMat;
+            Mat colorMat = new Mat();
+            Cv2.ApplyColorMap(originMat, colorMat, (ColormapTypes)_depthColor);
+            return colorMat;
         }
         private void SaveSvgToFile(string svgContent)
         {
@@ -1483,6 +1804,33 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        private static Mat CreateGradientMat(int w,int h)
+        {
+            Mat gradientMat = new Mat(w, h, MatType.CV_8UC1, new Scalar(0));
+
+            for (int i = 0; i < gradientMat.Rows; i++)
+            {
+                byte value = (byte)(255 - (i * 255 / (gradientMat.Rows - 1)));
+
+                gradientMat.Row(i).SetTo(new Scalar(value));
+            }
+
+            return gradientMat;
+        }
+
+        private List<Point> PostProcessPoints(List<Point> points)
+        {
+            int originCount = points.Count;
+            List<Point> result = points;
+            if(IsDublicateRemoveEnabled)
+            {
+                HashSet<Point> distinctPointsSet = new HashSet<Point>(points);
+                result = new(distinctPointsSet);
+            }
+            ExcludedPointCount = originCount - result.Count;
+            return result;
+        }
+
 
     }
 }

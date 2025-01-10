@@ -13,9 +13,21 @@ namespace EZHolodotNet.Core
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is int intValue && parameter != null && int.TryParse(parameter.ToString(), out int paramValue))
+            if (value is int intValue && parameter is string paramString)
             {
-                return intValue == paramValue?Visibility.Visible:Visibility.Collapsed;
+                // 将参数按 '|' 分割成多个值
+                var paramValues = paramString
+                    .Split('|')
+                    .Select(p => int.TryParse(p, out var parsedValue) ? parsedValue : (int?)null)
+                    .Where(p => p.HasValue)
+                    .Select(p => p.Value)
+                    .ToList();
+
+                // 检查 value 是否在这些参数中
+                if (paramValues.Contains(intValue))
+                {
+                    return Visibility.Visible;
+                }
             }
 
             return Visibility.Collapsed;

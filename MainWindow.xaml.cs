@@ -53,7 +53,20 @@ namespace EZHolodotNet
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-        public ImageProcesser ImageProcesser;
+        private ImageProcesser? _imageProcesser;
+        public ImageProcesser? ImageProcesser
+        {
+            get => _imageProcesser;
+            set
+            {
+                if (!Equals(_imageProcesser, value))
+                {
+                    _imageProcesser = value;
+                    DataContext = value;
+                    OnPropertyChanged(nameof(_imageProcesser));
+                }
+            }
+        }
 
         public MainWindow()
         {
