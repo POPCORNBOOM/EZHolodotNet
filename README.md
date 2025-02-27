@@ -1,3 +1,5 @@
+
+[![Stargazers over time](https://starchart.cc/POPCORNBOOM/EZHolodotNet.svg?variant=adaptive)](https://starchart.cc/POPCORNBOOM/EZHolodotNet)
 ### 下载
 
 [windows_anycpu最新发行版本](https://github.com/POPCORNBOOM/EZHolodotNet/releases/latest)
