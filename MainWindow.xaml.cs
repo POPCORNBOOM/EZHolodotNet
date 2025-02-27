@@ -78,6 +78,8 @@ namespace EZHolodotNet
             }
             catch (Exception e)
             {
+                while(e.InnerException != null)
+                    e = e.InnerException;
                 var uiMessageBox = new Wpf.Ui.Controls.MessageBox
                 {
                     Title = "OhSh*t！启动时发生错误，麻烦你汇报一下TT",
@@ -124,6 +126,23 @@ namespace EZHolodotNet
             ImageProcesser.ProcessManual(false);
             ImageProcesser.MousePoint = new OpenCvSharp.Point(0,0);
 
+
+        }
+
+        private void DeduplicationAccuracySlider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            ImageProcesser.RefreshDisplay();
+
+        }        
+        private void DeduplicationDensitySlider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            ImageProcesser.RefreshDisplay();
+
+        }
+
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ImageProcesser.ReloadModel();
 
         }
     }

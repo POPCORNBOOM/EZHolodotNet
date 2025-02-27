@@ -22,6 +22,7 @@ namespace EZHolodotNet.Core
     using Microsoft.ML.OnnxRuntime;
     using Microsoft.ML.OnnxRuntime.Tensors;
     using OpenCvSharp;  // 引入OpenCVSharp用于图像处理
+    using System.Windows.Media;
 
     public class SvgPainter
     {
@@ -79,7 +80,7 @@ namespace EZHolodotNet.Core
                 return sb.ToString();
             });
         }
-        public static async Task PreviewPath(List<Point> points, Mat? depthImage, int zeroHeight = 128, int ignoreHeightDistance = 0, double aFactor = 0.16, double bFactor = 1000, int previewDense = 10, bool isPositiveDepthPointOnly = false, Mat? originalImageL = null, Mat? originalImageR = null, Mat? originalImageO = null, Mat? originalImageLine = null)
+        public static async Task PreviewPath(List<Point> points, Mat? depthImage, int zeroHeight = 128, int ignoreHeightDistance = 0, double aFactor = 0.16, double bFactor = 1000, int previewDense = 10, bool isPositiveDepthPointOnly = false, Mat? originalImageL = null, Mat? originalImageR = null, Mat? originalImageO = null, Mat? originalImageLine = null,bool drawLineDensity = false)
         {
             await Task.Run(() =>
             {
@@ -90,7 +91,9 @@ namespace EZHolodotNet.Core
                 bool drawPreview = originalImageL != null;
 
                 int imageWidth = depthImage.Width;
-
+                // 创建一个单通道Mat
+                Mat singleChannelMat = new Mat(originalImageLine.Size(), MatType.CV_8UC1, new Scalar(0));
+                int MaximumOverlap = 0;
                 foreach (var point in points)
                 {
                     int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
@@ -109,13 +112,45 @@ namespace EZHolodotNet.Core
 
                     if (drawPreview)
                     {
+                        // 创建一个集合来存储已经绘制的点，避免重复
+                        HashSet<(int, int)> drawnPoints = new HashSet<(int, int)>();
+
                         for (double i = 0; i < previewDense; i++)
                         {
                             double t = i / previewDense;
                             double x = Math.Pow((1 - t), 3) * x0 + 3 * Math.Pow((1 - t), 2) * t * h_x0 + 3 * (1 - t) * Math.Pow(t, 2) * h_x1 + Math.Pow(t, 3) * x1;
                             double y = Math.Pow((1 - t), 3) * y0 + 3 * Math.Pow((1 - t), 2) * t * h_y + 3 * (1 - t) * Math.Pow(t, 2) * h_y + Math.Pow(t, 3) * y0;
-                            Cv2.Circle(originalImageLine, new(x, y), 1, new Scalar(depth, depth, depth, 255));
+
+                            int roundedX = (int)(x + 0.5);  // 使用四舍五入的方式来减少重复
+                            int roundedY = (int)(y + 0.5);
+
+                            // 保证坐标在图像范围内
+                            if (roundedX >= 0 && roundedX < originalImageLine.Width && roundedY >= 0 && roundedY < originalImageLine.Height)
+                            {
+                                // 如果点还没被绘制过，才进行绘制
+                                if (!drawnPoints.Contains((roundedX, roundedY)))
+                                {
+                                    if (!drawLineDensity)
+                                    {
+                                        Cv2.Circle(originalImageLine, new Point(roundedX, roundedY), 1, new Scalar(depth, depth, depth, 255));
+                                    }
+                                    else
+                                    {
+                                        int count = singleChannelMat.At<byte>(roundedY, roundedX) += 1;
+                                        if (count > MaximumOverlap)
+                                            MaximumOverlap = count;
+                                        /*singleChannelMat.At<byte>(roundedY + 1, roundedX) += 1;
+                                        singleChannelMat.At<byte>(roundedY, roundedX + 1) += 1;
+                                        singleChannelMat.At<byte>(roundedY - 1, roundedX) += 1;
+                                        singleChannelMat.At<byte>(roundedY, roundedX - 1) += 1;*/
+                                    }
+
+                                    // 记录该点已绘制
+                                    drawnPoints.Add((roundedX, roundedY));
+                                }
+                            }
                         }
+
                         Cv2.Circle(originalImageL, new(x0, y0), 1, new Scalar(255, 255, 0, 255));
                         Cv2.Circle(originalImageR, new(x1, y0), 1, new Scalar(255, 0, 255, 255));
 
@@ -125,6 +160,22 @@ namespace EZHolodotNet.Core
                         //Cv2.Circle(originalImageO, new(x0, y0), 1, new Scalar(255, 255, 0, 255));
                         //Cv2.Circle(originalImageO, new(x1, y0), 1, new Scalar(255, 0, 255, 255));
                     }
+                }
+                // 归一化单通道图像
+
+                // 使用颜色映射
+                if (drawLineDensity)
+                {
+                    Mat normalizedMat = new Mat();
+                    Cv2.Normalize(singleChannelMat, normalizedMat, 0, 255, NormTypes.MinMax);
+
+                    Cv2.Blur(normalizedMat, normalizedMat, new Size(3, 3));
+                    Mat coloredMat = new Mat();
+                    //Cv2.ImShow("debug", normalizedMat);
+                    Cv2.ApplyColorMap(normalizedMat, coloredMat, ColormapTypes.Jet);
+                    Cv2.PutText(coloredMat, MaximumOverlap.ToString(), new(4, 32), HersheyFonts.HersheySimplex, 1, new(0, 0, 255),3);
+                    // 将颜色映射结果存储回 originalImageLine（如果需要）
+                    coloredMat.CopyTo(originalImageLine);
                 }
             });
         }

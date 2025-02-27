@@ -11,18 +11,11 @@ using System.Threading.Tasks;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using Microsoft.ML.OnnxRuntime;
 using OpenCvSharp;
-using Size = System.Drawing.Size;
+using System.ComponentModel;
+using Size = OpenCvSharp.Size;
 
 namespace EZHolodotNet.Core
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Diagnostics;
-    using Microsoft.ML.OnnxRuntime;
-    using Microsoft.ML.OnnxRuntime.Tensors;
-    using OpenCvSharp;  // 引入OpenCVSharp用于图像处理
-    using System.ComponentModel;
 
     public class DepthEstimation:INotifyPropertyChanged
     {

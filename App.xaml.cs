@@ -22,7 +22,7 @@ namespace EZHolodotNet
 
             // 可以选择记录到文件，或者显示给用户
             LogError(errorMessage);  // 自定义的日志记录方法
-            MessageBox.Show("errorMessage");
+            MessageBox.Show(e.Exception.Message);
 
             // 设置为 true 表示异常已经被处理，应用程序不会崩溃
             e.Handled = true;

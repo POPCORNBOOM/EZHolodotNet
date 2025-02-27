@@ -25,6 +25,17 @@ using Point = OpenCvSharp.Point;
 
 namespace EZHolodotNet.Core
 {
+    public class PointDistance
+    {
+        public Point Point { get; set; }
+        public double Distance { get; set; }
+
+        public PointDistance(Point point, double distance)
+        {
+            Point = point;
+            Distance = distance;
+        }
+    }
     public class ImageProcesser:INotifyPropertyChanged
     {
         public ImageProcesser()
@@ -61,6 +72,12 @@ namespace EZHolodotNet.Core
         }
         public ImageProcesser(MainWindow mainWindow)
         {
+            if(RefreshModel())
+                DepthEstimation = new DepthEstimation(ModelFilePath);
+            this.mainWindow = mainWindow;
+        }
+        public bool RefreshModel()
+        {
             //遍历所有.onnx文件
             // 获取所有 .onnx 文件
             string runningDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -69,22 +86,29 @@ namespace EZHolodotNet.Core
             {
                 var uiMessageBox = new Wpf.Ui.Controls.MessageBox
                 {
-                    Title = "错误",
-                    Content = "未发现深度识别模型，请将(.onnx)模型与软件(.exe)放在同一文件夹后重试",
+                    Title = "警告",
+                    Content = "未发现深度识别模型，请将(.onnx)模型与软件(.exe)放在同一文件夹",
                     CloseButtonText = "了解",
                 };
+                ModelsPath = null; 
+                OnPropertyChanged(nameof(ModelsPath));
+                OnPropertyChanged(nameof(IsModelLoaded));
 
                 uiMessageBox.ShowDialogAsync();
-                Application.Current.Shutdown(0);
-                return;
+                //Application.Current.Shutdown(0);
+                return false;
             }
-            ModelFilePath = onnxFiles[0].Split("\\").Last();
-            DepthEstimation = new DepthEstimation(onnxFiles[0]);
-            this.mainWindow = mainWindow;
+            ModelsPath = onnxFiles.Select(f => f.Split("\\").Last()).ToList();
+            OnPropertyChanged(nameof(ModelsPath));
+            OnPropertyChanged(nameof(IsModelLoaded));
+            
+            return true;
         }
 
+        public RelayCommand OpenFolderCommand => new RelayCommand((p) => Process.Start("explorer.exe", AppDomain.CurrentDomain.BaseDirectory));
+        public RelayCommand RefreshModelCommand => new RelayCommand((p) => ReloadModel());
         public RelayCommand ConvertToManualCommand => new RelayCommand((p) => ConvertToManualPoint(p.ToString()??"c"));
-        public RelayCommand ClearManualPointsCommand => new RelayCommand((p) => AddOperation(new(_manualPointsStored),false));
+        public RelayCommand ClearManualPointsCommand => new RelayCommand((p) => NewOperation(new(_manualPointsStored),false));
         public RelayCommand UndoStepCommand => new RelayCommand((p) => Undo());
         public RelayCommand RedoStepCommand => new RelayCommand((p) => Redo());
         public RelayCommand SetManualToolCommand => new RelayCommand((p) => ManualTool=int.Parse(p.ToString()??"0"));
@@ -110,6 +134,16 @@ namespace EZHolodotNet.Core
                     ProcessScratch();
             }
         });
+        public List<string> _modelsPath = new();
+        public List<string> ModelsPath
+        {
+            get => _modelsPath;
+            set => _modelsPath = value;
+        }
+        public bool IsModelLoaded
+        {
+            get => DepthEstimation!=null;
+        }
         public RelayCommand ProcessDepthCommand => new RelayCommand((p) => ProcessDepth());
         public RelayCommand CreateScratchCommand => new RelayCommand((p) => ProcessScratch());
         public RelayCommand ExportScratchCommand => new RelayCommand((p) => ProcessExportScratch((string)p));
@@ -127,20 +161,49 @@ namespace EZHolodotNet.Core
             uiMessageBox.ShowDialogAsync();
         }
 
-        private string _modelFilePath = "";
-        [XmlIgnore]
         public string ModelFilePath
         {
-            get => _modelFilePath;
+            get
+            {
+                string filepath = "无";
+                try
+                {
+                    if(_modelsPath!=null)
+                        filepath = _modelsPath[_selectedModelPathIndex];
+                }
+                catch(Exception e)
+                {
+
+                }
+                return filepath;
+            }
+        }            
+        private int _selectedModelPathIndex = 0;
+        [XmlIgnore]
+        public int SelectedModelPathIndex
+        {
+            get => _selectedModelPathIndex;
             set
             {
-                if (!Equals(_modelFilePath, value))
+                if (!Equals(_selectedModelPathIndex, value))
                 {
-                    _modelFilePath = value;
+                    _selectedModelPathIndex = value;
+                    OnPropertyChanged(nameof(SelectedModelPathIndex));
                     OnPropertyChanged(nameof(ModelFilePath));
+                    ReloadModel();
                 }
             }
-        }       
+        }      
+        public void ReloadModel()
+        {
+            DepthEstimation?.CloseSession();
+            DepthEstimation = null;
+            if (RefreshModel())
+            {
+                DepthEstimation = new DepthEstimation(ModelFilePath);
+                OnPropertyChanged(nameof(ModelFilePath));
+            }
+        }
         private string _filePath = "";
         [XmlIgnore]
         public string FilePath
@@ -301,7 +364,7 @@ namespace EZHolodotNet.Core
         public double AreaDensity { get; set; } = 10;
         public List<Point2d> Points { get; set; } = new List<Point2d>();
         [XmlIgnore]
-        public DepthEstimation DepthEstimation;
+        public DepthEstimation? DepthEstimation;
         private Point _mousePoint = new(0, 0);
         public int MousePointX
         { 
@@ -343,6 +406,8 @@ namespace EZHolodotNet.Core
                 OnPropertyChanged(nameof(MouseDepth));
                 OnPropertyChanged(nameof(EraserCenterY));
                 OnPropertyChanged(nameof(EraserCenterX));
+                OnPropertyChanged(nameof(SmearCenterY));
+                OnPropertyChanged(nameof(SmearCenterX));
                 OnPropertyChanged(nameof(MousePointX));
                 OnPropertyChanged(nameof(MousePointY));
 
@@ -402,6 +467,7 @@ namespace EZHolodotNet.Core
             }
         }
         private int _manualTool = 0;
+      
         private double _overlayOpacity = 0.5;
 
         public double OverlayOpacity
@@ -663,7 +729,20 @@ namespace EZHolodotNet.Core
                     _eraserRadius = value;
                     OnPropertyChanged(nameof(EraserRadius));
                     OnPropertyChanged(nameof(EraserDiameter));
-                    RefreshDisplay();
+                }
+            }
+        }   
+        private double _smearRadius = 25;
+        public double SmearRadius
+        {
+            get => _smearRadius;
+            set
+            {
+                if (!Equals(_smearRadius, value))
+                {
+                    _smearRadius = value;
+                    OnPropertyChanged(nameof(SmearRadius));
+                    OnPropertyChanged(nameof(SmearDiameter));
                 }
             }
         }          
@@ -674,6 +753,14 @@ namespace EZHolodotNet.Core
         public double EraserCenterY
         {
             get => _mousePoint.Y - EraserRadius;
+        }           
+        public double SmearCenterX
+        {
+            get => _mousePoint.X - SmearRadius;
+        }       
+        public double SmearCenterY
+        {
+            get => _mousePoint.Y - SmearRadius;
         }       
         private bool _isNotProcessingSvg = true;
         public bool IsNotProcessingSvg
@@ -779,6 +866,21 @@ namespace EZHolodotNet.Core
                 {
                     _isPreviewingLine = value;
                     OnPropertyChanged(nameof(IsPreviewingLine));
+                }
+            }
+        }     
+        private bool _isPreviewingLineDensity = false;
+        public bool IsPreviewingLineDensity
+        {
+            get => _isPreviewingLineDensity;
+            set
+            {
+                if (!Equals(_isPreviewingLineDensity, value))
+                {
+                    _isPreviewingLineDensity = value;
+                    OnPropertyChanged(nameof(IsPreviewingLineDensity));
+                    ProcessScratch();
+
                 }
             }
         }       
@@ -922,7 +1024,55 @@ namespace EZHolodotNet.Core
                     RefreshDisplay();
                 }
             }
-        }        
+        }       
+        private bool _isDublicateRemovePlusEnabled = false;
+        public bool IsDublicateRemovePlusEnabled
+        {
+            get => _isDublicateRemovePlusEnabled;
+            set
+            {
+                if (!Equals(_isDublicateRemovePlusEnabled, value))
+                {
+                    _isDublicateRemovePlusEnabled = value;
+                    OnPropertyChanged(nameof(IsDublicateRemovePlusEnabled));
+                    RefreshDisplay();
+                }
+            }
+        }
+        private double _deduplicationAccuracy = 0.5;
+
+        public double DeduplicationAccuracy
+        {
+            get => _deduplicationAccuracy;
+            set
+            {
+                if (!Equals(_deduplicationAccuracy, value))
+                {
+                    _deduplicationAccuracy = value;
+                    OnPropertyChanged(nameof(DeduplicationAccuracy));
+                    OnPropertyChanged(nameof(DeduplicationGridHeight));
+                    OnPropertyChanged(nameof(DeduplicationGridWidth));
+                    OnPropertyChanged(nameof(DeduplicationMaxCount));
+                    //RefreshDisplay();//实时更新较卡，已移交MouseUp Event，下同
+                }
+            }
+        }
+        private double _deduplicationDensity = 0.5;
+
+        public double DeduplicationDensity
+        {
+            get => _deduplicationDensity;
+            set
+            {
+                if (!Equals(_deduplicationDensity, value))
+                {
+                    _deduplicationDensity = value;
+                    OnPropertyChanged(nameof(DeduplicationDensity));
+                    OnPropertyChanged(nameof(DeduplicationMaxCount));
+                    //RefreshDisplay();
+                }
+            }
+        }
         private bool _isExcludeMaskEnabled = false;
         public bool IsExcludeMaskEnabled
         {
@@ -1034,7 +1184,10 @@ namespace EZHolodotNet.Core
             OriginalImage = new Mat(filepath);
             OnPropertyChanged(nameof(OriginImageHeight));
             OnPropertyChanged(nameof(OriginImageWidth));
-            DepthImage = DepthEstimation.ProcessImage(OriginalImage);
+            if (IsModelLoaded)
+                DepthImage = DepthEstimation.ProcessImage(OriginalImage);
+            else
+                DepthImage = new(OriginalImage.Size(), MatType.CV_8UC1);
             //DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
         }
 
@@ -1322,7 +1475,7 @@ namespace EZHolodotNet.Core
                         }
                     }
 
-                    AddOperation(result);
+                    NewOperation(result);
 
                     MessageBox.Show($"成功从点图导入 {result.Count} 个点");
                 }
@@ -1444,6 +1597,7 @@ namespace EZHolodotNet.Core
         {
             if (OriginalImage == null) return;
             if (OriginalImage.Width == 0) return;
+            if (!IsModelLoaded) return;
             DepthImage = DepthEstimation.ProcessImage(OriginalImage);
             //Cv2.ImShow("r", DepthImage);
         }        
@@ -1476,6 +1630,10 @@ namespace EZHolodotNet.Core
         public double EraserDiameter
         {
             get => 2 * EraserRadius;
+        }        
+        public double SmearDiameter
+        {
+            get => 2 * SmearRadius;
         }
         public int StartMousePointX
         {
@@ -1503,15 +1661,28 @@ namespace EZHolodotNet.Core
                             if (_penPathLength > 1 / _manualDensity)
                             {
                                 _manualPointsStored.Add(MousePoint);
-                                AddOperation([MousePoint]);
+                                NewOperation([MousePoint]);
                                 //LastStepAmount ++;
                                 _penPathLength -= 1 / _manualDensity;
                             }
                             break;
                         case 2:
-                            var p = RemovePointsInRadius(MousePoint, EraserRadius);
+                            var p = GetPointsInRadius(MousePoint, EraserRadius);
                             if (p.Count!=0)
-                                AddOperation(p, false);
+                                NewOperation(p.Select(pd => pd.Point).ToList(), false);
+                            break;
+                        case 4://smear
+                            var p1 = GetPointsInRadius(MousePoint, EraserRadius);
+                            if (p1.Count != 0)
+                            {
+                                Point movedistance = new(MousePoint.X - LastPoint.Value.X, MousePoint.Y - LastPoint.Value.Y);
+                                List<Point> offsets = new();
+                                foreach(var pd in p1)
+                                {
+                                    offsets.Add(movedistance * (1-pd.Distance/_smearRadius)*0.5);
+                                }
+                                NewOperation(p1.Select(pd => _manualPointsStored.IndexOf(pd.Point)).ToList(), offsets);
+                            }
                             break;
 
 
@@ -1536,13 +1707,13 @@ namespace EZHolodotNet.Core
                             GetUniformInterpolatedPoints(StartMousePoint.Value, MousePoint, _manualDensity);
                         if (interpolated.Count == 2)
                         {
-                            AddOperation([StartMousePoint.Value]);
+                            NewOperation([StartMousePoint.Value]);
                             //_manualPointsStored.Add(StartMousePoint.Value);
                             //LastStepAmount = 1;
                         }
                         else
                         {
-                            AddOperation(interpolated);
+                            NewOperation(interpolated);
                             //_manualPointsStored.AddRange(interpolated);
                             //LastStepAmount = interpolated.Count;
                         }
@@ -1553,17 +1724,26 @@ namespace EZHolodotNet.Core
                 _penPathLength = 0;
             }
         }
-        public List<Point> RemovePointsInRadius(Point center, double radius)
+
+
+        public List<PointDistance> GetPointsInRadius(Point center, double radius)
         {
             if (_manualPointsStored == null)
                 return new();
 
             return _manualPointsStored.Where(point =>
-            {
-                // 计算当前点与圆心之间的距离
-                double distance = Math.Sqrt(Math.Pow(point.X - center.X, 2) + Math.Pow(point.Y - center.Y, 2));
-                return distance < radius;
-            }).ToList();
+                {
+                    // 计算当前点与圆心之间的距离
+                    double distance = Math.Sqrt(Math.Pow(point.X - center.X, 2) + Math.Pow(point.Y - center.Y, 2));
+                    return distance < radius;
+                })
+                .Select(point =>
+                {
+                    // 返回一个包含点和距离的对象
+                    double distance = Math.Sqrt(Math.Pow(point.X - center.X, 2) + Math.Pow(point.Y - center.Y, 2));
+                    return new PointDistance(point, distance);
+                })
+                .ToList();
         }
         private static List<Point> GetUniformInterpolatedPoints(Point p1, Point p2, double density)
         {
@@ -1588,29 +1768,113 @@ namespace EZHolodotNet.Core
         }
         private class Operation
         {
+            private List<Point> manualPoints;
             public List<Point> Points { get; }
-            public bool IsAddOperation { get; }
+            public List<int> PointIndice { get; }
+            public bool? IsAddOperation { get; }  // 修改为 bool?，null 表示 Move 操作
+            public List<Point>? Offset { get; }  // 移动操作的偏移量，null 时表示没有偏移
 
-            public Operation(List<Point> points, bool isAddOperation)
+            // 构造函数：支持 Add 操作或 Remove 操作
+            public Operation(List<Point> manualPointsStored,List<Point> points, bool isAddOperation)
             {
+                manualPoints = manualPointsStored;
                 Points = new List<Point>(points);
-                IsAddOperation = isAddOperation;
+                IsAddOperation = isAddOperation;  // Add 操作时传入 true 或 false
+                Offset = null;  // 没有偏移
+            }
+
+            // 构造函数：支持 Move 操作
+            public Operation(List<Point> manualPointsStored,List<int> points, List<Point> offset)
+            {
+                manualPoints = manualPointsStored;
+                PointIndice = points;
+                IsAddOperation = null;  // null 表示 Move 操作
+                Offset = offset;  // 设置偏移量
+            }
+
+            // 执行 Add 操作
+            public void Execute()
+            {
+                if (IsAddOperation.HasValue)
+                {
+                    if (IsAddOperation.Value)
+                    {
+                        manualPoints.AddRange(Points);
+                    }
+                    else
+                    {
+                        manualPoints.RemoveAll(p => Points.Contains(p));
+                    }
+                }
+                else
+                {
+                    if (Offset.Count == PointIndice.Count)
+                    {
+                        for (int i = 0; i < PointIndice.Count; i++)
+                        {
+                            // 移动每个点
+                            manualPoints[PointIndice[i]] = new(manualPoints[PointIndice[i]].X + Offset[i].X, manualPoints[PointIndice[i]].Y + Offset[i].Y);
+                        }
+                    }
+                }
+            }
+
+            // 执行 Move 操作
+            public void Undo()
+            {
+                if (IsAddOperation.HasValue)
+                {
+                    if (IsAddOperation.Value)
+                    {
+                        manualPoints.RemoveAll(p => Points.Contains(p));
+                    }
+                    else
+                    {
+                        manualPoints.AddRange(Points);
+                    }
+                }
+                else
+                {
+                    if (Offset.Count == PointIndice.Count)
+                    {
+                        for (int i = 0; i < PointIndice.Count; i++)
+                        {
+                            // 移动每个点
+                            manualPoints[PointIndice[i]] = new(manualPoints[PointIndice[i]].X - Offset[i].X, manualPoints[PointIndice[i]].Y - Offset[i].Y);
+                        }
+                    }
+
+                }
             }
         }
+
 
         private readonly Stack<Operation> _undoStack = new Stack<Operation>();
         private readonly Stack<Operation> _redoStack = new Stack<Operation>();
 
-        public void AddOperation(List<Point> points, bool isAddOperation = true)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="isAddOperation">true:Add;false:Remove;</param>
+        public void NewOperation(List<Point> points, bool isAddOperation = true)
         {
-            // 执行操作
-            if (isAddOperation)
-                _manualPointsStored.AddRange(points);
-            else
-                _manualPointsStored.RemoveAll(p => points.Contains(p));
 
             // 记录操作
-            _undoStack.Push(new Operation(points, isAddOperation));
+            var o = new Operation(_manualPointsStored, points, isAddOperation);
+            o.Execute();
+            _undoStack.Push(o);
+            _redoStack.Clear(); // 每次新操作后清空 redo 栈
+
+            RefreshDisplay();
+        }        
+        public void NewOperation(List<int> points, List<Point> offsets)
+        {
+
+            // 记录操作
+            var o = new Operation(_manualPointsStored, points, offsets);
+            o.Execute();
+            _undoStack.Push(o);
             _redoStack.Clear(); // 每次新操作后清空 redo 栈
 
             RefreshDisplay();
@@ -1620,12 +1884,12 @@ namespace EZHolodotNet.Core
             switch (type)
             {
                 case "c": // contour
-                    AddOperation(_contourPoints);
+                    NewOperation(_contourPoints);
                     IsContourMethodEnabled = false;
                     IsManualMethodEnabled = true;
                     break;
                 case "b": // brightness
-                    AddOperation(_brightnessPoints);
+                    NewOperation(_brightnessPoints);
                     IsBrightnessMethodEnabled = false;
                     IsManualMethodEnabled = true;
                     break;
@@ -1636,10 +1900,7 @@ namespace EZHolodotNet.Core
             if (_undoStack.Count == 0) return;
 
             var operation = _undoStack.Pop();
-            if (operation.IsAddOperation)
-                _manualPointsStored.RemoveAll(p => operation.Points.Contains(p));
-            else
-                _manualPointsStored.AddRange(operation.Points);
+            operation.Undo();
 
             _redoStack.Push(operation);
             RefreshDisplay();
@@ -1651,10 +1912,7 @@ namespace EZHolodotNet.Core
             if (_redoStack.Count == 0) return;
 
             var operation = _redoStack.Pop();
-            if (operation.IsAddOperation)
-                _manualPointsStored.AddRange(operation.Points);
-            else
-                _manualPointsStored.RemoveAll(p => operation.Points.Contains(p));
+            operation.Execute();
 
             _undoStack.Push(operation);
             RefreshDisplay();
@@ -1665,14 +1923,14 @@ namespace EZHolodotNet.Core
             if (OriginalImage == null) return;
             if (OriginalImage.Width == 0) return;
             if (!CheckOverflow()) return;
-            Mat scratchImageL = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
-            Mat scratchImageR = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
-            Mat scratchImageO = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
-            Mat scratchImageLine = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
+            Mat scratchImageL = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));//起点
+            Mat scratchImageR = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));//终点
+            Mat scratchImageO = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));//原点
+            Mat scratchImageLine = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));//轨迹
             try
             {
                 IsNotProcessingSvg = false;
-                await SvgPainter.PreviewPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly, scratchImageL,scratchImageR,scratchImageO, scratchImageLine);
+                await SvgPainter.PreviewPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly, scratchImageL,scratchImageR,scratchImageO, scratchImageLine,IsPreviewingLineDensity);
                 DisplayImageScratchL = scratchImageL.ToWriteableBitmap();
                 DisplayImageScratchR = scratchImageR.ToWriteableBitmap();
                 DisplayImageScratchO = scratchImageO.ToWriteableBitmap();
@@ -1818,19 +2076,143 @@ namespace EZHolodotNet.Core
             return gradientMat;
         }
 
+        public int DeduplicationGridWidth
+        {
+            get
+            {
+                int gridWidth = 2;
+                try
+                {
+                    gridWidth = (int)(OriginImageWidth * Math.Pow(0.5, Math.Log2(OriginImageWidth) * _deduplicationAccuracy));
+                }
+                catch(Exception e)
+                {
+
+                }
+                gridWidth = gridWidth <= 1 ? 2 : gridWidth;
+                return gridWidth;
+            }
+        }            
+        public int DeduplicationGridHeight
+        {
+            get
+            {
+                int gridHeight = 2;
+                try
+                {
+                    gridHeight = (int)(OriginImageHeight * Math.Pow(0.5, Math.Log2(OriginImageHeight) * _deduplicationAccuracy));
+                }
+                catch(Exception e)
+                {
+
+                }
+                gridHeight = gridHeight <= 1 ? 2 : gridHeight;
+                return gridHeight;
+            }
+        }              
+        public int DeduplicationMaxCount
+        {
+            get
+            {
+                int maxCount = 1;
+                try
+                {
+                    int gridSize = DeduplicationGridWidth * DeduplicationGridHeight;
+                    maxCount = (int)(gridSize * Math.Pow(0.5, Math.Log2(gridSize) * _deduplicationDensity));
+                }
+                catch (Exception e)
+                {
+
+                }
+                maxCount = maxCount == 0 ? 1 : maxCount;
+                return maxCount;
+            }
+        }        
         private List<Point> PostProcessPoints(List<Point> points)
         {
             int originCount = points.Count;
             List<Point> result = points;
-            if(IsDublicateRemoveEnabled)
+            if (IsDublicateRemoveEnabled)
             {
                 HashSet<Point> distinctPointsSet = new HashSet<Point>(points);
-                result = new(distinctPointsSet);
+                result = new List<Point>(distinctPointsSet);
+
+                if (IsDublicateRemovePlusEnabled)
+                {
+                    /*
+                    List<Point> pointsToRemove = new List<Point>();
+
+                    // 遍历每个点，检查是否满足移除条件
+                    int index = 0;
+                    while (index < result.Count)  // 使用 ToList() 防止在迭代时修改列表
+                    {
+                        if (result.Where(p =>
+                        {
+                            // 计算当前点与圆心之间的距离
+                            double distance = Math.Sqrt(Math.Pow(p.X - result[index].X, 2) + Math.Pow(p.Y - result[index].Y, 2));
+                            return distance < KillRange;
+                        }).ToList().Count > KillCount)
+                            result.RemoveAt(index);
+                        else index++;
+
+                    }
+                    */
+
+                    //int gridWidth = (int)(OriginImageWidth * Math.Pow(0.5, Math.Log2(OriginImageWidth) * _deduplicationAccuracy));
+                    //int gridHeight = (int)(OriginImageHeight * Math.Pow(0.5, Math.Log2(OriginImageHeight) * _deduplicationAccuracy));
+
+                    //Trace.WriteLine($"w{gridWidth},h{gridHeight},maxcount{maxCount}");
+                    // 3. 创建一个字典来存储每个网格内的点
+                    Dictionary<(int, int), List<Point>> gridMap = new Dictionary<(int, int), List<Point>>();
+
+                    // 4. 将每个点映射到对应的网格
+                    foreach (var point in result)
+                    {
+                        int gridX = point.X / DeduplicationGridWidth;
+                        int gridY = point.Y / DeduplicationGridHeight;
+                        var gridKey = (gridX, gridY);
+
+                        if (!gridMap.ContainsKey(gridKey))
+                        {
+                            gridMap[gridKey] = new List<Point>();
+                        }
+
+                        gridMap[gridKey].Add(point);
+                    }
+
+                    // 5. 遍历每个网格，检查点数是否超过理想个数
+                    List<Point> pointsToRemove = new List<Point>();
+
+                    foreach (var grid in gridMap)
+                    {
+                        List<Point> gridPoints = grid.Value;
+
+                        // 如果网格中的点数超过理想个数
+                        if (gridPoints.Count > DeduplicationMaxCount)
+                        {
+                            // 随机选择多余的点进行删除
+                            Random rand = new Random();
+                            int pointsToDelete = gridPoints.Count - DeduplicationMaxCount;
+                            for (int i = 0; i < pointsToDelete; i++)
+                            {
+                                int indexToRemove = rand.Next(gridPoints.Count);
+                                pointsToRemove.Add(gridPoints[indexToRemove]);
+                                gridPoints.RemoveAt(indexToRemove);
+                            }
+                        }
+                    }
+
+                    // 6. 从结果中移除被删除的点
+                    foreach (var point in pointsToRemove)
+                    {
+                        result.Remove(point);
+                    }
+                }
             }
+
             ExcludedPointCount = originCount - result.Count;
             return result;
         }
-
 
     }
 }
