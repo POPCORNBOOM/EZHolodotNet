@@ -80,7 +80,7 @@ namespace EZHolodotNet.Core
                 return sb.ToString();
             });
         }
-        public static async Task PreviewPath(List<Point> points, Mat? depthImage, int zeroHeight = 128, int ignoreHeightDistance = 0, double aFactor = 0.16, double bFactor = 1000, int previewDense = 10, bool isPositiveDepthPointOnly = false, Mat? originalImageL = null, Mat? originalImageR = null, Mat? originalImageO = null, Mat? originalImageLine = null,bool drawLineDensity = false)
+        public static async Task PreviewPath(List<Point> points, Mat? depthImage, int zeroHeight = 128, int ignoreHeightDistance = 0, double aFactor = 0.16, double bFactor = 1000, int previewDense = 10, Mat? originalImageL = null, Mat? originalImageR = null, Mat? originalImageO = null, Mat? originalImageLine = null,bool drawLineDensity = false)
         {
             await Task.Run(() =>
             {
@@ -97,7 +97,7 @@ namespace EZHolodotNet.Core
                 foreach (var point in points)
                 {
                     int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
-                    if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
+                    //if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
                     if (Math.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
 
                     double curvature = (depth - zeroHeight) * imageWidth / bFactor;

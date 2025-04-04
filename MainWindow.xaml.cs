@@ -97,7 +97,7 @@ namespace EZHolodotNet
             var i = sender as Image;
             var p = e.GetPosition(i);
             ImageProcesser.MousePoint = new(p.X * ImageProcesser.OriginalImage.Cols/i.ActualWidth, p.Y * ImageProcesser.OriginalImage.Rows / i.ActualHeight);
-            ImageProcesser.ProcessManual(null);
+            ImageProcesser.ProcessManual(null, e.MiddleButton == MouseButtonState.Pressed);
         }
 
         private void Slider_MouseUp(object sender, MouseButtonEventArgs e)
@@ -110,7 +110,7 @@ namespace EZHolodotNet
         private void Image_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (ImageProcesser.OriginalImage == null) return;
-            ImageProcesser.ProcessManual(true);
+            ImageProcesser.ProcessManual(true, e.MiddleButton == MouseButtonState.Pressed);
         }
 
         private void Image_MouseUp(object sender, MouseButtonEventArgs e)
@@ -128,13 +128,8 @@ namespace EZHolodotNet
 
 
         }
-
-        private void DeduplicationAccuracySlider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
-        {
-            ImageProcesser.RefreshDisplay();
-
-        }        
-        private void DeduplicationDensitySlider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+     
+        private void TimeConsumingSlider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             ImageProcesser.RefreshDisplay();
 
@@ -144,6 +139,11 @@ namespace EZHolodotNet
         {
             ImageProcesser.ReloadModel();
 
+        }
+
+        private void Image_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            ImageProcesser.PreviewScale += e.Delta/1200d;
         }
     }
 }

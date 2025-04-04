@@ -481,6 +481,54 @@ namespace EZHolodotNet.Core
                     OnPropertyChanged(nameof(OverlayOpacity));
                 }
             }
+        }               
+        private double _previewX = 0;
+
+        public double PreviewX
+        {
+            get => _previewX;
+            set
+            {
+                if (!Equals(_previewX, value))
+                {
+                    _previewX = value;
+                    OnPropertyChanged(nameof(PreviewX));
+                }
+            }
+        }         
+        private double _previewY = 0;
+
+        public double PreviewY
+        {
+            get => _previewY;
+            set
+            {
+                if (!Equals(_previewY, value))
+                {
+                    _previewY = value;
+                    OnPropertyChanged(nameof(PreviewY));
+                }
+            }
+        }         
+        private double _previewScale = 1;
+
+        public double PreviewScale
+        {
+            get => _previewScale;
+            set
+            {
+                if (!Equals(_previewScale, value))
+                {
+                    _previewScale = value;
+
+                    if (_previewScale > 4)
+                        _previewScale = 4;
+                    if (_previewScale < 0.25)
+                        _previewScale = 0.25;
+
+                    OnPropertyChanged(nameof(PreviewScale));
+                }
+            }
         }        
         private double _previewT = 0.5;
 
@@ -567,7 +615,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }        
-        private double _aFactor = 0.69;  
+        private double _aFactor = 0.33;  
         public double AFactor
         {
             get => _aFactor;
@@ -580,7 +628,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }             
-        private double _bFactor = 800;  
+        private double _bFactor = 1111;  
         public double BFactor
         {
             get => _bFactor;
@@ -593,7 +641,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }       
-        private int _previewDense = 50;  
+        private int _previewDense = 150;  
         public int PreviewDense
         {
             get => _previewDense;
@@ -745,6 +793,19 @@ namespace EZHolodotNet.Core
                     OnPropertyChanged(nameof(SmearDiameter));
                 }
             }
+        }               
+        private double _smearStrenth = 0.5;
+        public double SmearStrenth
+        {
+            get => _smearStrenth;
+            set
+            {
+                if (!Equals(_smearStrenth, value))
+                {
+                    _smearStrenth = value;
+                    OnPropertyChanged(nameof(SmearStrenth));
+                }
+            }
         }          
         public double EraserCenterX
         {
@@ -817,7 +878,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }       
-        private bool _isPreviewingLeft = true;
+        private bool _isPreviewingLeft = false;
         public bool IsPreviewingLeft
         {
             get => _isPreviewingLeft;
@@ -830,7 +891,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }       
-        private bool _isPreviewingRight = true;
+        private bool _isPreviewingRight = false;
         public bool IsPreviewingRight
         {
             get => _isPreviewingRight;
@@ -843,7 +904,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }       
-        private bool _isPreviewingOrigin = true;
+        private bool _isPreviewingOrigin = false;
         public bool IsPreviewingOrigin
         {
             get => _isPreviewingOrigin;
@@ -897,7 +958,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }          
-        private string _previewColorful = "c";
+        private string _previewColorful = "#FFFFFF";
         public string PreviewColorful
         {
             get => _previewColorful;
@@ -1087,6 +1148,34 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        private double _excludingRangeMin = 0;
+        public double ExcludingRangeMin
+        {
+            get => _excludingRangeMin;
+            set
+            {
+                if (!Equals(_excludingRangeMin, value))
+                {
+                    _excludingRangeMin = value;
+                    OnPropertyChanged(nameof(ExcludingRangeMin));
+                    //RefreshDisplay();
+                }
+            }
+        }          
+        private double _excludingRangeMax = 255;
+        public double ExcludingRangeMax
+        {
+            get => _excludingRangeMax;
+            set
+            {
+                if (!Equals(_excludingRangeMax, value))
+                {
+                    _excludingRangeMax = value;
+                    OnPropertyChanged(nameof(ExcludingRangeMax));
+                    //RefreshDisplay();
+                }
+            }
+        }    
         private double _brightnessBaseDensity = 0.16;
         public double BrightnessBaseDensity
         {
@@ -1647,11 +1736,12 @@ namespace EZHolodotNet.Core
         public bool IsManualEditing => StartMousePoint != null;
         double _penPathLength = 0;
         Point? LastPoint;
-        public void ProcessManual(bool? isMouseDown = null)
+        public void ProcessManual(bool? isMouseDown = null,bool isMoveView = false)
         {
-            if (!_isManualMethodEnabled) return;
             if (isMouseDown == null) // moving
             {
+                if (!_isManualMethodEnabled) return;
+
                 if (IsManualEditing)
                 {
                     switch (ManualTool)
@@ -1672,14 +1762,14 @@ namespace EZHolodotNet.Core
                                 NewOperation(p.Select(pd => pd.Point).ToList(), false);
                             break;
                         case 4://smear
-                            var p1 = GetPointsInRadius(MousePoint, EraserRadius);
+                            var p1 = GetPointsInRadius(MousePoint, SmearRadius);
                             if (p1.Count != 0)
                             {
                                 Point movedistance = new(MousePoint.X - LastPoint.Value.X, MousePoint.Y - LastPoint.Value.Y);
                                 List<Point> offsets = new();
                                 foreach(var pd in p1)
                                 {
-                                    offsets.Add(movedistance * (1-pd.Distance/_smearRadius)*0.5);
+                                    offsets.Add(movedistance * (1-Math.Pow(pd.Distance/_smearRadius,2)) * _smearStrenth);
                                 }
                                 NewOperation(p1.Select(pd => _manualPointsStored.IndexOf(pd.Point)).ToList(), offsets);
                             }
@@ -1692,6 +1782,8 @@ namespace EZHolodotNet.Core
             }
             else if (isMouseDown == true) // start
             {
+                if (!_isManualMethodEnabled) return;
+
                 //LastStepAmount = 0;
                 StartMousePoint = MousePoint;
                 LastPoint = MousePoint;
@@ -1699,6 +1791,7 @@ namespace EZHolodotNet.Core
             }
             else //end
             {
+                if (!_isManualMethodEnabled) return;
                 if (IsManualEditing)
                 {
                     if(ManualTool==3)
@@ -1930,7 +2023,7 @@ namespace EZHolodotNet.Core
             try
             {
                 IsNotProcessingSvg = false;
-                await SvgPainter.PreviewPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly, scratchImageL,scratchImageR,scratchImageO, scratchImageLine,IsPreviewingLineDensity);
+                await SvgPainter.PreviewPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, scratchImageL,scratchImageR,scratchImageO, scratchImageLine,IsPreviewingLineDensity);
                 DisplayImageScratchL = scratchImageL.ToWriteableBitmap();
                 DisplayImageScratchR = scratchImageR.ToWriteableBitmap();
                 DisplayImageScratchO = scratchImageO.ToWriteableBitmap();
@@ -2202,14 +2295,27 @@ namespace EZHolodotNet.Core
                         }
                     }
 
-                    // 6. 从结果中移除被删除的点
                     foreach (var point in pointsToRemove)
                     {
                         result.Remove(point);
                     }
                 }
             }
-
+            if (IsExcludeMaskEnabled)
+            {
+                if (DepthImage != null)
+                {
+                    if (!(_excludingRangeMin == 0 && _excludingRangeMax == 255))
+                    {
+                        for (int i = result.Count - 1; i >= 0; i--)
+                        {
+                            int depth = DepthImage.Get<Vec3b>(result[i].Y, result[i].X)[0];
+                            if (depth < _excludingRangeMin || depth > _excludingRangeMax)
+                                result.Remove(result[i]);
+                        }
+                    }
+                }
+            }
             ExcludedPointCount = originCount - result.Count;
             return result;
         }
