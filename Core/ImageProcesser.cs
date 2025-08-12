@@ -19,6 +19,7 @@ using OpenCvSharp.WpfExtensions;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
+using Wpf.Ui.Interop.WinDef;
 using MessageBox = System.Windows.MessageBox;
 using MessageBoxButton = System.Windows.MessageBoxButton;
 using Point = OpenCvSharp.Point;
@@ -109,6 +110,7 @@ namespace EZHolodotNet.Core
         public RelayCommand RefreshModelCommand => new RelayCommand((p) => ReloadModel());
         public RelayCommand ConvertToManualCommand => new RelayCommand((p) => ConvertToManualPoint(p.ToString()??"c"));
         public RelayCommand ClearManualPointsCommand => new RelayCommand((p) => NewOperation(new(_manualPointsStored),false));
+        public RelayCommand GradientDraftCommand => new RelayCommand((p) => GradientDraftExecute());
         public RelayCommand UndoStepCommand => new RelayCommand((p) => Undo());
         public RelayCommand RedoStepCommand => new RelayCommand((p) => Redo());
         public RelayCommand SetManualToolCommand => new RelayCommand((p) => ManualTool=int.Parse(p.ToString()??"0"));
@@ -251,6 +253,19 @@ namespace EZHolodotNet.Core
                     _depthImage = value;
                     OnPropertyChanged(nameof(DepthImage));
                     DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
+                }
+            }
+        }        
+        [XmlIgnore]public Mat? _gradientImage = new Mat();
+        [XmlIgnore]public Mat? GradientImage
+        {
+            get => _gradientImage;
+            set
+            {
+                if (!Equals(_gradientImage, value))
+                {
+                    _gradientImage = value;
+                    OnPropertyChanged(nameof(GradientImage));
                 }
             }
         }
@@ -793,6 +808,20 @@ namespace EZHolodotNet.Core
                     OnPropertyChanged(nameof(SmearDiameter));
                 }
             }
+        }     
+        private double _draftRadius = 25;
+        public double DraftRadius
+        {
+            get => _draftRadius;
+            set
+            {
+                if (!Equals(_draftRadius, value))
+                {
+                    _draftRadius = value;
+                    OnPropertyChanged(nameof(DraftRadius));
+                    OnPropertyChanged(nameof(DraftDiameter));
+                }
+            }
         }               
         private double _smearStrenth = 0.5;
         public double SmearStrenth
@@ -804,6 +833,19 @@ namespace EZHolodotNet.Core
                 {
                     _smearStrenth = value;
                     OnPropertyChanged(nameof(SmearStrenth));
+                }
+            }
+        }
+        private double _draftStrength = 0.1;
+        public double DraftStrength
+        {
+            get => _draftStrength;
+            set
+            {
+                if (!Equals(_draftStrength, value))
+                {
+                    _draftStrength = value;
+                    OnPropertyChanged(nameof(DraftStrength));
                 }
             }
         }          
@@ -1277,6 +1319,7 @@ namespace EZHolodotNet.Core
                 DepthImage = DepthEstimation.ProcessImage(OriginalImage);
             else
                 DepthImage = new(OriginalImage.Size(), MatType.CV_8UC1);
+            UpdateGradient();
             //DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
         }
 
@@ -1723,6 +1766,10 @@ namespace EZHolodotNet.Core
         public double SmearDiameter
         {
             get => 2 * SmearRadius;
+        }        
+        public double DraftDiameter
+        {
+            get => 2 * DraftRadius;
         }
         public int StartMousePointX
         {
@@ -1735,7 +1782,8 @@ namespace EZHolodotNet.Core
 
         public bool IsManualEditing => StartMousePoint != null;
         double _penPathLength = 0;
-        Point? LastPoint;
+        Point? _lastPoint;
+        List<Point>? _draftingPoints;
         public void ProcessManual(bool? isMouseDown = null,bool isMoveView = false)
         {
             if (isMouseDown == null) // moving
@@ -1747,7 +1795,7 @@ namespace EZHolodotNet.Core
                     switch (ManualTool)
                     {
                         case 1:
-                            _penPathLength += Math.Sqrt(Math.Pow(MousePoint.X - LastPoint.Value.X, 2) + Math.Pow(MousePoint.Y - LastPoint.Value.Y, 2));
+                            _penPathLength += Math.Sqrt(Math.Pow(MousePoint.X - _lastPoint.Value.X, 2) + Math.Pow(MousePoint.Y - _lastPoint.Value.Y, 2));
                             if (_penPathLength > 1 / _manualDensity)
                             {
                                 _manualPointsStored.Add(MousePoint);
@@ -1765,7 +1813,7 @@ namespace EZHolodotNet.Core
                             var p1 = GetPointsInRadius(MousePoint, SmearRadius);
                             if (p1.Count != 0)
                             {
-                                Point movedistance = new(MousePoint.X - LastPoint.Value.X, MousePoint.Y - LastPoint.Value.Y);
+                                Point movedistance = new(MousePoint.X - _lastPoint.Value.X, MousePoint.Y - _lastPoint.Value.Y);
                                 List<Point> offsets = new();
                                 foreach(var pd in p1)
                                 {
@@ -1774,10 +1822,17 @@ namespace EZHolodotNet.Core
                                 NewOperation(p1.Select(pd => _manualPointsStored.IndexOf(pd.Point)).ToList(), offsets);
                             }
                             break;
+                        case 5://draft
+                            var p2 = GetPointsInRadius(MousePoint, DraftRadius);
+                            if (p2.Count != 0)
+                            {
+                                _draftingPoints = _draftingPoints?.Union(p2.Select(pd => pd.Point).ToList()).ToList();
+                            }
+                            break;
 
 
                     }
-                    LastPoint = MousePoint;
+                    _lastPoint = MousePoint;
                 }
             }
             else if (isMouseDown == true) // start
@@ -1786,8 +1841,9 @@ namespace EZHolodotNet.Core
 
                 //LastStepAmount = 0;
                 StartMousePoint = MousePoint;
-                LastPoint = MousePoint;
+                _lastPoint = MousePoint;
                 _penPathLength = 0;
+                _draftingPoints = new();
             }
             else //end
             {
@@ -1811,9 +1867,27 @@ namespace EZHolodotNet.Core
                             //LastStepAmount = interpolated.Count;
                         }
                     }
+                    else if (ManualTool == 5)
+                    {
+                        if (_draftingPoints.Count == 0)
+                            return;
+                        List<Point> offsets = new();
+                        List<int> points = new();
+                        foreach(var p in _draftingPoints)
+                        {
+                            points.Add(_manualPointsStored.IndexOf(p));
+                            Vec2f v = GetGradientDirection(p) * DraftStrength;
+                            offsets.Add(new Point(
+                                (int)MathF.Round(v.Item0),
+                                (int)MathF.Round(v.Item1)
+                            ));
+                        }
+                        NewOperation(points, offsets);
+                        _draftingPoints = new();
+                    }
                 }
                 StartMousePoint = null;
-                LastPoint = null;
+                _lastPoint = null;
                 _penPathLength = 0;
             }
         }
@@ -1858,6 +1932,62 @@ namespace EZHolodotNet.Core
             }
             points.Add(p2);
             return points;
+        }
+
+        //根据深度图梯度偏移所有点
+        private void GradientDraftExecute()
+        {
+
+            if (_manualPointsStored.Count == 0)
+                return;
+            List<Point> offsets = new();
+            List<int> points = new();
+            for(int i = 0; i< _manualPointsStored.Count;i++)
+            {
+                points.Add(i);
+                Vec2f v = GetGradientDirection(_manualPointsStored[i]) * DraftStrength;
+                offsets.Add(new Point(
+                    (int)MathF.Round(v.Item0),
+                    (int)MathF.Round(v.Item1)
+                ));
+            }
+            NewOperation(points, offsets);
+            
+        }
+
+        private void UpdateGradient()
+        {
+            Mat depthFloat = new Mat();
+            DepthImage.ConvertTo(depthFloat, MatType.CV_32F);
+
+            // 计算 X、Y 梯度
+            Mat gradX = new Mat();
+            Mat gradY = new Mat();
+            Cv2.Sobel(depthFloat, gradX, MatType.CV_32F, 1, 0, ksize: 3);
+            Cv2.Sobel(depthFloat, gradY, MatType.CV_32F, 0, 1, ksize: 3);
+
+            // 计算梯度方向存储到GradientImage里
+            var merged = new Mat();
+            Cv2.Merge(new[] { gradX, gradY }, merged);
+            GradientImage?.Dispose();
+            GradientImage = merged;
+        }
+
+        private Vec2f GetGradientDirection(Point pos)
+        {
+            if (GradientImage == null || GradientImage.Empty())
+                throw new InvalidOperationException("请先调用 UpdateGradient() 计算梯度方向。");
+            Vec2f r = new(0,0);
+            try
+            {
+                r = GradientImage.Get<Vec2f>(pos.Y, pos.X);//TBD: out of range
+            }
+            catch(Exception e)
+            {
+
+            }
+            return r;
+
         }
         private class Operation
         {

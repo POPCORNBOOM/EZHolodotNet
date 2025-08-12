@@ -11,6 +11,7 @@
         <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoStepCommand}"/>
         <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoStepCommand}"/>
     </Window.InputBindings>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
@@ -213,6 +214,7 @@
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="1*" />
                                                 <RowDefinition Height="1*" />
+                                                <RowDefinition Height="1*" />
                                             </Grid.RowDefinitions>
                                             <ToggleButton Padding="0,7" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,2,0" 
                                                           ToolTip="鼠标"  Command="{Binding SetManualToolCommand}" CommandParameter="0" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=0}">
@@ -234,10 +236,15 @@
                                                           ToolTip="【可撤销】涂抹，在“深度/采样预览图”中拖拽或单击，以在手动采样中微调采样点的位置" Command="{Binding SetManualToolCommand}" CommandParameter="4" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=4}">
                                                 <ui:SymbolIcon Symbol="HandDraw24"/>
                                             </ToggleButton>
-                                            <Button Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,4,0,0" Grid.Row="1" Grid.Column="2" 
+                                            <ToggleButton Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,4,0,0" Grid.Row="1" Grid.Column="2" 
+                                                          ToolTip="【可撤销】涂抹，在“深度/采样预览图”中拖拽或单击，以在手动采样中微调采样点的位置" Command="{Binding SetManualToolCommand}" CommandParameter="5" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=5}">
+                                                <ui:SymbolIcon Symbol="CalendarPattern20"/>
+                                            </ToggleButton>
+                                            <Button Background="#e44c55" Height="33" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,4,2,0" Grid.Row="2" Grid.Column="0" 
                                                     ToolTip="【可撤销】清空，移除手动采样中所有采样点" Command="{Binding ClearManualPointsCommand}" CommandParameter="3">
                                                 <ui:SymbolIcon Symbol="Delete24"/>
                                             </Button>
+   
                                         </Grid>
                                         <Expander Margin="0,0,0,4" Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=1|3,Mode=OneWay}" IsExpanded="True" Header="画笔设置">
                                             <StackPanel>
@@ -265,7 +272,7 @@
                                         Value="{Binding EraserRadius}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
                                             </StackPanel>
-                                        </Expander>       
+                                        </Expander>
                                         <Expander Margin="0,0,0,4" Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=4,Mode=OneWay}" IsExpanded="True" Header="涂抹设置">
                                             <StackPanel>
 
@@ -286,6 +293,22 @@
                                                 <Slider Minimum="0.25" Maximum="4"
                                         Value="{Binding SmearStrenth}" 
                                         TickFrequency="0.01" IsSnapToTickEnabled="True"/>
+                                            </StackPanel>
+                                        </Expander>
+                                        <Expander Margin="0,0,0,4" Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=5,Mode=OneWay}" IsExpanded="True" Header="梯度偏移工具">
+                                            <StackPanel>
+
+                                                <ui:TextBlock>
+                                                    <Run Text="偏移强度"/>
+                                                    <Run Text="{Binding DraftStrength,StringFormat={}{0:0%}}"/>
+                                                </ui:TextBlock>
+
+                                                <Slider Minimum="-1" Maximum="1"
+                                        Value="{Binding DraftStrength}" 
+                                        TickFrequency="0.01" IsSnapToTickEnabled="True"/>
+
+                                                <Button Margin="0,4,0,0" Content="执行" Command="{Binding GradientDraftCommand}"/>
+
                                             </StackPanel>
                                         </Expander>
                                         <Grid>
@@ -437,6 +460,7 @@
                             <Line Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=3,Mode=OneWay}" X1="{Binding StartMousePointX,Mode=OneWay}" Y1="{Binding StartMousePointY,Mode=OneWay}" X2="{Binding MousePointX,Mode=OneWay}" Y2="{Binding MousePointY,Mode=OneWay}" IsHitTestVisible="False" Stroke="White" StrokeThickness="2"/>
                             <Ellipse Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=2,Mode=OneWay}" Width="{Binding EraserDiameter,Mode=OneWay}" Height="{Binding EraserDiameter,Mode=OneWay}" Canvas.Left="{Binding EraserCenterX,Mode=OneWay}" Canvas.Top="{Binding EraserCenterY,Mode=OneWay}" IsHitTestVisible="False" Fill="#AAFFFFFF" Stroke="White" StrokeThickness="2"/>
                             <Ellipse Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=4,Mode=OneWay}" Width="{Binding SmearDiameter,Mode=OneWay}" Height="{Binding SmearDiameter,Mode=OneWay}" Canvas.Left="{Binding SmearCenterX,Mode=OneWay}" Canvas.Top="{Binding SmearCenterY,Mode=OneWay}" IsHitTestVisible="False" Fill="#AAFFFFFF" Stroke="White" StrokeThickness="2"/>
+                            <Ellipse Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=5,Mode=OneWay}" Width="{Binding SmearDiameter,Mode=OneWay}" Height="{Binding SmearDiameter,Mode=OneWay}" Canvas.Left="{Binding SmearCenterX,Mode=OneWay}" Canvas.Top="{Binding SmearCenterY,Mode=OneWay}" IsHitTestVisible="False" Fill="#AAFFFFFF" Stroke="White" StrokeThickness="2"/>
                         </Canvas>
                     </Viewbox>
                 </Grid>
