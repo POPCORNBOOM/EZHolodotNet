@@ -55,7 +55,7 @@ namespace EZHolodotNet.Core
 
                 foreach (var point in points)
                 {
-                    int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
+                    float depth = depthImage.Get<float>(point.Y, point.X);
                     if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
                     if (Math.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
 
@@ -96,7 +96,7 @@ namespace EZHolodotNet.Core
                 int MaximumOverlap = 0;
                 foreach (var point in points)
                 {
-                    int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
+                    float depth = depthImage.Get<float>(point.Y, point.X);
                     //if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
                     if (Math.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
 
@@ -194,7 +194,7 @@ namespace EZHolodotNet.Core
                 {
                     foreach (var point in points)
                     {
-                        int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
+                        float depth = depthImage.Get<float>(point.Y, point.X);
                         Vec3b mcolor = originalImage.Get<Vec3b>(point.Y, point.X);
                         if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
                         if (Math.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
@@ -225,7 +225,7 @@ namespace EZHolodotNet.Core
                 {
                     foreach (var point in points)
                     {
-                        int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
+                        float depth = depthImage.Get<float>(point.Y, point.X);
                         if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
 
                         double curvature = (depth - zeroHeight) * imageWidth / bFactor;
@@ -256,7 +256,7 @@ namespace EZHolodotNet.Core
                     var mcolor = HexToScalar(color);
                     foreach (var point in points)
                     {
-                        int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
+                        float depth = depthImage.Get<float>(point.Y, point.X);
                         if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
 
                         double curvature = (depth - zeroHeight) * imageWidth / bFactor;
@@ -298,7 +298,7 @@ namespace EZHolodotNet.Core
                 {
                     foreach (var point in points)
                     {
-                        int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
+                        float depth = depthImage.Get<float>(point.Y, point.X);
                         Vec3b mcolor = originalImage.Get<Vec3b>(point.Y, point.X);
                         if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
                         if (Math.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
@@ -325,7 +325,7 @@ namespace EZHolodotNet.Core
                 {
                     foreach (var point in points)
                     {
-                        int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
+                        float depth = depthImage.Get<float>(point.Y, point.X);
                         if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
 
                         double curvature = (depth - zeroHeight) * imageWidth / bFactor;
@@ -351,7 +351,7 @@ namespace EZHolodotNet.Core
                     var mcolor = HexToScalar(color);
                     foreach (var point in points)
                     {
-                        int depth = depthImage.Get<Vec3b>(point.Y, point.X)[0];
+                        float depth = depthImage.Get<float>(point.Y, point.X);
                         if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
 
                         double curvature = (depth - zeroHeight) * imageWidth / bFactor;

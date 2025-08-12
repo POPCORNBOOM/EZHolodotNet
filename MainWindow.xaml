@@ -32,7 +32,7 @@
                 <Separator/>
 
                 <ui:MenuItem Header="深度图" Icon="{ui:SymbolIcon Symbol=DocumentCatchUp24}">
-                    <ui:MenuItem Header="导出深度" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportDepthCommand}">
+                    <ui:MenuItem Header="导出深度*" ToolTip="将会丢失小数精度" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportDepthCommand}">
                     </ui:MenuItem>
                     <ui:MenuItem Header="导入深度" Icon="{ui:SymbolIcon Symbol=ArrowImport24}" Command="{Binding ImportDepthCommand}">
                     </ui:MenuItem>
@@ -120,7 +120,7 @@
                                         <ColumnDefinition Width="1*" />
                                         <ColumnDefinition Width="1*" />
                                     </Grid.ColumnDefinitions>
-                                    <ui:Button Margin="0,0,2,0" Content="导出深度" HorizontalAlignment="Stretch" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportDepthCommand}"/>
+                                    <ui:Button Margin="0,0,2,0" Content="导出深度*" ToolTip="将会丢失小数精度" HorizontalAlignment="Stretch" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportDepthCommand}"/>
                                     <ui:Button Grid.Column="1" Margin="2,0,0,0" HorizontalAlignment="Stretch" Content="导入深度" Icon="{ui:SymbolIcon Symbol=ArrowImport24}" Command="{Binding ImportDepthCommand}"/>
                                 </Grid>
 
@@ -785,7 +785,7 @@
             </ui:TextBlock>
             <ui:TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" Grid.Column="2" HorizontalAlignment="Center">
                 <Run Text="   高度"/>
-                <Run Foreground="#FF559CE4" FontWeight="Bold" FontSize="12" Text="{Binding MouseDepth,Mode=OneWay}"/>
+                <Run Foreground="#FF559CE4" FontWeight="Bold" FontSize="12" Text="{Binding MouseDepth,StringFormat={}{0:0.00},Mode=OneWay}"/>
             </ui:TextBlock>
             <ui:TextBlock Visibility="Collapsed" Grid.Column="3" VerticalAlignment="Center">
                 <Run Text="   手动采样 P1"/>

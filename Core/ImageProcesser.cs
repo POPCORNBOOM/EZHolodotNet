@@ -242,7 +242,7 @@ namespace EZHolodotNet.Core
             }
         }
         [XmlIgnore]public Mat? OriginalImage { get; set; }
-        [XmlIgnore]public Mat? _depthImage = new Mat();
+        [XmlIgnore]public Mat? _depthImage = new Mat(); //32FC1
         [XmlIgnore]public Mat? DepthImage
         {
             get => _depthImage;
@@ -252,7 +252,7 @@ namespace EZHolodotNet.Core
                 {
                     _depthImage = value;
                     OnPropertyChanged(nameof(DepthImage));
-                    DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
+                    DisplayImageDepth = ApplyColorMap(_depthImage).ToWriteableBitmap();
                 }
             }
         }        
@@ -435,9 +435,9 @@ namespace EZHolodotNet.Core
             {
                 if (DepthImage == null) return 0;
                 if (DepthImage.Cols == 0) return 0;
-                Vec3b normalizedValue = DepthImage.Get<Vec3b>(MousePoint.Y, MousePoint.X);
+                float normalizedValue = DepthImage.Get<float>(MousePoint.Y, MousePoint.X);
                 //Trace.WriteLine(normalizedValue[0]);
-                return normalizedValue[0];
+                return normalizedValue;
             }
         }
         [XmlIgnore]
@@ -1318,7 +1318,7 @@ namespace EZHolodotNet.Core
             if (IsModelLoaded)
                 DepthImage = DepthEstimation.ProcessImage(OriginalImage);
             else
-                DepthImage = new(OriginalImage.Size(), MatType.CV_8UC1);
+                DepthImage = new(OriginalImage.Size(), MatType.CV_32FC1);
             UpdateGradient();
             //DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
         }
@@ -1957,14 +1957,16 @@ namespace EZHolodotNet.Core
 
         private void UpdateGradient()
         {
-            Mat depthFloat = new Mat();
-            DepthImage.ConvertTo(depthFloat, MatType.CV_32F);
+            if (DepthImage == null) return;
+
+            //Mat depthFloat = new Mat();
+            //DepthImage.ConvertTo(depthFloat, MatType.CV_32F);
 
             // 计算 X、Y 梯度
             Mat gradX = new Mat();
             Mat gradY = new Mat();
-            Cv2.Sobel(depthFloat, gradX, MatType.CV_32F, 1, 0, ksize: 3);
-            Cv2.Sobel(depthFloat, gradY, MatType.CV_32F, 0, 1, ksize: 3);
+            Cv2.Sobel(DepthImage, gradX, MatType.CV_32F, 1, 0, ksize: 3);
+            Cv2.Sobel(DepthImage, gradY, MatType.CV_32F, 0, 1, ksize: 3);
 
             // 计算梯度方向存储到GradientImage里
             var merged = new Mat();
@@ -2256,7 +2258,8 @@ namespace EZHolodotNet.Core
         private Mat ApplyColorMap(Mat originMat)
         {
             Mat colorMat = new Mat();
-            Cv2.ApplyColorMap(originMat, colorMat, (ColormapTypes)_depthColor);
+            Cv2.ConvertScaleAbs(originMat, colorMat,1);
+            Cv2.ApplyColorMap(colorMat, colorMat, (ColormapTypes)_depthColor);
             return colorMat;
         }
         private void SaveSvgToFile(string svgContent)
@@ -2439,7 +2442,7 @@ namespace EZHolodotNet.Core
                     {
                         for (int i = result.Count - 1; i >= 0; i--)
                         {
-                            int depth = DepthImage.Get<Vec3b>(result[i].Y, result[i].X)[0];
+                            float depth = DepthImage.Get<float>(result[i].Y, result[i].X);
                             if (depth < _excludingRangeMin || depth > _excludingRangeMax)
                                 result.Remove(result[i]);
                         }

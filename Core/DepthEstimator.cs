@@ -70,8 +70,8 @@ namespace EZHolodotNet.Core
             var depthData = RunInference(inputTensor);
 
             // 后处理
-            Mat depthMat = PostprocessDepth(depthData, image.Height, image.Width);
-            Cv2.ConvertScaleAbs(depthMat, depthMat, 1.0);
+            Mat depthMat = PostprocessDepth(depthData, image.Height, image.Width); //518*518*1 32Float Color1
+            //Cv2.ConvertScaleAbs(depthMat, depthMat, 1.0);
 
             return depthMat;
         }
