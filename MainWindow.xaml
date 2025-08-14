@@ -11,6 +11,16 @@
         <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoStepCommand}"/>
         <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoStepCommand}"/>
     </Window.InputBindings>
+    <Window.Resources>
+        <Storyboard x:Key="FadeInAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.3"/>
+        </Storyboard>
+        <Storyboard x:Key="FadeOutAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                             From="1" To="0" Duration="0:0:0.3"/>
+        </Storyboard>
+    </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -25,6 +35,36 @@
             <ColumnDefinition Width="5" />
             <ColumnDefinition MinWidth="200" Width="*" />
         </Grid.ColumnDefinitions>
+        <Border Grid.ColumnSpan="5">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Opacity" Value="0"/>
+
+                    <!-- 当绑定的 IsVisible 为 true 时显示 -->
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsTipsPanelVisible}" Value="True">
+                            <DataTrigger.EnterActions>
+                                <!-- 显示时执行渐显动画 -->
+                                <BeginStoryboard Storyboard="{StaticResource FadeInAnimation}"/>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <!-- 隐藏时执行渐隐动画 -->
+                                <BeginStoryboard Storyboard="{StaticResource FadeOutAnimation}"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <Border.Background>
+                <LinearGradientBrush>
+                    <GradientStop Offset="0.6"/>
+                    <GradientStop Offset="0.7" Color="#FF559CE4"/>
+                    <GradientStop Offset="1" Color="#FF559CE4"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <TextBlock Foreground="White" Text="{Binding TipsString}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8"/>
+        </Border>
+
         <Menu>
             <ui:MenuItem Header="文件" Icon="{ui:SymbolIcon Symbol=Document24}">
                 <ui:MenuItem Header="打开图片" Icon="{ui:SymbolIcon Symbol=ImageAdd24}" Command="{Binding ChooseImageCommand}">
@@ -38,12 +78,18 @@
                     </ui:MenuItem>
                 </ui:MenuItem>
                 <Separator/>
-                
+
                 <ui:MenuItem Header="点图" Icon="{ui:SymbolIcon Symbol=GridDots24}">
-                    <ui:MenuItem Header="导出点图(合一)" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportPointsCommand}" CommandParameter="a">
+                    <ui:MenuItem Header="导出PNG点图(合一)" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportPointsCommand}" CommandParameter="a">
                     </ui:MenuItem>
-                    <ui:MenuItem Header="导出点图(仅手动采样)" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportPointsCommand}">
+                    <ui:MenuItem Header="导出PNG点图(仅手动采样)" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportPointsCommand}">
                     </ui:MenuItem>
+                    <Separator/>
+                    <ui:MenuItem Header="导出SVG无损点图(合一)" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportSvgPointsCommand}" CommandParameter="a">
+                    </ui:MenuItem>
+                    <ui:MenuItem Header="导出SVG无损点图(仅手动采样)" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportSvgPointsCommand}">
+                    </ui:MenuItem>
+                    <Separator/>
                     <ui:MenuItem Header="导入点图" Icon="{ui:SymbolIcon Symbol=ArrowImport24}" Command="{Binding ImportPointsCommand}">
                     </ui:MenuItem>
                 </ui:MenuItem>
@@ -62,8 +108,10 @@
             <ui:MenuItem Header="工具" Icon="{ui:SymbolIcon Symbol=Wrench24}">
                 <ui:MenuItem Header="重新估算深度" Icon="{ui:SymbolIcon Symbol=CatchUp24}" Command="{Binding ProcessDepthCommand}"/>
                 <ui:MenuItem Header="生成轨迹预览" Icon="{ui:SymbolIcon Symbol=EyeLines24}" Command="{Binding CreateScratchCommand}"/>
+                <Separator/>
                 <ui:MenuItem Header="开源信息" Icon="{ui:SymbolIcon Symbol=BookInformation24}"  Command="{Binding OpenCustomMessageBoxCommand}"/>
-
+                <Separator/>
+                <ui:MenuItem Header="Debug" Command="{Binding DebugCommand}" CommandParameter="DepthContourMapContrust"/>
             </ui:MenuItem>
         </Menu>
         <Border Grid.Row="1">
@@ -132,45 +180,96 @@
                                 <CheckBox Content="轮廓采样策略" IsChecked="{Binding IsContourMethodEnabled}"/>
                                 <Expander Visibility="{Binding IsContourMethodEnabled,Converter={StaticResource BooleanToVisibilityConverter}}" IsExpanded="True" Header="轮廓采样">
                                     <StackPanel>
-                                        <ui:Button ToolTip="【可撤销】将轮廓采样到的点转移到手动采样中，以便进一步精细调整这些点" Icon="{ui:SymbolIcon Symbol=HandDraw24}" Margin="0,0,0,4" Content="转移到手动采样" Command="{Binding ConvertToManualCommand}" CommandParameter="c"/>
-                                        <ui:TextBlock>
-                                            <Run Text="轮廓采样间隔"/>
-                                            <Run Text="{Binding LineDensity,StringFormat={}{0:0}}"/>
-                                        </ui:TextBlock>
+                                        <ui:Button Appearance="Primary" ToolTip="【可撤销】将轮廓采样到的点转移到手动采样中，以便进一步精细调整这些点" Icon="{ui:SymbolIcon Symbol=HandDraw24}" Margin="0,0,0,4" HorizontalAlignment="Stretch" Content="转移到手动采样" Command="{Binding ConvertToManualCommand}" CommandParameter="c"/>
+                                        <ui:ToggleSwitch Content="基于深度" IsChecked="{Binding IsDepthContourMode}"/>
+                                        <Separator Margin="0,4"/>
+                                        <Border BorderThickness="0" Margin="0" Padding="0">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsDepthContourMode}" Value="true">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel>
+                                                <ui:TextBlock>
+                                                    <Run Text="轮廓采样间隔"/>
+                                                    <Run Text="{Binding LineDensity,StringFormat={}{0:0}}"/>
+                                                </ui:TextBlock>
 
-                                        <Slider Minimum="1" Maximum="50"
+                                                <Slider Minimum="1" Maximum="50"
                                         Value="{Binding LineDensity}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
 
-                                        <ui:TextBlock>
-                                            <Run Text="模糊因数"/>
-                                            <Run Text="{Binding BlurFactor,StringFormat={}{0:0}}"/>
-                                        </ui:TextBlock>
+                                                <ui:TextBlock>
+                                                    <Run Text="模糊因数"/>
+                                                    <Run Text="{Binding BlurFactor,StringFormat={}{0:0}}"/>
+                                                </ui:TextBlock>
 
-                                        <Slider Minimum="1" Maximum="50"
+                                                <Slider Minimum="1" Maximum="50"
                                         Value="{Binding BlurFactor}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
-                                        <ui:TextBlock>
-                                            <Run Text="下阈值"/>
-                                            <Run Text="{Binding Threshold1,StringFormat={}{0:0}}"/>
-                                        </ui:TextBlock>
+                                                <ui:TextBlock>
+                                                    <Run Text="下阈值"/>
+                                                    <Run Text="{Binding Threshold1,StringFormat={}{0:0}}"/>
+                                                </ui:TextBlock>
 
-                                        <Slider Minimum="0" Maximum="255" 
+                                                <Slider Minimum="0" Maximum="255" 
                                         Value="{Binding Threshold1}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
-                                        <ui:TextBlock>
-                                            <Run Text="上阈值"/>
-                                            <Run Text="{Binding Threshold2,StringFormat={}{0:0}}"/>
-                                        </ui:TextBlock>
-                                        <Slider Minimum="0" Maximum="255" 
+                                                <ui:TextBlock>
+                                                    <Run Text="上阈值"/>
+                                                    <Run Text="{Binding Threshold2,StringFormat={}{0:0}}"/>
+                                                </ui:TextBlock>
+                                                <Slider Minimum="0" Maximum="255" 
                                         Value="{Binding Threshold2}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border BorderThickness="0" Margin="0" Padding="0">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsDepthContourMode}" Value="true">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel>
+                                                <CheckBox IsChecked="{Binding IsBinaryDeNoise}" Content="二值降噪"/>
+
+                                                <ui:TextBlock Visibility="{Binding IsBinaryDeNoise,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}">
+                                                    <Run Text="细节因数"/>
+                                                    <Run Text="{Binding DepthContourDetailFactor,StringFormat={}{0:0.00}}"/>
+                                                </ui:TextBlock>
+
+                                                <Slider Visibility="{Binding IsBinaryDeNoise,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}" Minimum="-2" Maximum="2"
+                                        Value="{Binding DepthContourDetailFactor}" Thumb.DragCompleted="TimeConsumingSlider_DragCompleted"
+                                        TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+                                                <ui:TextBlock>
+                                                    <Run Text="密度因数"/>
+                                                    <Run Text="{Binding DepthContourDensityFactor,StringFormat={}{0:0.00}}"/>
+                                                </ui:TextBlock>
+
+                                                <Slider Minimum="-2" Maximum="2"
+                                        Value="{Binding DepthContourDensityFactor}" Thumb.DragCompleted="TimeConsumingSlider_DragCompleted"
+                                        TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+
+                                                <CheckBox IsChecked="{Binding IsShowEnhancedMat}" Content="展示轮廓图"/>
+
+                                            </StackPanel>
+                                        </Border>
                                     </StackPanel>
                                 </Expander>
                                 <CheckBox Content="明度采样策略" IsChecked="{Binding IsBrightnessMethodEnabled}"/>
                                 <Expander Visibility="{Binding IsBrightnessMethodEnabled,Converter={StaticResource BooleanToVisibilityConverter}}" IsExpanded="True" Header="明度采样">
                                     <StackPanel>
-                                        <ui:Button ToolTip="【可撤销】将明度采样到的点转移到手动采样中，以便进一步精细调整这些点" Icon="{ui:SymbolIcon Symbol=HandDraw24}" Margin="0,0,0,4" Content="转移到手动采样" Command="{Binding ConvertToManualCommand}" CommandParameter="b"/>
+                                        <ui:Button Appearance="Primary" ToolTip="【可撤销】将明度采样到的点转移到手动采样中，以便进一步精细调整这些点" Icon="{ui:SymbolIcon Symbol=HandDraw24}" HorizontalAlignment="Stretch" Margin="0,0,0,4" Content="转移到手动采样" Command="{Binding ConvertToManualCommand}" CommandParameter="b"/>
                                         <CheckBox Content="暗度模式(取反)" IsChecked="{Binding IsDarknessMode}"/>
                                         <ui:TextBlock>
                                             <Run Text="基础密度"/>
@@ -205,7 +304,7 @@
                                         <ui:TextBlock>
                                             <Run Text="工具"/>
                                         </ui:TextBlock>
-                                        <Grid Margin="0,0,0,4">
+                                        <Grid Margin="0,4">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="1*" />
                                                 <ColumnDefinition Width="1*" />
@@ -240,7 +339,7 @@
                                                           ToolTip="【可撤销】涂抹，在“深度/采样预览图”中拖拽或单击，以在手动采样中微调采样点的位置" Command="{Binding SetManualToolCommand}" CommandParameter="5" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=5}">
                                                 <ui:SymbolIcon Symbol="CalendarPattern20"/>
                                             </ToggleButton>
-                                            <Button Background="#e44c55" Height="33" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,4,2,0" Grid.Row="2" Grid.Column="0" 
+                                            <Button Grid.ColumnSpan="3" Background="#e44c55" Height="33" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,4,2,0" Grid.Row="2" Grid.Column="0" 
                                                     ToolTip="【可撤销】清空，移除手动采样中所有采样点" Command="{Binding ClearManualPointsCommand}" CommandParameter="3">
                                                 <ui:SymbolIcon Symbol="Delete24"/>
                                             </Button>
@@ -299,6 +398,15 @@
                                             <StackPanel>
 
                                                 <ui:TextBlock>
+                                                    <Run Text="偏移画刷半径"/>
+                                                    <Run Text="{Binding DraftRadius,StringFormat={}{0:0}}"/>
+                                                    <Run Text="px"/>
+                                                </ui:TextBlock>
+
+                                                <Slider Minimum="1" Maximum="50"
+                                                        Value="{Binding DraftRadius}" 
+                                                        TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                                <ui:TextBlock>
                                                     <Run Text="偏移强度"/>
                                                     <Run Text="{Binding DraftStrength,StringFormat={}{0:0%}}"/>
                                                 </ui:TextBlock>
@@ -307,11 +415,11 @@
                                         Value="{Binding DraftStrength}" 
                                         TickFrequency="0.01" IsSnapToTickEnabled="True"/>
 
-                                                <Button Margin="0,4,0,0" Content="执行" Command="{Binding GradientDraftCommand}"/>
+                                                <ui:Button HorizontalAlignment="Stretch" Margin="0,4,0,0" Content="对所有点施加偏移" Command="{Binding GradientDraftCommand}"/>
 
                                             </StackPanel>
                                         </Expander>
-                                        <Grid>
+                                        <Grid Margin="0,4">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="1*" />
                                                 <ColumnDefinition Width="1*" />
@@ -324,6 +432,7 @@
                                                 <ui:SymbolIcon Symbol="ArrowRedo24"/>
                                             </Button>
                                         </Grid>
+                                        <Separator Margin="0,4"/>
                                         <ui:TextBlock>
                                             <Run Text="外部操作"/>
                                         </ui:TextBlock>
@@ -460,7 +569,7 @@
                             <Line Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=3,Mode=OneWay}" X1="{Binding StartMousePointX,Mode=OneWay}" Y1="{Binding StartMousePointY,Mode=OneWay}" X2="{Binding MousePointX,Mode=OneWay}" Y2="{Binding MousePointY,Mode=OneWay}" IsHitTestVisible="False" Stroke="White" StrokeThickness="2"/>
                             <Ellipse Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=2,Mode=OneWay}" Width="{Binding EraserDiameter,Mode=OneWay}" Height="{Binding EraserDiameter,Mode=OneWay}" Canvas.Left="{Binding EraserCenterX,Mode=OneWay}" Canvas.Top="{Binding EraserCenterY,Mode=OneWay}" IsHitTestVisible="False" Fill="#AAFFFFFF" Stroke="White" StrokeThickness="2"/>
                             <Ellipse Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=4,Mode=OneWay}" Width="{Binding SmearDiameter,Mode=OneWay}" Height="{Binding SmearDiameter,Mode=OneWay}" Canvas.Left="{Binding SmearCenterX,Mode=OneWay}" Canvas.Top="{Binding SmearCenterY,Mode=OneWay}" IsHitTestVisible="False" Fill="#AAFFFFFF" Stroke="White" StrokeThickness="2"/>
-                            <Ellipse Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=5,Mode=OneWay}" Width="{Binding SmearDiameter,Mode=OneWay}" Height="{Binding SmearDiameter,Mode=OneWay}" Canvas.Left="{Binding SmearCenterX,Mode=OneWay}" Canvas.Top="{Binding SmearCenterY,Mode=OneWay}" IsHitTestVisible="False" Fill="#AAFFFFFF" Stroke="White" StrokeThickness="2"/>
+                            <Ellipse Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=5,Mode=OneWay}" Width="{Binding DraftDiameter,Mode=OneWay}" Height="{Binding DraftDiameter,Mode=OneWay}" Canvas.Left="{Binding DraftCenterX,Mode=OneWay}" Canvas.Top="{Binding DraftCenterY,Mode=OneWay}" IsHitTestVisible="False" Fill="#AAFFFFFF" Stroke="White" StrokeThickness="2"/>
                         </Canvas>
                     </Viewbox>
                 </Grid>
@@ -496,7 +605,7 @@
                                     <ComboBoxItem Content="DeepGreen"/>
                                 </ComboBox>
                                 <ui:TextBlock>
-                                    <Run Text="轮廓图/深度图"/>
+                                    <Run Text="点图/深度图"/>
                                     <Run Text="{Binding OverlayOpacity,StringFormat={}{0:0%}}"/>
                                 </ui:TextBlock>
 
@@ -521,6 +630,7 @@
                                     x:Name="WarningFlyout"
                                     Placement="Top">
                                     <StackPanel>
+                                        
                                         <TextBlock Text="噢！" FontWeight="Bold" FontSize="24" Margin="0,0,0,4"/>
                                         <TextBlock LineHeight="20"
                                             Width="280"
@@ -549,7 +659,7 @@
                                 </ui:Flyout>
                                 <CheckBox Margin="0,-20,0,0" Grid.Column="1" Content="自动更新预览" IsChecked="{Binding IsAutoGeneratePreview}"/>
                                 
-                                <ui:Button Content="生成轨迹预览>>" Appearance="Primary" Command="{Binding CreateScratchCommand}"/>
+                                <ui:Button HorizontalAlignment="Stretch" Content="生成轨迹预览>>" Appearance="Primary" Command="{Binding CreateScratchCommand}"/>
                                 <Rectangle HorizontalAlignment="Stretch" Fill="#DFDFDF" Height="1" Margin="-8,8"/>
 <!--
                                 <ui:TextBlock>
@@ -749,7 +859,11 @@
                                 Icon="{ui:SymbolIcon Symbol=VideoClip24}"
                                 ToolTip="在 Bilibili 上查看教学视频"
                                 NavigateUri="https://www.bilibili.com/video/BV1moCHYxEPk"/>
-            <TextBlock Foreground="LightGray" FontSize="8" VerticalAlignment="Center" Text="EZHolo @ v1.4"/>
+            <TextBlock Foreground="LightGray" FontSize="8" VerticalAlignment="Center">
+                <Run Text="EZHolo @ v1.5"/>
+                <LineBreak/>
+                <Run Text="Copyright © 2025 Yigu Wang"/>
+            </TextBlock>
             <TextBlock Margin="8,0" Foreground="LightGray" FontSize="8" VerticalAlignment="Center">
                 <Run Text="输出上限:"/>
                 <Run Text="{Binding MaximumPointCount}"/>
@@ -761,6 +875,8 @@
                 <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="1*" />
                 <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="1*" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
@@ -783,11 +899,7 @@
                 <Run Text=","/>
                 <Run Foreground="#FF559CE4" FontWeight="Bold" FontSize="12" Text="{Binding MousePointY,Mode=OneWay}"/>
             </ui:TextBlock>
-            <ui:TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" Grid.Column="2" HorizontalAlignment="Center">
-                <Run Text="   高度"/>
-                <Run Foreground="#FF559CE4" FontWeight="Bold" FontSize="12" Text="{Binding MouseDepth,StringFormat={}{0:0.00},Mode=OneWay}"/>
-            </ui:TextBlock>
-            <ui:TextBlock Visibility="Collapsed" Grid.Column="3" VerticalAlignment="Center">
+            <ui:TextBlock Visibility="Collapsed" Grid.Column="2" VerticalAlignment="Center">
                 <Run Text="   手动采样 P1"/>
                 <Run Text="{Binding StartMousePointX,Mode=OneWay}"/>
                 <Run Text="{Binding StartMousePointY,Mode=OneWay}"/>
@@ -796,6 +908,11 @@
                 <Run Text="{Binding MousePointY,Mode=OneWay}"/>
 
             </ui:TextBlock>
+            <ui:TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" Grid.Column="3" HorizontalAlignment="Center">
+                <Run Text="   高度"/>
+                <Run Foreground="#FF559CE4" FontWeight="Bold" FontSize="12" Text="{Binding MouseDepth,StringFormat={}{0:0.00},Mode=OneWay}"/>
+            </ui:TextBlock>
+
             <Viewbox Grid.Column="4" Height="12">
                 <Grid Height="255" Width="255">
                     <Image Width="200" HorizontalAlignment="Center" Source="{Binding GradientColor}" Stretch="Fill"/>
@@ -803,6 +920,19 @@
                         <Line.RenderTransform>
                             <RotateTransform Angle="180"/>
                         </Line.RenderTransform>
+                    </Line>
+                </Grid>
+            </Viewbox>
+            <ui:TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" Grid.Column="5" HorizontalAlignment="Center">
+                <Run Text="   梯度"/>
+                <Run Foreground="#FF559CE4" FontWeight="Bold" FontSize="12" Text="{Binding MouseGradient,StringFormat={}{0:0.00},Mode=OneWay}"/>
+            </ui:TextBlock>
+
+            <Viewbox Margin="2,0,0,0" Grid.Column="6" Height="12">
+                <Grid Height="512" Width="512">
+                    <Ellipse Width="512" Height="512" Fill="#559CE4"/>
+                    <Line StrokeEndLineCap="Triangle" X1="255" X2="{Binding MouseGradientX,Mode=OneWay}" Y1="255" Y2="{Binding MouseGradientY,Mode=OneWay}" Stroke="Red" StrokeThickness="70" RenderTransformOrigin="0.5,0.5">
+
                     </Line>
                 </Grid>
             </Viewbox>

@@ -96,7 +96,7 @@ namespace EZHolodotNet
             if (ImageProcesser.OriginalImage == null) return;
             var i = sender as Image;
             var p = e.GetPosition(i);
-            ImageProcesser.MousePoint = new(p.X * ImageProcesser.OriginalImage.Cols/i.ActualWidth, p.Y * ImageProcesser.OriginalImage.Rows / i.ActualHeight);
+            ImageProcesser.MousePoint = new((float)(p.X * ImageProcesser.OriginalImage.Cols/i.ActualWidth), (float)(p.Y * ImageProcesser.OriginalImage.Rows / i.ActualHeight));
             ImageProcesser.ProcessManual(null, e.MiddleButton == MouseButtonState.Pressed);
         }
 
@@ -124,7 +124,7 @@ namespace EZHolodotNet
         {
             if (ImageProcesser.OriginalImage == null) return;
             ImageProcesser.ProcessManual(false);
-            ImageProcesser.MousePoint = new OpenCvSharp.Point(0,0);
+            ImageProcesser.MousePoint = new (0,0);
 
 
         }
@@ -143,7 +143,7 @@ namespace EZHolodotNet
 
         private void Image_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            ImageProcesser.PreviewScale += e.Delta/1200d;
+            ImageProcesser.PreviewScale += e.Delta/1200f;
         }
     }
 }

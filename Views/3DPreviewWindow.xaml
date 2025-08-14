@@ -20,15 +20,96 @@
                 </Border.Effect>
             </Border>
         </Viewbox>
-        <Image Source="{Binding DisplayImageScratch3D}"/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+            <Image Source="{Binding DisplayImageScratch3DLeft}" HorizontalAlignment="Center">
+                <Image.Style>
+                    <Style>
+                        <Setter Property="Grid.Column" Value="1"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsParallelEye3DMode}" Value="true">
+                                <Setter Property="Grid.Column" Value="0"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Image.Style>
+            </Image>
+            <Image Source="{Binding DisplayImageScratch3DRight}" HorizontalAlignment="Center">
+                <Image.Style>
+                    <Style>
+                        <Setter Property="Grid.Column" Value="0"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsParallelEye3DMode}" Value="true">
+                                <Setter Property="Grid.Column" Value="1"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Image.Style>
+            </Image>
+            <Label HorizontalAlignment="Right" Foreground="White" Margin="10">
+                <Label.Style>
+                    <Style TargetType="Label">
+                        <Setter Property="Content" Value="Right"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsParallelEye3DMode}" Value="true">
+                                <Setter Property="Content" Value="Left"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Label.Style>
+            </Label>
+            <Label Grid.Column="1" HorizontalAlignment="Left" Foreground="White" Margin="10">
+                <Label.Style>
+                    <Style TargetType="Label">
+                        <Setter Property="Content" Value="Left"/>
+                        <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsParallelEye3DMode}" Value="true">
+                            <Setter Property="Content" Value="Right"/>
+                        </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Label.Style>
+            </Label>
+            <Ellipse Fill="Red" Width="5" Height="5" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12"/>
+            <Ellipse Grid.Column="1" Fill="Red" Width="5" Height="5" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12"/>
+        </Grid>
         <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
-            <TextBlock Text="请使用平行眼观察" Foreground="White">
-
+            <TextBlock Foreground="White">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Text" Value="请使用交叉眼(斗鸡眼)观察"/>
+                        <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsParallelEye3DMode}" Value="true">
+                            <Setter Property="Text" Value="请使用平行眼(失焦眼)观察"/>
+                        </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
             </TextBlock>
 
             <ui:Button Width="13" Height="13" Margin="4,0" Foreground="White" VerticalAlignment="Center" Icon="{ui:SymbolIcon Symbol=Question24}" Appearance="Light" Padding="0">
                 <ui:Button.ToolTip>
-                    <Image Margin="0" Stretch="Uniform" Source="/Images/instruction.png"/>
+                    <StackPanel>
+                        <Image Margin="0" Stretch="Uniform" Source="/Images/instruction.png"/>
+                        <TextBlock FontSize="10">
+                            <Run Text="平行眼(失焦眼)" FontWeight="Bold"/>
+                            <LineBreak/>
+                            <Run Text="丈量你的双眼瞳孔间距，缩放窗口"/>
+                            <LineBreak/>
+                            <Run Text="使得屏幕上的红点间距≤你的瞳距"/>
+                            <LineBreak/>
+                            <Run Text="看向某个远方，你会有一种呆滞的感觉"/>
+                            <LineBreak/>
+                            <Run Text="维持这种感觉并把头转向屏幕，你处于近距离的视野"/>
+                            <LineBreak/>
+                            <Run Text="将会是重影状态。此时屏幕上的两个红点会分成四个，"/>
+                            <LineBreak/>
+                            <Run Text="试着控制眼睛，将左点的右像和右点的左像拼合"/>
+                        </TextBlock>
+                    </StackPanel>
                 </ui:Button.ToolTip>
             </ui:Button>
         </StackPanel>
@@ -41,6 +122,9 @@
         <Expander Grid.Row="1" IsExpanded="True" Header="预览控制">
             <StackPanel>
                 <ui:ToggleSwitch Margin="0,0,0,8" Content="自动播放" IsChecked="{Binding IsAutoPlay3D}"/>
+                <ui:ToggleSwitch Margin="0,0,0,8" Content="平行眼模式"  IsChecked="{Binding IsParallelEye3DMode}">
+
+                </ui:ToggleSwitch>
                 <Expander Header="预览控制" IsExpanded="{Binding IsAutoPlay3D,Mode=OneWay,Converter={StaticResource BooleanInverseConverter}}" Visibility="{Binding IsAutoPlay3D,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=i}">
                     <StackPanel>
                         <ui:TextBlock>
@@ -99,7 +183,7 @@
                             <Run Text="{Binding AutoPlayMaxFps,StringFormat={}{0:0.00}}"/>
                         </ui:TextBlock>
                         <Slider Minimum="1"
-                                Maximum="60" 
+                                Maximum="45" 
                                 Value="{Binding AutoPlayMaxFps}"
                                 TickFrequency="0.5"
                                 TickPlacement="BottomRight"
