@@ -108,6 +108,11 @@
                             <Run Text="将会是重影状态。此时屏幕上的两个红点会分成四个，"/>
                             <LineBreak/>
                             <Run Text="试着控制眼睛，将左点的右像和右点的左像拼合"/>
+                            <LineBreak/>
+                            <Run Text="交叉眼(斗鸡眼)" FontWeight="Bold"/>
+                            <LineBreak/>
+                            <Run Text="就是斗鸡眼"/>
+
                         </TextBlock>
                     </StackPanel>
                 </ui:Button.ToolTip>
