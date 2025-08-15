@@ -54,7 +54,7 @@ $$
 - **原点(补偿)**
 
 $$
-  \mathbf{C} = \begin{bmatrix} x \\\ y \end{bmatrix} + \begin{bmatrix} 1 \\\ offset \end{bmatrix}
+  \mathbf{C} = \begin{bmatrix} x \\\ y \end{bmatrix} + \begin{bmatrix} 0 \\\ offset \end{bmatrix}
 $$
 
 - **起点和终点**
