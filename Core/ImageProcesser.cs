@@ -53,8 +53,14 @@ namespace EZHolodotNet.Core
             :this(p.X, p.Y)
         {
 
+        }        
+        public Point(System.Windows.Point p)
+            :this((float)p.X, (float)p.Y)
+        {
+
         }
         public static Point operator *(Point pt, double scale) => new((float)(pt.Xf*scale), (float)(pt.Yf*scale));
+        public static Vec2f operator -(Point pt1, Point pt2) => new Vec2f(pt1.Xf - pt2.Xf, pt1.Yf - pt2.Yf);
 
 
     }
@@ -159,6 +165,12 @@ namespace EZHolodotNet.Core
 
             }
         }
+        public RelayCommand RestoreViewCommand => new RelayCommand((p) =>
+        {
+            PreviewX = 0;
+            PreviewY = 0;
+            PreviewScale = 1;
+        });
         public RelayCommand OpenFolderCommand => new RelayCommand((p) => Process.Start("explorer.exe", AppDomain.CurrentDomain.BaseDirectory));
         public RelayCommand RefreshModelCommand => new RelayCommand((p) => ReloadModel());
         public RelayCommand ConvertToManualCommand => new RelayCommand((p) => ConvertToManualPoint(p.ToString() ?? "c"));
@@ -510,14 +522,15 @@ namespace EZHolodotNet.Core
         public List<Point2d> Points { get; set; } = new List<Point2d>();
         [XmlIgnore]
         public DepthEstimation? DepthEstimation;
-        private Point _mousePoint = new(0, 0);
+        private Point _mousePixelPosition = new(0, 0);
+        private Point _mouseWindowPosition = new(0, 0);
         public int MousePointX
         {
-            get => MousePoint.X;
+            get => MousePixelPosition.X;
         }
         public int MousePointY
         {
-            get => MousePoint.Y;
+            get => MousePixelPosition.Y;
         }
         public int OriginImageWidth
         {
@@ -541,13 +554,13 @@ namespace EZHolodotNet.Core
             }
         }
         [XmlIgnore]
-        public Point MousePoint
+        public Point MousePixelPosition
         {
-            get => _mousePoint;
+            get => _mousePixelPosition;
             set
             {
-                _mousePoint = value;
-                OnPropertyChanged(nameof(MousePoint));
+                _mousePixelPosition = value;
+                OnPropertyChanged(nameof(MousePixelPosition));
                 OnPropertyChanged(nameof(MouseDepth));
                 OnPropertyChanged(nameof(MouseGradient));
                 OnPropertyChanged(nameof(MouseGradientX));
@@ -562,6 +575,19 @@ namespace EZHolodotNet.Core
                 OnPropertyChanged(nameof(MousePointY));
 
             }
+        }        
+        [XmlIgnore]
+        public Point MouseWindowPosition
+        {
+            get => _mouseWindowPosition;
+            set
+            {
+                if(!Equals(_mouseWindowPosition,value))
+                {
+                    _mouseWindowPosition = value;
+                    OnPropertyChanged(nameof(MouseWindowPosition));
+                }
+            }
         }
         [XmlIgnore]
         public float MouseDepth
@@ -570,7 +596,7 @@ namespace EZHolodotNet.Core
             {
                 if (DepthImage == null) return 0;
                 if (DepthImage.Cols == 0) return 0;
-                float normalizedValue = DepthImage.Get<float>(MousePoint.Y, MousePoint.X);
+                float normalizedValue = DepthImage.Get<float>(MousePixelPosition.Y, MousePixelPosition.X);
                 //Trace.WriteLine(normalizedValue[0]);
                 return normalizedValue;
             }
@@ -582,7 +608,7 @@ namespace EZHolodotNet.Core
             {
                 if (GradientImage == null) return 0;
                 if (GradientImage.Cols == 0) return 0;
-                Vec2f gradientVector = GradientImage.Get<Vec2f>(MousePoint.Y, MousePoint.X);
+                Vec2f gradientVector = GradientImage.Get<Vec2f>(MousePixelPosition.Y, MousePixelPosition.X);
                 float norm = MathF.Pow(MathF.Pow(gradientVector.Item0, 2) + MathF.Pow(gradientVector.Item1, 2), 0.5f);
                 MouseGradientVectorNormal = gradientVector * 255 / norm;
                 return norm;
@@ -1019,27 +1045,27 @@ namespace EZHolodotNet.Core
         }
         public float EraserCenterX
         {
-            get => _mousePoint.X - EraserRadius;
+            get => _mousePixelPosition.X - EraserRadius;
         }
         public float EraserCenterY
         {
-            get => _mousePoint.Y - EraserRadius;
+            get => _mousePixelPosition.Y - EraserRadius;
         }
         public float SmearCenterX
         {
-            get => _mousePoint.X - SmearRadius;
+            get => _mousePixelPosition.X - SmearRadius;
         }
         public float SmearCenterY
         {
-            get => _mousePoint.Y - SmearRadius;
+            get => _mousePixelPosition.Y - SmearRadius;
         }
         public float DraftCenterX
         {
-            get => _mousePoint.X - DraftRadius;
+            get => _mousePixelPosition.X - DraftRadius;
         }
         public float DraftCenterY
         {
-            get => _mousePoint.Y - DraftRadius;
+            get => _mousePixelPosition.Y - DraftRadius;
         }
         private bool _isTipsPanelVisible = false;
         public bool IsTipsPanelVisible
@@ -2253,7 +2279,30 @@ namespace EZHolodotNet.Core
         float _penPathLength = 0;
         Point? _lastPoint;
         List<Point>? _draftingPoints;
-        public void ProcessManual(bool? isMouseDown = null, bool isMoveView = false)
+        Vec2f _startMovingPosition = new(0,0);
+        Point? _movingLastPoint;
+
+
+
+        public void ProcessMovingView(bool isStartMoving = true) // else isMoving
+        {
+            if(isStartMoving)
+            {
+                _startMovingPosition = new(_previewX, _previewY);
+                _movingLastPoint = MouseWindowPosition;
+                //Trace.WriteLine($"start moving {_previewX},{_previewY}");
+            }
+            else
+            {
+                Vec2f delta = MouseWindowPosition - (_movingLastPoint ?? MouseWindowPosition);
+                Vec2f newLocation = _startMovingPosition + delta/_previewScale;
+                PreviewX = newLocation.Item0;
+                PreviewY = newLocation.Item1;
+                //Trace.WriteLine($"move to {_previewX},{_previewY}");
+
+            }
+        }
+        public void ProcessManual(bool? isMouseDown = null)
         {
             if (isMouseDown == null) // moving
             {
@@ -2264,25 +2313,25 @@ namespace EZHolodotNet.Core
                     switch (ManualTool)
                     {
                         case 1:
-                            _penPathLength += MathF.Sqrt(MathF.Pow(MousePoint.X - _lastPoint.Value.X, 2) + MathF.Pow(MousePoint.Y - _lastPoint.Value.Y, 2));
+                            _penPathLength += MathF.Sqrt(MathF.Pow(MousePixelPosition.X - _lastPoint.Value.X, 2) + MathF.Pow(MousePixelPosition.Y - _lastPoint.Value.Y, 2));
                             if (_penPathLength > 1 / _manualDensity)
                             {
-                                _manualPointsStored.Add(MousePoint);
-                                NewOperation([MousePoint]);
+                                _manualPointsStored.Add(MousePixelPosition);
+                                NewOperation([MousePixelPosition]);
                                 //LastStepAmount ++;
                                 _penPathLength -= 1 / _manualDensity;
                             }
                             break;
                         case 2:
-                            var p = GetPointsInRadius(MousePoint, EraserRadius);
+                            var p = GetPointsInRadius(MousePixelPosition, EraserRadius);
                             if (p.Count != 0)
                                 NewOperation(p.Select(pd => pd.Point).ToList(), false);
                             break;
                         case 4://smear
-                            var p1 = GetPointsInRadius(MousePoint, SmearRadius);
+                            var p1 = GetPointsInRadius(MousePixelPosition, SmearRadius);
                             if (p1.Count != 0)
                             {
-                                Point movedistance = new(MousePoint.X - _lastPoint.Value.X, MousePoint.Y - _lastPoint.Value.Y);
+                                Point movedistance = new(MousePixelPosition.X - _lastPoint.Value.X, MousePixelPosition.Y - _lastPoint.Value.Y);
                                 List<Point> offsets = new();
                                 foreach (var pd in p1)
                                 {
@@ -2292,7 +2341,7 @@ namespace EZHolodotNet.Core
                             }
                             break;
                         case 5://draft
-                            var p2 = GetPointsInRadius(MousePoint, DraftRadius);
+                            var p2 = GetPointsInRadius(MousePixelPosition, DraftRadius);
                             if (p2.Count != 0)
                             {
                                 _draftingPoints = _draftingPoints?.Union(p2.Select(pd => pd.Point).ToList()).ToList();
@@ -2301,7 +2350,7 @@ namespace EZHolodotNet.Core
 
 
                     }
-                    _lastPoint = MousePoint;
+                    _lastPoint = MousePixelPosition;
                 }
             }
             else if (isMouseDown == true) // start
@@ -2309,8 +2358,8 @@ namespace EZHolodotNet.Core
                 if (!_isManualMethodEnabled) return;
 
                 //LastStepAmount = 0;
-                StartMousePoint = MousePoint;
-                _lastPoint = MousePoint;
+                StartMousePoint = MousePixelPosition;
+                _lastPoint = MousePixelPosition;
                 _penPathLength = 0;
                 _draftingPoints = new();
             }
@@ -2322,7 +2371,7 @@ namespace EZHolodotNet.Core
                     if (ManualTool == 3)
                     {
                         var interpolated =
-                            GetUniformInterpolatedPoints(StartMousePoint.Value, MousePoint, _manualDensity);
+                            GetUniformInterpolatedPoints(StartMousePoint.Value, MousePixelPosition, _manualDensity);
                         if (interpolated.Count == 2)
                         {
                             NewOperation([StartMousePoint.Value]);

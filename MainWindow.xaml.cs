@@ -1,5 +1,6 @@
 ﻿using EZHolodotNet.Core;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -96,8 +97,10 @@ namespace EZHolodotNet
             if (ImageProcesser.OriginalImage == null) return;
             var i = sender as Image;
             var p = e.GetPosition(i);
-            ImageProcesser.MousePoint = new((float)(p.X * ImageProcesser.OriginalImage.Cols/i.ActualWidth), (float)(p.Y * ImageProcesser.OriginalImage.Rows / i.ActualHeight));
-            ImageProcesser.ProcessManual(null, e.MiddleButton == MouseButtonState.Pressed);
+            ImageProcesser.MousePixelPosition = new((float)(p.X * ImageProcesser.OriginalImage.Cols/i.ActualWidth), (float)(p.Y * ImageProcesser.OriginalImage.Rows / i.ActualHeight));
+            if (e.LeftButton == MouseButtonState.Pressed)
+                ImageProcesser.ProcessManual(null);
+
         }
 
         private void Slider_MouseUp(object sender, MouseButtonEventArgs e)
@@ -109,8 +112,12 @@ namespace EZHolodotNet
 
         private void Image_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (ImageProcesser.OriginalImage == null) return;
-            ImageProcesser.ProcessManual(true, e.MiddleButton == MouseButtonState.Pressed);
+            if (ImageProcesser.OriginalImage == null) return; 
+            if (e.LeftButton == MouseButtonState.Pressed)
+                ImageProcesser.ProcessManual(true);
+            else if (e.MiddleButton == MouseButtonState.Pressed)
+                ImageProcesser.ProcessMovingView();
+
         }
 
         private void Image_MouseUp(object sender, MouseButtonEventArgs e)
@@ -124,7 +131,7 @@ namespace EZHolodotNet
         {
             if (ImageProcesser.OriginalImage == null) return;
             ImageProcesser.ProcessManual(false);
-            ImageProcesser.MousePoint = new (0,0);
+            ImageProcesser.MousePixelPosition = new (0,0);
 
 
         }
@@ -144,6 +151,15 @@ namespace EZHolodotNet
         private void Image_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             ImageProcesser.PreviewScale += e.Delta/1200f;
+        }
+
+        private void Window_MouseMove(object sender, MouseEventArgs e)
+        {
+            //Trace.WriteLine($"window moving{DateTime.Now},{e.GetPosition(App.Current.MainWindow)}");
+            ImageProcesser.MouseWindowPosition = new(e.GetPosition(App.Current.MainWindow));
+            if (e.MiddleButton == MouseButtonState.Pressed)
+                ImageProcesser.ProcessMovingView(false);
+
         }
     }
 }
