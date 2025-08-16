@@ -334,8 +334,14 @@ namespace EZHolodotNet.Core
                     _originalImage?.Dispose();
                     _originalImage = value;
                     OnPropertyChanged(nameof(OriginalImage));
+                    OnPropertyChanged(nameof(IsOriginalImageLoaded));
                 }
             }
+        }
+
+        public bool IsOriginalImageLoaded
+        {
+            get => _originalImage != null && _originalImage.Cols != 0;
         }
         [XmlIgnore] private Mat? _depthImage = new Mat(); //32FC1
         [XmlIgnore] public Mat? DepthImage
@@ -690,6 +696,34 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        private float _indicatorX = 0;
+
+        public float IndicatorX
+        {
+            get => _indicatorX;
+            set
+            {
+                if (!Equals(_indicatorX, value))
+                {
+                    _indicatorX = value;
+                    OnPropertyChanged(nameof(IndicatorX));
+                }
+            }
+        }        
+        private float _indicatorY = 0;
+
+        public float IndicatorY
+        {
+            get => _indicatorY;
+            set
+            {
+                if (!Equals(_indicatorY, value))
+                {
+                    _indicatorY = value;
+                    OnPropertyChanged(nameof(IndicatorY));
+                }
+            }
+        }
         private float _previewX = 0;
 
         public float PreviewX
@@ -703,9 +737,8 @@ namespace EZHolodotNet.Core
                     OnPropertyChanged(nameof(PreviewX));
                 }
             }
-        }
+        }        
         private float _previewY = 0;
-
         public float PreviewY
         {
             get => _previewY;
@@ -718,6 +751,8 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+
+
         private float _previewScale = 1;
 
         public float PreviewScale
@@ -824,7 +859,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private float _aFactor = 0.33f;
+        private float _aFactor = 0.66f;
         public float AFactor
         {
             get => _aFactor;
@@ -837,7 +872,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private float _bFactor = 1111;
+        private float _bFactor = 1400;
         public float BFactor
         {
             get => _bFactor;
@@ -2284,17 +2319,23 @@ namespace EZHolodotNet.Core
 
 
 
-        public void ProcessMovingView(bool isStartMoving = true) // else isMoving
+
+        public void ProcessMovingView(bool? isStartMoving = true)
         {
-            if(isStartMoving)
+            if(isStartMoving == true) // start moving
             {
                 _startMovingPosition = new(_previewX, _previewY);
                 _movingLastPoint = MouseWindowPosition;
                 //Trace.WriteLine($"start moving {_previewX},{_previewY}");
             }
-            else
+            else if (isStartMoving == false) // stop moving
             {
-                Vec2f delta = MouseWindowPosition - (_movingLastPoint ?? MouseWindowPosition);
+                _movingLastPoint = null;
+            }
+            else // else is voving
+            {
+                if (_movingLastPoint == null) return;
+                Vec2f delta = MouseWindowPosition - _movingLastPoint.Value;
                 Vec2f newLocation = _startMovingPosition + delta/_previewScale;
                 PreviewX = newLocation.Item0;
                 PreviewY = newLocation.Item1;

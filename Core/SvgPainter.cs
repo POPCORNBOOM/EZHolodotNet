@@ -27,7 +27,8 @@ namespace EZHolodotNet.Core
 
     public class SvgPainter
     {
-        private const string SvgHeader = "<svg width=\"%wpx\" height=\"%hpx\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n";
+        // width="%wpx" height="%hpx"
+        private const string SvgHeader = "<svg width=\"%wpx\" height=\"%hpx\" viewBox=\"%v\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n";
         private const string SvgFooter = "</svg>";
 
         public static async Task<string> BuildSvgPath(
@@ -82,8 +83,9 @@ namespace EZHolodotNet.Core
             });*/
             return await Task.Run(() =>
             {
+                float minX = float.MaxValue , minY = float.MaxValue, maxX = 0, maxY = 0;
                 var sb = new StringBuilder();
-                sb.Append(SvgHeader.Replace("%w", depthImage.Cols.ToString()).Replace("%h", depthImage.Rows.ToString()));
+                
 
                 int imageWidth = depthImage.Width;
                 float curvatureFactor = imageWidth / bFactor;
@@ -109,13 +111,22 @@ namespace EZHolodotNet.Core
                     float h_x1 = point.Xf + curvatureAFactor;
                     float h_y = point.Yf - curvatureAFactor + offset;
 
+                    if (x0 < minX) minX = x0;
+                    if (x1 > maxX) maxX = x1;
+                    if (x1 < minX) minX = x1;
+                    if (x0 > maxX) maxX = x0;
+                    if (point.Yf < minY) minY = point.Yf;
+                    if (point.Yf > maxY) maxY = point.Yf;
+                    if (y0 < minY) minY = y0;
+                    if (y0 > maxY) maxY = y0;
+
                     var pathString = string.Format(
                         "<path d=\"M {0:0.00},{1:0.00} C {2:0.00},{3:0.00} {4:0.00},{5:0.00} {6:0.00},{7:0.00}\" stroke=\"black\" fill=\"none\" stroke-width=\"1\"/>\n",
                         x0, y0, h_x0, h_y, h_x1, h_y, x1, y0);
 
                     pathBag.Add(pathString);
                 });
-
+                sb.Append(SvgHeader.Replace("%w", depthImage.Cols.ToString()).Replace("%h", depthImage.Rows.ToString()).Replace("%v", $"{minX},{minY},{maxX-minX},{maxY-minY}"));
                 // Combine all paths
                 foreach (var path in pathBag)
                 {

@@ -6,7 +6,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:local="clr-namespace:EZHolodotNet"
         mc:Ignorable="d"
-        Title="EZHolo" Height="720" Width="800" MinHeight="450" MinWidth="750" Icon="/Views/ezholo.png" MouseMove="Window_MouseMove">
+        Title="EZHolo" Height="720" Width="800" MinHeight="450" MinWidth="750" Icon="/Views/ezholo.png" MouseMove="Window_MouseMove" MouseUp="Window_MouseUp" MouseLeave="Window_MouseLeave">
     <Window.InputBindings>
         <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoStepCommand}"/>
         <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoStepCommand}"/>
@@ -171,7 +171,7 @@
                                     <ui:Button Margin="2,0,0,0" Grid.Column="3" VerticalAlignment="Stretch" Icon="{ui:SymbolIcon Symbol=ArrowClockwise24}" Command="{Binding RefreshModelCommand}"/>
                                 </Grid>
                                 <Button Margin="0,4,0,0" Content="重新估算" HorizontalAlignment="Stretch" Command="{Binding ProcessDepthCommand}"/>
-                                
+
                                 <Grid Margin="0,4,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="1*" />
@@ -352,7 +352,7 @@
                                                     ToolTip="【可撤销】清空，移除手动采样中所有采样点" Command="{Binding ClearManualPointsCommand}" CommandParameter="3">
                                                 <ui:SymbolIcon Symbol="Delete24"/>
                                             </Button>
-   
+
                                         </Grid>
                                         <Expander Margin="0,0,0,4" Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=1|3,Mode=OneWay}" IsExpanded="True" Header="画笔设置">
                                             <StackPanel>
@@ -540,7 +540,7 @@
         <Border Grid.Row="1" Grid.Column="2">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="333" />
                     <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
                 <Image MaxHeight="300" Margin="4,0" Source="{Binding GradientColor}" Stretch="Fill"/>
@@ -558,14 +558,98 @@
                     </Grid>
                 </Viewbox>
 
-                <Viewbox MaxHeight="300" Margin="8,16" VerticalAlignment="Stretch" Stretch="UniformToFill">
+                <Viewbox MaxHeight="300" Margin="8,16" VerticalAlignment="Stretch" Stretch="UniformToFill" MouseDown="Viewbox_MouseDown">
                     <Border Width="200" 
                             Height="200"
                             Background="{StaticResource ChessboardBrush}">
                     </Border>
                 </Viewbox>
+                <Grid ClipToBounds="True" Margin="16" SizeChanged="Grid_SizeChanged" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Grid>
+                        <Grid.RenderTransform>
+                            <TranslateTransform X="{Binding IndicatorX}" Y="{Binding IndicatorY}"/>
+                        </Grid.RenderTransform>
+                        <Line X1="0" Y1="0" X2="{Binding PreviewX}" Y2="{Binding PreviewY}" StrokeThickness="5" StrokeDashCap="Round" StrokeDashArray="0,3" Stroke="#88559CE4">
+                            <Line.Style>
+                                <Style TargetType="Line">
+                                    <Setter Property="RenderTransform">
+                                        <Setter.Value>
+                                            <ScaleTransform ScaleX="{Binding PreviewScale}" ScaleY="{Binding PreviewScale}"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="Visibility" Value="Hidden"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsOriginalImageLoaded}" Value="true">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Line.Style>
+                        </Line>
+                    </Grid>
+                </Grid>
+                <TextBlock HorizontalAlignment="Center" FontSize="10" Foreground="White" VerticalAlignment="Center" TextAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsOriginalImageLoaded}" Value="true">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                    <Run Text="开始你的工作" FontSize="14"/>
+                    <LineBreak/>
+                    <Run Text="文件 - 打开图片 或 “点击选择图片”"/>
+                </TextBlock>
+                <TextBlock HorizontalAlignment="Center" FontSize="10" Foreground="White" VerticalAlignment="Center" TextAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsOriginalImageLoaded}" Value="true">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                    <Run Text="图移不回来了？" FontSize="14"/>
+                    <LineBreak/>
+                    <Run Text="深度与采样预览 - 视图 - 重置视图"/>
+                    <LineBreak/>
+                    <Run Text="或者点击"/>
+                    <Hyperlink Command="{Binding RestoreViewCommand}">
+                        <Hyperlink.Style>
+                            <Style TargetType="Hyperlink">
+                                <Setter Property="Foreground" Value="#559CE4"/>
+                                <Style.Triggers>
+                                    <EventTrigger RoutedEvent="Mouse.MouseEnter">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <ColorAnimation Duration="0:0:0.1" Storyboard.TargetProperty="Foreground.Color" To="#E46633"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                    <EventTrigger RoutedEvent="Mouse.MouseLeave">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <ColorAnimation Duration="0:0:1" Storyboard.TargetProperty="Foreground.Color" To="#559CE4"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Hyperlink.Style>
+                        <Run Text="这里" />
+                    </Hyperlink>
+                </TextBlock>
+
+
                 <Grid Margin="16" ClipToBounds="True">
-                    <Grid RenderTransformOrigin="0.5,0.5">
+
+
+                    <Grid RenderTransformOrigin="0.5,0.5" Grid.ColumnSpan="2" Grid.RowSpan="2">
                         <Grid.RenderTransform>
                             <TransformGroup>
                                 <TranslateTransform X="{Binding PreviewX}" Y="{Binding PreviewY}"/>
@@ -617,7 +701,7 @@
                                     <ComboBoxItem Content="Turbo"/>
                                     <ComboBoxItem Content="DeepGreen"/>
                                 </ComboBox>
-                                <Expander Margin="0,4,0,0" Header="视图">
+                                <Expander  IsExpanded="True" Margin="0,4,0,0" Header="视图">
                                     <StackPanel>
                                         <ui:TextBlock>
                                             <Run Text="采样点图/深度图比例"/>
@@ -667,7 +751,7 @@
                                     x:Name="WarningFlyout"
                                     Placement="Top">
                                     <StackPanel>
-                                        
+
                                         <TextBlock Text="噢！" FontWeight="Bold" FontSize="24" Margin="0,0,0,4"/>
                                         <TextBlock LineHeight="20"
                                             Width="280"
@@ -695,10 +779,10 @@
                                     </StackPanel>
                                 </ui:Flyout>
                                 <CheckBox Margin="0,-20,0,0" Grid.Column="1" Content="自动更新预览" IsChecked="{Binding IsAutoGeneratePreview}"/>
-                                
+
                                 <ui:Button HorizontalAlignment="Stretch" Content="生成轨迹预览>>" Appearance="Primary" Command="{Binding CreateScratchCommand}"/>
                                 <Rectangle HorizontalAlignment="Stretch" Fill="#DFDFDF" Height="1" Margin="-8,8"/>
-<!--
+                                <!--
                                 <ui:TextBlock>
                                     <Run Text="仅保留大于零深度的点"/>
                                 </ui:TextBlock>
@@ -721,22 +805,25 @@
                             Value="{Binding ZeroDepth}" 
                             TickFrequency="1" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
 
-                                <ui:TextBlock>
-                                    <Run Text="曲率(a)系数"/>
-                                    <Run Text="{Binding AFactor,StringFormat={}{0:0.00}}"/>
-                                </ui:TextBlock>
-                                <Slider Minimum="0" Maximum="1" 
+                                <Expander IsExpanded="True" Margin="0,4,0,0" Header="轨迹参数">
+                                    <StackPanel>
+                                        <ui:TextBlock>
+                                            <Run Text="曲率(a)系数"/>
+                                            <Run Text="{Binding AFactor,StringFormat={}{0:0.00}}"/>
+                                        </ui:TextBlock>
+                                        <Slider Minimum="0" Maximum="1" 
                             Value="{Binding AFactor}" 
                             TickFrequency="0.01" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
 
-                                <ui:TextBlock>
-                                    <Run Text="拉伸(b)系数"/>
-                                    <Run Text="{Binding BFactor,StringFormat={}{0:0}}"/>
-                                </ui:TextBlock>
-                                <Slider Minimum="100" Maximum="10000" 
+                                        <ui:TextBlock>
+                                            <Run Text="拉伸(b)系数"/>
+                                            <Run Text="{Binding BFactor,StringFormat={}{0:0}}"/>
+                                        </ui:TextBlock>
+                                        <Slider Minimum="500" Maximum="3000" 
                             Value="{Binding BFactor}" 
                             TickFrequency="0.01" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
-
+                                    </StackPanel>
+                                </Expander>
 
                             </StackPanel>
                         </Expander>
@@ -878,7 +965,7 @@
                                                         </LinearGradientBrush>
                                                     </ui:SymbolIcon.Foreground>
                                                 </ui:SymbolIcon>
-                                               
+
                                             </ui:Button.Icon>
                                         </ui:Button>
                                     </StackPanel>
@@ -914,7 +1001,7 @@
                 <Run Text="{Binding MaximumPointCount}"/>
                 <Run Text="点"/>
             </TextBlock>
-        </StackPanel>        
+        </StackPanel>
         <Grid Margin="0,0,8,0" Grid.Row="2" Grid.ColumnSpan="5" HorizontalAlignment="Right">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" />

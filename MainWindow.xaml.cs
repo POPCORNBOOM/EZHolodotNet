@@ -158,7 +158,32 @@ namespace EZHolodotNet
             //Trace.WriteLine($"window moving{DateTime.Now},{e.GetPosition(App.Current.MainWindow)}");
             ImageProcesser.MouseWindowPosition = new(e.GetPosition(App.Current.MainWindow));
             if (e.MiddleButton == MouseButtonState.Pressed)
+                ImageProcesser.ProcessMovingView(null);
+
+        }
+
+        private void Window_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e.MiddleButton == MouseButtonState.Released)
                 ImageProcesser.ProcessMovingView(false);
+        }
+
+        private void Window_MouseLeave(object sender, MouseEventArgs e)
+        {
+            ImageProcesser.ProcessMovingView(false);
+
+        }
+
+        private void Grid_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            ImageProcesser.IndicatorX = (float)e.NewSize.Width / 2;
+            ImageProcesser.IndicatorY = (float)e.NewSize.Height / 2;
+        }
+
+        private void Viewbox_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.MiddleButton == MouseButtonState.Pressed)
+                ImageProcesser.ProcessMovingView();
 
         }
     }
