@@ -1102,6 +1102,19 @@ namespace EZHolodotNet.Core
         {
             get => _mousePixelPosition.Y - DraftRadius;
         }
+        private bool _isSmartEraserEnabled = false;
+        public bool IsSmartEraserEnabled
+        {
+            get => _isSmartEraserEnabled;
+            set
+            {
+                if (!Equals(_isSmartEraserEnabled, value))
+                {
+                    _isSmartEraserEnabled = value;
+                    OnPropertyChanged(nameof(IsSmartEraserEnabled));
+                }
+            }
+        }
         private bool _isTipsPanelVisible = false;
         public bool IsTipsPanelVisible
         {
@@ -1989,8 +2002,8 @@ namespace EZHolodotNet.Core
             // 使用保存对话框选择保存路径
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
-                Filter = "PNG 文件 (*.png)|*.png",
-                DefaultExt = "png",
+                Filter = ext=="png"?"PNG 文件 (*.png)|*.png":"可缩放矢量图形 SVG 文件 (*.svg)|*.svg",
+                DefaultExt = ext,
                 AddExtension = true,
                 FileName = $"{Path.GetFileNameWithoutExtension(FilePath)}{(type == "a" ? "_A" : "_M")}_PointMap.{ext}"
             };
@@ -2314,6 +2327,7 @@ namespace EZHolodotNet.Core
         float _penPathLength = 0;
         Point? _lastPoint;
         List<Point>? _draftingPoints;
+        List<Point>? _erasingPoints;
         Vec2f _startMovingPosition = new(0,0);
         Point? _movingLastPoint;
 
@@ -2364,9 +2378,11 @@ namespace EZHolodotNet.Core
                             }
                             break;
                         case 2:
-                            var p = GetPointsInRadius(MousePixelPosition, EraserRadius);
-                            if (p.Count != 0)
-                                NewOperation(p.Select(pd => pd.Point).ToList(), false);
+                            var p0 = GetPointsInRadius(MousePixelPosition, EraserRadius);
+                            if (p0.Count != 0)
+                            {
+                                _erasingPoints = _erasingPoints?.Union(p0.Select(pd => pd.Point).ToList()).ToList();
+                            }
                             break;
                         case 4://smear
                             var p1 = GetPointsInRadius(MousePixelPosition, SmearRadius);
@@ -2402,6 +2418,7 @@ namespace EZHolodotNet.Core
                 StartMousePoint = MousePixelPosition;
                 _lastPoint = MousePixelPosition;
                 _penPathLength = 0;
+                _erasingPoints = new();
                 _draftingPoints = new();
             }
             else //end
@@ -2426,6 +2443,61 @@ namespace EZHolodotNet.Core
                             //LastStepAmount = interpolated.Count;
                         }
                     }
+                    else if (ManualTool == 2)
+                    {
+                        /*if (_erasingPoints.Count != 0)
+                        {
+                            if (_isSmartEraserEnabled)
+                            {
+                                float averageDepth = 0;
+                                Dictionary<Point, float> pointDepth = new();
+                                foreach(var point in _erasingPoints)
+                                {
+                                    float d = DepthImage.Get<float>(point.Y, point.X);
+                                    pointDepth[point] = d;
+                                    averageDepth += d;
+                                }
+                                averageDepth /= _erasingPoints.Count;
+                                //取出depth大于averageDepth的points（List）赋值给_erasingPoints
+                            }
+                            NewOperation(_erasingPoints, false);
+                            _erasingPoints.Clear();
+                        }*/
+                        if (_erasingPoints.Count != 0)
+                        {
+                            if (_isSmartEraserEnabled && _erasingPoints.Count > 1)
+                            {
+                                // 并行计算深度值
+                                var pointsWithDepth = new (Point Point, float Depth)[_erasingPoints.Count];
+                                Parallel.For(0, _erasingPoints.Count, i =>
+                                {
+                                    var point = _erasingPoints[i];
+                                    pointsWithDepth[i] = (point, DepthImage.Get<float>(point.Y, point.X));
+                                });
+
+                                // 并行计算平均值（使用 SIMD 优化）
+                                float sum = 0;
+                                foreach (var (_, depth) in pointsWithDepth)
+                                {
+                                    sum += depth;
+                                }
+                                float averageDepth = sum / pointsWithDepth.Length;
+
+                                // 并行过滤
+                                var filteredPoints = new System.Collections.Concurrent.ConcurrentBag<Point>();
+                                Parallel.ForEach(pointsWithDepth, item =>
+                                {
+                                    if (item.Depth < averageDepth)
+                                        filteredPoints.Add(item.Point);
+                                });
+
+                                _erasingPoints = new List<Point>(filteredPoints);
+                            }
+
+                            NewOperation(_erasingPoints, false);
+                            _erasingPoints.Clear();
+                        }
+                    }                    
                     else if (ManualTool == 5)
                     {
                         if (_draftingPoints.Count != 0)
@@ -2628,7 +2700,11 @@ namespace EZHolodotNet.Core
                     }
                     else
                     {
-                        manualPoints.RemoveAll(p => Points.Contains(p));
+                        //manualPoints.RemoveAll(p => Points.Contains(p));
+                        foreach(var point in Points)
+                        {
+                            manualPoints.Remove(point);
+                        }
                     }
                 }
                 else
@@ -3106,10 +3182,9 @@ namespace EZHolodotNet.Core
                                 }
                             }
                         }
-
                         foreach (var point in pointsToRemove)
                         {
-                            result.Remove(point);
+                            result.Remove(point);// TODO: 优化算法
                         }
                     }
                 }

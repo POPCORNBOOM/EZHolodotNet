@@ -121,7 +121,7 @@
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
-                <Viewbox MaxHeight="300" Margin="8,16" VerticalAlignment="Stretch" Stretch="UniformToFill">
+                <Viewbox MaxHeight="300" HorizontalAlignment="Center" Margin="8,16" VerticalAlignment="Stretch" Stretch="UniformToFill">
                     <Border Width="200" 
                             Height="200"
                             Background="{StaticResource ChessboardBrush}">
@@ -170,7 +170,7 @@
                                     <ui:Button Margin="2,0,0,0" Grid.Column="2" VerticalAlignment="Stretch" Icon="{ui:SymbolIcon Symbol=Folder24}" Command="{Binding OpenFolderCommand}"/>
                                     <ui:Button Margin="2,0,0,0" Grid.Column="3" VerticalAlignment="Stretch" Icon="{ui:SymbolIcon Symbol=ArrowClockwise24}" Command="{Binding RefreshModelCommand}"/>
                                 </Grid>
-                                <Button Margin="0,4,0,0" Content="重新估算" HorizontalAlignment="Stretch" Command="{Binding ProcessDepthCommand}"/>
+                                <Button Margin="0,4,0,0" Content="重新估算" ToolTip="重新基于原图估算深度图和梯度" HorizontalAlignment="Stretch" Command="{Binding ProcessDepthCommand}"/>
 
                                 <Grid Margin="0,4,0,0">
                                     <Grid.ColumnDefinitions>
@@ -388,6 +388,8 @@
                                                 <Slider Minimum="1" Maximum="50"
                                         Value="{Binding EraserRadius}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
+
+                                                <CheckBox Content="智能橡皮" ToolTip="开启后将自动选择背景采样点清除，对前景采样点则保留" IsChecked="{Binding IsSmartEraserEnabled}"/>
                                             </StackPanel>
                                         </Expander>
                                         <Expander Margin="0,0,0,4" Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=4,Mode=OneWay}" IsExpanded="True" Header="涂抹设置">
@@ -558,7 +560,7 @@
                     </Grid>
                 </Viewbox>
 
-                <Viewbox MaxHeight="300" Margin="8,16" VerticalAlignment="Stretch" Stretch="UniformToFill" MouseDown="Viewbox_MouseDown">
+                <Viewbox MaxHeight="300" HorizontalAlignment="Center" Margin="8,16" VerticalAlignment="Stretch" Stretch="UniformToFill" MouseDown="Viewbox_MouseDown">
                     <Border Width="200" 
                             Height="200"
                             Background="{StaticResource ChessboardBrush}">
@@ -601,7 +603,33 @@
                     </TextBlock.Style>
                     <Run Text="开始你的工作" FontSize="14"/>
                     <LineBreak/>
-                    <Run Text="文件 - 打开图片 或 “点击选择图片”"/>
+                    <Run Text="文件 - 打开图片 或 “点击选择图片”"/>                    
+                    <LineBreak/>
+                    <Run Text="或者点击"/>
+                    <Hyperlink Command="{Binding ChooseImageCommand}">
+                        <Hyperlink.Style>
+                            <Style TargetType="Hyperlink">
+                                <Setter Property="Foreground" Value="#559CE4"/>
+                                <Style.Triggers>
+                                    <EventTrigger RoutedEvent="Mouse.MouseEnter">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <ColorAnimation Duration="0:0:0.1" Storyboard.TargetProperty="Foreground.Color" To="#E46633"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                    <EventTrigger RoutedEvent="Mouse.MouseLeave">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <ColorAnimation Duration="0:0:0.5" Storyboard.TargetProperty="Foreground.Color" To="#559CE4"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Hyperlink.Style>
+                        <Run Text="这里" />
+                    </Hyperlink>
                 </TextBlock>
                 <TextBlock HorizontalAlignment="Center" FontSize="10" Foreground="White" VerticalAlignment="Center" TextAlignment="Center">
                     <TextBlock.Style>
@@ -634,7 +662,7 @@
                                     <EventTrigger RoutedEvent="Mouse.MouseLeave">
                                         <BeginStoryboard>
                                             <Storyboard>
-                                                <ColorAnimation Duration="0:0:1" Storyboard.TargetProperty="Foreground.Color" To="#559CE4"/>
+                                                <ColorAnimation Duration="0:0:0.5" Storyboard.TargetProperty="Foreground.Color" To="#559CE4"/>
                                             </Storyboard>
                                         </BeginStoryboard>
                                     </EventTrigger>
@@ -719,7 +747,10 @@
                                         <Slider Minimum="0.25" Maximum="4" 
                             Value="{Binding PreviewScale}" 
                             TickFrequency="0.01" IsSnapToTickEnabled="True"/>
-
+                                        
+                                        <ui:TextBlock>
+                                            <Run Text="位置"/>
+                                        </ui:TextBlock>
                                         <Grid Margin="0,4,0,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="20" />
@@ -727,16 +758,17 @@
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="1*" />
+                                                <RowDefinition Height="4" />
                                                 <RowDefinition Height="1*" />
                                             </Grid.RowDefinitions>
-                                            <ui:TextBlock VerticalAlignment="Center">
+                                            <ui:TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">
                                                 <Run Text="X"/>
                                             </ui:TextBlock>
                                             <ui:NumberBox Grid.Row="0" Grid.Column="1" MaxDecimalPlaces="1" Value="{Binding PreviewX}"/>
-                                            <ui:TextBlock Grid.Row="1" VerticalAlignment="Center">
+                                            <ui:TextBlock Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <Run Text="Y"/>
                                             </ui:TextBlock>
-                                            <ui:NumberBox Grid.Row="1" Grid.Column="1" MaxDecimalPlaces="1" Value="{Binding PreviewY}"/>
+                                            <ui:NumberBox Grid.Row="2" Grid.Column="1" MaxDecimalPlaces="1" Value="{Binding PreviewY}"/>
 
                                         </Grid>
                                         <ui:Button Icon="{ui:SymbolIcon Symbol=ArrowRotateCounterclockwise24}" Content="重置视图" Command="{Binding RestoreViewCommand}" Margin="0,4,0,0" HorizontalAlignment="Stretch"/>
@@ -838,7 +870,7 @@
                     <RowDefinition Height="auto" MinHeight="200" />
                     <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
-                <Viewbox MaxHeight="300" Margin="8,16" Stretch="UniformToFill">
+                <Viewbox MaxHeight="300" HorizontalAlignment="Center" Margin="8,16" Stretch="UniformToFill">
                     <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="200" Height="200"
                        Background="{StaticResource ChessboardBrush}">
                     </Border>
