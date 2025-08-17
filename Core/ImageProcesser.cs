@@ -1493,6 +1493,143 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        public int DeduplicationGridWidth
+        {
+            get
+            {
+                int gridWidth = 2;
+                try
+                {
+                    gridWidth = (int)(OriginImageWidth * Math.Pow(0.5, Math.Log2(OriginImageWidth) * _deduplicationAccuracy));
+                }
+                catch (Exception e)
+                {
+
+                }
+                gridWidth = gridWidth <= 1 ? 2 : gridWidth;
+                return gridWidth;
+            }
+        }
+        public int DeduplicationGridHeight
+        {
+            get
+            {
+                int gridHeight = 2;
+                try
+                {
+                    gridHeight = (int)(OriginImageHeight * Math.Pow(0.5, Math.Log2(OriginImageHeight) * _deduplicationAccuracy));
+                }
+                catch (Exception e)
+                {
+
+                }
+                gridHeight = gridHeight <= 1 ? 2 : gridHeight;
+                return gridHeight;
+            }
+        }
+        public int DeduplicationMaxCount
+        {
+            get
+            {
+                int maxCount = 1;
+                try
+                {
+                    int gridSize = DeduplicationGridWidth * DeduplicationGridHeight;
+                    maxCount = (int)(gridSize * Math.Pow(0.5, Math.Log2(gridSize) * _deduplicationDensity));
+                }
+                catch (Exception e)
+                {
+
+                }
+                maxCount = maxCount == 0 ? 1 : maxCount;
+                return maxCount;
+            }
+        }        private float _deduplicationToolAccuracy = 0.8f;
+
+        public float DeduplicationToolAccuracy
+        {
+            get => _deduplicationToolAccuracy;
+            set
+            {
+                if (!Equals(_deduplicationToolAccuracy, value))
+                {
+                    _deduplicationToolAccuracy = value;
+                    OnPropertyChanged(nameof(DeduplicationToolAccuracy));
+                    OnPropertyChanged(nameof(DeduplicationToolGridHeight));
+                    OnPropertyChanged(nameof(DeduplicationToolGridWidth));
+                    OnPropertyChanged(nameof(DeduplicationToolMaxCount));
+                    //RefreshDisplay();//实时更新较卡，已移交MouseUp Event，下同
+                }
+            }
+        }
+        private float _deduplicationToolDensity = 0.85f;
+
+        public float DeduplicationToolDensity
+        {
+            get => _deduplicationToolDensity;
+            set
+            {
+                if (!Equals(_deduplicationToolDensity, value))
+                {
+                    _deduplicationToolDensity = value;
+                    OnPropertyChanged(nameof(DeduplicationToolDensity));
+                    OnPropertyChanged(nameof(DeduplicationToolMaxCount));
+                    //RefreshDisplay();
+                }
+            }
+        }
+        public int DeduplicationToolGridWidth
+        {
+            get
+            {
+                int gridWidth = 2;
+                try
+                {
+                    gridWidth = (int)(OriginImageWidth * Math.Pow(0.5, Math.Log2(OriginImageWidth) * _deduplicationToolAccuracy));
+                }
+                catch (Exception e)
+                {
+
+                }
+                gridWidth = gridWidth <= 1 ? 2 : gridWidth;
+                return gridWidth;
+            }
+        }
+        public int DeduplicationToolGridHeight
+        {
+            get
+            {
+                int gridHeight = 2;
+                try
+                {
+                    gridHeight = (int)(OriginImageHeight * Math.Pow(0.5, Math.Log2(OriginImageHeight) * _deduplicationToolAccuracy));
+                }
+                catch (Exception e)
+                {
+
+                }
+                gridHeight = gridHeight <= 1 ? 2 : gridHeight;
+                return gridHeight;
+            }
+        }
+        public int DeduplicationToolMaxCount
+        {
+            get
+            {
+                int maxCount = 1;
+                try
+                {
+                    int gridSize = DeduplicationToolGridWidth * DeduplicationToolGridHeight;
+                    maxCount = (int)(gridSize * Math.Pow(0.5, Math.Log2(gridSize) * _deduplicationToolDensity));
+                }
+                catch (Exception e)
+                {
+
+                }
+                maxCount = maxCount == 0 ? 1 : maxCount;
+                return maxCount;
+            }
+        }
         private bool _isExcludeMaskEnabled = false;
         public bool IsExcludeMaskEnabled
         {
@@ -2662,6 +2799,7 @@ namespace EZHolodotNet.Core
             private int maxWidth = 0;
             private int maxHeight = 0;
             private List<Point> manualPoints;
+            private HashSet<Point> manualPointsSet;
             public List<Point> Points { get; }
             public List<int> PointIndice { get; }
             public bool? IsAddOperation { get; }  // 修改为 bool?，null 表示 Move 操作
@@ -2673,6 +2811,7 @@ namespace EZHolodotNet.Core
                 maxWidth = maxW;
                 maxHeight = maxH;
                 manualPoints = manualPointsStored;
+                manualPointsSet = new HashSet<Point>(manualPointsStored);
                 Points = new List<Point>(points);
                 IsAddOperation = isAddOperation;  // Add 操作时传入 true 或 false
                 Offset = null;  // 没有偏移
@@ -2694,7 +2833,7 @@ namespace EZHolodotNet.Core
             {
                 if (IsAddOperation.HasValue)
                 {
-                    if (IsAddOperation.Value)
+                    /*if (IsAddOperation.Value)
                     {
                         manualPoints.AddRange(Points);
                     }
@@ -2704,6 +2843,23 @@ namespace EZHolodotNet.Core
                         foreach(var point in Points)
                         {
                             manualPoints.Remove(point);
+                        }
+                    }*/
+                    if (IsAddOperation.Value)
+                    {
+                        manualPoints.AddRange(Points);
+                        if (manualPointsSet != null)
+                        {
+                            manualPointsSet.UnionWith(Points);
+                        }
+                    }
+                    else
+                    {
+                        var pointsToRemove = new HashSet<Point>(Points);
+                        manualPoints.RemoveAll(p => pointsToRemove.Contains(p));
+                        if (manualPointsSet != null)
+                        {
+                            manualPointsSet.ExceptWith(Points);
                         }
                     }
                 }
@@ -3051,58 +3207,7 @@ namespace EZHolodotNet.Core
             return gradientMat;
         }
 
-        public int DeduplicationGridWidth
-        {
-            get
-            {
-                int gridWidth = 2;
-                try
-                {
-                    gridWidth = (int)(OriginImageWidth * Math.Pow(0.5, Math.Log2(OriginImageWidth) * _deduplicationAccuracy));
-                }
-                catch(Exception e)
-                {
-
-                }
-                gridWidth = gridWidth <= 1 ? 2 : gridWidth;
-                return gridWidth;
-            }
-        }            
-        public int DeduplicationGridHeight
-        {
-            get
-            {
-                int gridHeight = 2;
-                try
-                {
-                    gridHeight = (int)(OriginImageHeight * Math.Pow(0.5, Math.Log2(OriginImageHeight) * _deduplicationAccuracy));
-                }
-                catch(Exception e)
-                {
-
-                }
-                gridHeight = gridHeight <= 1 ? 2 : gridHeight;
-                return gridHeight;
-            }
-        }              
-        public int DeduplicationMaxCount
-        {
-            get
-            {
-                int maxCount = 1;
-                try
-                {
-                    int gridSize = DeduplicationGridWidth * DeduplicationGridHeight;
-                    maxCount = (int)(gridSize * Math.Pow(0.5, Math.Log2(gridSize) * _deduplicationDensity));
-                }
-                catch (Exception e)
-                {
-
-                }
-                maxCount = maxCount == 0 ? 1 : maxCount;
-                return maxCount;
-            }
-        }        
+ 
         private List<Point> PostProcessPoints(List<Point> points)
         {
             int originCount = points.Count;
@@ -3172,11 +3277,11 @@ namespace EZHolodotNet.Core
                             if (gridPoints.Count > DeduplicationMaxCount)
                             {
                                 // 随机选择多余的点进行删除
-                                Random rand = new Random();
                                 int pointsToDelete = gridPoints.Count - DeduplicationMaxCount;
                                 for (int i = 0; i < pointsToDelete; i++)
                                 {
-                                    int indexToRemove = rand.Next(gridPoints.Count);
+                                    
+                                    int indexToRemove = Random.Shared.Next(gridPoints.Count);
                                     pointsToRemove.Add(gridPoints[indexToRemove]);
                                     gridPoints.RemoveAt(indexToRemove);
                                 }

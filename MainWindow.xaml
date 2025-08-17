@@ -323,6 +323,7 @@
                                                 <RowDefinition Height="1*" />
                                                 <RowDefinition Height="1*" />
                                                 <RowDefinition Height="1*" />
+                                                <RowDefinition Height="1*" />
                                             </Grid.RowDefinitions>
                                             <ToggleButton Padding="0,7" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,2,0" 
                                                           ToolTip="鼠标"  Command="{Binding SetManualToolCommand}" CommandParameter="0" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=0}">
@@ -336,6 +337,7 @@
                                                           ToolTip="【可撤销】橡皮擦，在“深度/采样预览图”中拖拽或单击，以在手动采样中移除一系列采样点" Command="{Binding SetManualToolCommand}" CommandParameter="2" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=2}">
                                                 <ui:SymbolIcon Symbol="Eraser24"/>
                                             </ToggleButton>
+                                            
                                             <ToggleButton Padding="0,7" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,4,2,0" Grid.Row="1" Grid.Column="0" 
                                                           ToolTip="【可撤销】线条，在“深度/采样预览图”中拖拽或单击，以在手动采样中添加一系列采样点或单个采样点" Command="{Binding SetManualToolCommand}" CommandParameter="3" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=3}">
                                                 <ui:SymbolIcon Symbol="Line24"/>
@@ -348,7 +350,21 @@
                                                           ToolTip="【可撤销】梯度偏移，在“深度/采样预览图”中拖拽或单击，以在手动采样中对采样点向梯度方向/反方向施加偏移" Command="{Binding SetManualToolCommand}" CommandParameter="5" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=5}">
                                                 <ui:SymbolIcon Symbol="CalendarPattern20"/>
                                             </ToggleButton>
-                                            <Button Grid.ColumnSpan="3" Background="#e44c55" Height="33" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,4,2,0" Grid.Row="2" Grid.Column="0" 
+                                            
+                                            <ToggleButton Padding="0,7" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,4,2,0" Grid.Row="2" Grid.Column="0" 
+                                                          ToolTip="【可撤销】" Command="{Binding SetManualToolCommand}" CommandParameter="6" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=6}">
+                                                <ui:SymbolIcon Symbol="ArrowSyncDismiss24"/>
+                                            </ToggleButton>
+                                            <ToggleButton Visibility="Collapsed" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,4,2,0" Grid.Row="2" Grid.Column="1" 
+                                                          ToolTip="【可撤销】" Command="{Binding SetManualToolCommand}" CommandParameter="7" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=7}">
+                                                <ui:SymbolIcon Symbol="HandDraw24"/>
+                                            </ToggleButton>
+                                            <ToggleButton Visibility="Collapsed" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,4,0,0" Grid.Row="2" Grid.Column="2" 
+                                                          ToolTip="【可撤销】" Command="{Binding SetManualToolCommand}" CommandParameter="8" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=8}">
+                                                <ui:SymbolIcon Symbol="CalendarPattern20"/>
+                                            </ToggleButton>
+                                            
+                                            <Button Grid.ColumnSpan="3" Background="#e44c55" Height="33" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,4,2,0" Grid.Row="3" Grid.Column="0" 
                                                     ToolTip="【可撤销】清空，移除手动采样中所有采样点" Command="{Binding ClearManualPointsCommand}" CommandParameter="3">
                                                 <ui:SymbolIcon Symbol="Delete24"/>
                                             </Button>
@@ -379,6 +395,7 @@
                                                 <Slider Minimum="1" Maximum="50"
                                         Value="{Binding EraserRadius}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                                <!--
                                                 <ui:TextBlock>
                                                     <Run Text="选择性擦除"/>
                                                     <Run Text="{Binding EraserRadius,StringFormat={}{0:0}}"/>
@@ -388,8 +405,8 @@
                                                 <Slider Minimum="1" Maximum="50"
                                         Value="{Binding EraserRadius}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
-
-                                                <CheckBox Content="智能橡皮" ToolTip="开启后将自动选择背景采样点清除，对前景采样点则保留" IsChecked="{Binding IsSmartEraserEnabled}"/>
+                                                -->
+                                                <CheckBox Content="智能边缘橡皮" ToolTip="开启后将自动选择背景采样点清除，对前景采样点则保留" IsChecked="{Binding IsSmartEraserEnabled}"/>
                                             </StackPanel>
                                         </Expander>
                                         <Expander Margin="0,0,0,4" Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=4,Mode=OneWay}" IsExpanded="True" Header="涂抹设置">
@@ -439,6 +456,31 @@
 
                                             </StackPanel>
                                         </Expander>
+                                        <Expander Margin="0,0,0,4" Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=6,Mode=OneWay}" IsExpanded="True" Header="密度降低工具">
+                                            <StackPanel>
+                                                <TextBlock>
+                                                    <Run Text="去重精度"/>
+                                                    <Run Text="{Binding DeduplicationToolAccuracy,StringFormat={}{0:0.0%}}"/>
+                                                </TextBlock>
+                                                <Slider Minimum="0" Maximum="1" Value="{Binding DeduplicationToolAccuracy}"/>
+                                                <TextBlock>
+                                                    <Run Text="去重力度"/>
+                                                    <Run Text="{Binding DeduplicationToolDensity,StringFormat={}{0:0.0%}}"/>
+                                                </TextBlock>
+                                                <Slider Minimum="0" Maximum="1" Value="{Binding DeduplicationToolDensity}"/>
+                                                <TextBlock FontSize="8" Foreground="#FF808080">
+                                                    <Run Text="去重块大小"/>
+                                                    <Run Text="{Binding DeduplicationToolGridWidth,StringFormat={}{0:0},Mode=OneWay}"/>
+                                                    <Run Text="x"/>
+                                                    <Run Text="{Binding DeduplicationToolGridHeight,StringFormat={}{0:0},Mode=OneWay}"/>
+                                                    <Run Text="px"/>
+                                                    <LineBreak/>
+                                                    <Run Text="单块最大采样点数"/>
+                                                    <Run Text="{Binding DeduplicationToolMaxCount,StringFormat={}{0:0},Mode=OneWay}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Expander>
+
                                         <Grid Margin="0,4">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="1*" />
@@ -471,39 +513,6 @@
                                 <Expander Visibility="{Binding IsPostProcessEnabled,Converter={StaticResource BooleanToVisibilityConverter}}" IsExpanded="True" Header="采样后处理">
                                     <StackPanel>
                                         <CheckBox Content="去重" IsChecked="{Binding IsDublicateRemoveEnabled}"/>
-                                        <Expander Visibility="{Binding IsDublicateRemoveEnabled,Converter={StaticResource BooleanToVisibilityConverter}}" IsExpanded="False" Header="高级去重">
-                                            <StackPanel>
-                                                <CheckBox IsChecked="{Binding IsDublicateRemovePlusEnabled}">
-                                                    <TextBlock>
-                                                        <Run Text="启用高级去重"/>
-                                                        <InlineUIContainer>
-                                                            <ui:Button BorderBrush="Transparent" VerticalAlignment="Bottom" Padding="0" Width="14" Height="14" Margin="0" Icon="{ui:SymbolIcon Symbol=Clock24}"
-                                                                       ToolTip="这是一个耗时操作"/>
-                                                        </InlineUIContainer>
-                                                    </TextBlock>
-                                                </CheckBox>
-                                                <TextBlock>
-                                                    <Run Text="去重精度"/>
-                                                    <Run Text="{Binding DeduplicationAccuracy,StringFormat={}{0:0.0%}}"/>
-                                                </TextBlock>
-                                                <Slider Thumb.DragCompleted="TimeConsumingSlider_DragCompleted" Minimum="0" Maximum="1" Value="{Binding DeduplicationAccuracy}"/>
-                                                <TextBlock>
-                                                    <Run Text="去重力度"/>
-                                                    <Run Text="{Binding DeduplicationDensity,StringFormat={}{0:0.0%}}"/>
-                                                </TextBlock>
-                                                <Slider Thumb.DragCompleted="TimeConsumingSlider_DragCompleted" Minimum="0" Maximum="1" Value="{Binding DeduplicationDensity}"/>
-                                                <TextBlock FontSize="8" Foreground="#FF808080">
-                                                    <Run Text="去重块大小"/>
-                                                    <Run Text="{Binding DeduplicationGridWidth,StringFormat={}{0:0},Mode=OneWay}"/>
-                                                    <Run Text="x"/>
-                                                    <Run Text="{Binding DeduplicationGridHeight,StringFormat={}{0:0},Mode=OneWay}"/>
-                                                    <Run Text="px"/>
-                                                    <LineBreak/>
-                                                    <Run Text="单块最大采样点数"/>
-                                                    <Run Text="{Binding DeduplicationMaxCount,StringFormat={}{0:0},Mode=OneWay}"/>
-                                                </TextBlock>
-                                            </StackPanel>
-                                        </Expander>
                                         <CheckBox IsChecked="{Binding IsExcludeMaskEnabled}">
                                             <TextBlock>
                                                 <Run Text="启用排除"/>
