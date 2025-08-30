@@ -6,16 +6,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>ezholo.ico</ApplicationIcon>
+    <ApplicationIcon>ezholoNEW.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Images\instruction.png" />
-    <None Remove="Views\ezholo.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="ezholo.ico" />
+    <Content Include="ezholoNEW.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,7 +29,6 @@
 
   <ItemGroup>
     <Resource Include="Images\instruction.png" />
-    <Resource Include="Views\ezholo.png" />
   </ItemGroup>
 
   <ItemGroup>

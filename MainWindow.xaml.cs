@@ -176,8 +176,11 @@ namespace EZHolodotNet
 
         private void Grid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            ImageProcesser.IndicatorX = (float)e.NewSize.Width / 2;
-            ImageProcesser.IndicatorY = (float)e.NewSize.Height / 2;
+            if(ImageProcesser!=null)
+            {
+                ImageProcesser.IndicatorX = (float)e.NewSize.Width / 2;
+                ImageProcesser.IndicatorY = (float)e.NewSize.Height / 2;
+            }
         }
 
         private void Viewbox_MouseDown(object sender, MouseButtonEventArgs e)

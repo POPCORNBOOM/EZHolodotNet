@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:EZHolodotNet.Views"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
-        Title="3DPreviewWindow" Height="650" Width="800" Icon="/Views/ezholo.png">
+        Title="3D动态预览" Height="650" Width="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -28,10 +28,10 @@
             <Image Source="{Binding DisplayImageScratch3DLeft}" HorizontalAlignment="Center">
                 <Image.Style>
                     <Style>
-                        <Setter Property="Grid.Column" Value="1"/>
+                        <Setter Property="Grid.Column" Value="0"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsParallelEye3DMode}" Value="true">
-                                <Setter Property="Grid.Column" Value="0"/>
+                                <Setter Property="Grid.Column" Value="1"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -40,10 +40,10 @@
             <Image Source="{Binding DisplayImageScratch3DRight}" HorizontalAlignment="Center">
                 <Image.Style>
                     <Style>
-                        <Setter Property="Grid.Column" Value="0"/>
+                        <Setter Property="Grid.Column" Value="1"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsParallelEye3DMode}" Value="true">
-                                <Setter Property="Grid.Column" Value="1"/>
+                                <Setter Property="Grid.Column" Value="0"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>

@@ -6,10 +6,35 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:local="clr-namespace:EZHolodotNet"
         mc:Ignorable="d"
-        Title="EZHolo" Height="720" Width="800" MinHeight="450" MinWidth="750" Icon="/Views/ezholo.png" MouseMove="Window_MouseMove" MouseUp="Window_MouseUp" MouseLeave="Window_MouseLeave">
+        Title="EZHolo" Height="720" Width="800" MinHeight="450" MinWidth="850" MouseMove="Window_MouseMove" MouseUp="Window_MouseUp" MouseLeave="Window_MouseLeave">
     <Window.InputBindings>
+        <!-- 文件操作 -->
+        <KeyBinding Gesture="Ctrl+R" Command="{Binding ChooseImageCommand}"/>
+        <KeyBinding Gesture="Ctrl+E" Command="{Binding ExportScratchCommand}"/>
+
+        <!-- 深度图操作 -->
+        <KeyBinding Gesture="Ctrl+Shift+E" Command="{Binding ExportDepthCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+I" Command="{Binding ImportDepthCommand}"/>
+
+        <!-- 点图操作 -->
+        <KeyBinding Gesture="Ctrl+Shift+P" Command="{Binding ExportPointsCommand}" CommandParameter="a"/>
+        <KeyBinding Gesture="Ctrl+Alt+P" Command="{Binding ExportPointsCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding ExportSvgPointsCommand}" CommandParameter="a"/>
+        <KeyBinding Gesture="Ctrl+Alt+S" Command="{Binding ExportSvgPointsCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+M" Command="{Binding ImportPointsCommand}"/>
+
+        <!-- 配置操作 -->
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding ExportConfigCommand}"/>
+        <KeyBinding Gesture="Ctrl+L" Command="{Binding ImportConfigCommand}"/>
+
+        <!-- 编辑操作 -->
         <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoStepCommand}"/>
         <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoStepCommand}"/>
+
+        <!-- 工具操作 -->
+        <KeyBinding Gesture="F5" Command="{Binding ProcessDepthCommand}"/>
+        <KeyBinding Gesture="Ctrl+G" Command="{Binding CreateScratchCommand}"/>
+        <KeyBinding Gesture="F12" Command="{Binding DebugCommand}" CommandParameter="DepthContourMapContrust"/>
     </Window.InputBindings>
     <Window.Resources>
         <Storyboard x:Key="FadeInAnimation">
@@ -65,53 +90,57 @@
             <TextBlock Foreground="White" Text="{Binding TipsString}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8"/>
         </Border>
 
-        <Menu>
-            <ui:MenuItem Header="文件" Icon="{ui:SymbolIcon Symbol=Document24}">
-                <ui:MenuItem Header="打开图片" Icon="{ui:SymbolIcon Symbol=ImageAdd24}" Command="{Binding ChooseImageCommand}">
-                </ui:MenuItem>
+        <Menu Grid.ColumnSpan="3">
+            <ui:MenuItem Header="文件(_F)" Icon="{ui:SymbolIcon Symbol=Document24}">
+                <ui:MenuItem Header="打开图像" InputGestureText="Ctrl+R" Icon="{ui:SymbolIcon Symbol=ImageAdd24}" Command="{Binding ChooseImageCommand}"/>
                 <Separator/>
 
                 <ui:MenuItem Header="深度图" Icon="{ui:SymbolIcon Symbol=DocumentCatchUp24}">
-                    <ui:MenuItem Header="导出深度*" ToolTip="将会丢失小数精度" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportDepthCommand}">
-                    </ui:MenuItem>
-                    <ui:MenuItem Header="导入深度" Icon="{ui:SymbolIcon Symbol=ArrowImport24}" Command="{Binding ImportDepthCommand}">
-                    </ui:MenuItem>
+                    <ui:MenuItem Header="导出深度*" InputGestureText="Ctrl+Shift+E" ToolTip="将会丢失小数精度" 
+                     Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportDepthCommand}"/>
+                    <ui:MenuItem Header="导入深度" InputGestureText="Ctrl+Shift+I" 
+                     Icon="{ui:SymbolIcon Symbol=ArrowImport24}" Command="{Binding ImportDepthCommand}"/>
                 </ui:MenuItem>
                 <Separator/>
 
                 <ui:MenuItem Header="点图" Icon="{ui:SymbolIcon Symbol=GridDots24}">
-                    <ui:MenuItem Header="导出PNG点图(合一)" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportPointsCommand}" CommandParameter="a">
-                    </ui:MenuItem>
-                    <ui:MenuItem Header="导出PNG点图(仅手动采样)" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportPointsCommand}">
-                    </ui:MenuItem>
+                    <!-- PNG导出组 -->
+                    <ui:MenuItem Header="导出PNG点图(合一)" InputGestureText="Ctrl+Shift+P" 
+                     Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportPointsCommand}" CommandParameter="a"/>
+                    <ui:MenuItem Header="导出PNG点图(仅手动)" InputGestureText="Ctrl+Alt+P" 
+                     Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportPointsCommand}"/>
                     <Separator/>
-                    <ui:MenuItem Header="导出SVG无损点图(合一)" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportSvgPointsCommand}" CommandParameter="a">
-                    </ui:MenuItem>
-                    <ui:MenuItem Header="导出SVG无损点图(仅手动采样)" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportSvgPointsCommand}">
-                    </ui:MenuItem>
+                    <!-- SVG导出组 -->
+                    <ui:MenuItem Header="导出SVG点图(合一)" InputGestureText="Ctrl+Shift+S" 
+                     Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportSvgPointsCommand}" CommandParameter="a"/>
+                    <ui:MenuItem Header="导出SVG点图(仅手动)" InputGestureText="Ctrl+Alt+S" 
+                     Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportSvgPointsCommand}"/>
                     <Separator/>
-                    <ui:MenuItem Header="导入点图" Icon="{ui:SymbolIcon Symbol=ArrowImport24}" Command="{Binding ImportPointsCommand}">
-                    </ui:MenuItem>
+                    <ui:MenuItem Header="导入点图" InputGestureText="Ctrl+Shift+M" 
+                     Icon="{ui:SymbolIcon Symbol=ArrowImport24}" Command="{Binding ImportPointsCommand}"/>
                 </ui:MenuItem>
                 <Separator/>
-                <ui:MenuItem Header="保存当前配置" Icon="{ui:SymbolIcon Symbol=DocumentSave24}" Command="{Binding ExportConfigCommand}">
-                </ui:MenuItem>
-                <ui:MenuItem Header="读取配置" Icon="{ui:SymbolIcon Symbol=DocumentChevronDouble24}" Command="{Binding ImportConfigCommand}">
-                </ui:MenuItem>
-                <ui:MenuItem Header="导出刮擦轨迹" Icon="{ui:SymbolIcon Symbol=InkStroke24}" Command="{Binding ExportScratchCommand}"/>
 
+                <ui:MenuItem Header="保存配置" InputGestureText="Ctrl+S" 
+                 Icon="{ui:SymbolIcon Symbol=DocumentSave24}" Command="{Binding ExportConfigCommand}"/>
+                <ui:MenuItem Header="加载配置" InputGestureText="Ctrl+L" 
+                 Icon="{ui:SymbolIcon Symbol=DocumentChevronDouble24}" Command="{Binding ImportConfigCommand}"/>
+                <ui:MenuItem Header="导出刮擦轨迹" InputGestureText="Ctrl+E" Icon="{ui:SymbolIcon Symbol=InkStroke24}" Command="{Binding ExportScratchCommand}"/>
             </ui:MenuItem>
-            <ui:MenuItem Header="编辑" Icon="{ui:SymbolIcon Symbol=Edit24}">
-                <ui:MenuItem Header="撤销" Icon="{ui:SymbolIcon Symbol=ArrowUndo24}" ToolTip="撤销" Command="{Binding UndoStepCommand}"/>
-                <ui:MenuItem Header="重做" Icon="{ui:SymbolIcon Symbol=ArrowRedo24}" ToolTip="重做" Command="{Binding RedoStepCommand}"/>
+
+            <ui:MenuItem Header="编辑(_E)" Icon="{ui:SymbolIcon Symbol=Edit24}">
+                <ui:MenuItem Header="撤销" InputGestureText="Ctrl+Z" Icon="{ui:SymbolIcon Symbol=ArrowUndo24}" Command="{Binding UndoStepCommand}"/>
+                <ui:MenuItem Header="重做" InputGestureText="Ctrl+Y" Icon="{ui:SymbolIcon Symbol=ArrowRedo24}" Command="{Binding RedoStepCommand}"/>
             </ui:MenuItem>
-            <ui:MenuItem Header="工具" Icon="{ui:SymbolIcon Symbol=Wrench24}">
-                <ui:MenuItem Header="重新估算深度" Icon="{ui:SymbolIcon Symbol=CatchUp24}" Command="{Binding ProcessDepthCommand}"/>
-                <ui:MenuItem Header="生成轨迹预览" Icon="{ui:SymbolIcon Symbol=EyeLines24}" Command="{Binding CreateScratchCommand}"/>
+
+            <ui:MenuItem Header="工具(_T)" Icon="{ui:SymbolIcon Symbol=Wrench24}">
+                <ui:MenuItem Header="重新估算深度" InputGestureText="F5" 
+                 Icon="{ui:SymbolIcon Symbol=CatchUp24}" Command="{Binding ProcessDepthCommand}"/>
+                <ui:MenuItem Header="生成轨迹预览" InputGestureText="Ctrl+G" Icon="{ui:SymbolIcon Symbol=EyeLines24}" Command="{Binding CreateScratchCommand}"/>
                 <Separator/>
-                <ui:MenuItem Header="开源信息" Icon="{ui:SymbolIcon Symbol=BookInformation24}"  Command="{Binding OpenCustomMessageBoxCommand}"/>
+                <ui:MenuItem Header="开源信息" Icon="{ui:SymbolIcon Symbol=BookInformation24}" Command="{Binding OpenCustomMessageBoxCommand}"/>
                 <Separator/>
-                <ui:MenuItem Header="Debug" Command="{Binding DebugCommand}" CommandParameter="DepthContourMapContrust"/>
+                <ui:MenuItem Header="Debug工具" InputGestureText="F12" Command="{Binding DebugCommand}" CommandParameter="DepthContourMapContrust"/>
             </ui:MenuItem>
         </Menu>
         <Border Grid.Row="1">
@@ -121,14 +150,14 @@
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
-                <Viewbox MaxHeight="300" HorizontalAlignment="Center" Margin="8,16" VerticalAlignment="Stretch" Stretch="UniformToFill">
+                <Viewbox MaxHeight="300" HorizontalAlignment="Center" Margin="8,16" VerticalAlignment="Stretch" Stretch="UniformToFill" MouseDown="Viewbox_MouseDown">
                     <Border Width="200" 
                             Height="200"
                             Background="{StaticResource ChessboardBrush}">
                     </Border>
                 </Viewbox>
                 <Grid Margin="16" ClipToBounds="True">
-                    <Image RenderTransformOrigin="0.5,0.5" MaxHeight="300" Source="{Binding FilePath}" Stretch="Uniform">
+                    <Image MouseWheel="Image_MouseWheel" MouseMove="Image_MouseMove" MouseDown="Image_MouseDown" MouseUp="Image_MouseUp" MouseLeave="Image_MouseLeave" RenderTransformOrigin="0.5,0.5" MaxHeight="300" Source="{Binding FilePath}" Stretch="Uniform">
                         <Image.RenderTransform>
                             <TransformGroup>
                                 <TranslateTransform X="{Binding PreviewX}" Y="{Binding PreviewY}"/>
@@ -137,7 +166,7 @@
                         </Image.RenderTransform>
                     </Image>
                 </Grid>
-                <TextBlock VerticalAlignment="Bottom" Foreground="#D3D3D3" Margin="8,16" FontSize="8">
+                <TextBlock VerticalAlignment="Bottom" Foreground="#B3B3B3" Margin="8,16" FontSize="7">
                     <Run Text="{Binding FilePath,Mode=OneWay}"/>
                     <Run Text="@"/>
                     <Run Text="{Binding OriginImageWidth,Mode=OneWay}"/>
@@ -252,12 +281,12 @@
                                             <StackPanel>
                                                 <CheckBox IsChecked="{Binding IsBinaryDeNoise}" Content="二值降噪"/>
 
-                                                <ui:TextBlock Visibility="{Binding IsBinaryDeNoise,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}">
+                                                <ui:TextBlock>
                                                     <Run Text="细节因数"/>
                                                     <Run Text="{Binding DepthContourDetailFactor,StringFormat={}{0:0.00}}"/>
                                                 </ui:TextBlock>
 
-                                                <Slider Visibility="{Binding IsBinaryDeNoise,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}" Minimum="-2" Maximum="2"
+                                                <Slider Minimum="-2" Maximum="2"
                                         Value="{Binding DepthContourDetailFactor}" Thumb.DragCompleted="TimeConsumingSlider_DragCompleted"
                                         TickFrequency="0.1" IsSnapToTickEnabled="True"/>
                                                 <ui:TextBlock>
@@ -478,6 +507,8 @@
                                                     <Run Text="单块最大采样点数"/>
                                                     <Run Text="{Binding DeduplicationToolMaxCount,StringFormat={}{0:0},Mode=OneWay}"/>
                                                 </TextBlock>
+                                                <ui:Button HorizontalAlignment="Stretch" Margin="0,4,0,0" Content="运行去重" Command="{Binding DeduplicationCommand}"/>
+
                                             </StackPanel>
                                         </Expander>
 
@@ -559,12 +590,30 @@
                     <Grid Height="255">
                         <Line X1="0"
                                 X2="10"
-                                Y1="{Binding MouseDepth,Mode=OneWay}"
-                                Y2="{Binding MouseDepth,Mode=OneWay}"
-                                Stroke="#FF559CE4" StrokeThickness="1" RenderTransformOrigin="0.5,0.5">
+                                Y1="{Binding MouseDepth,Mode=OneWay,NotifyOnTargetUpdated=True}"
+                                Y2="{Binding MouseDepth,Mode=OneWay,NotifyOnTargetUpdated=True}"
+                                Stroke="#FF559CE4" StrokeThickness="2" RenderTransformOrigin="0.5,0.5">
                             <Line.RenderTransform>
                                 <RotateTransform Angle="180"/>
                             </Line.RenderTransform>
+                            <Line.Triggers>
+                                <EventTrigger RoutedEvent="Binding.TargetUpdated">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="Y1" Duration="00:00:0.1" To="{Binding MouseDepth}">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="Y2" Duration="00:00:0.1" To="{Binding MouseDepth}">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Line.Triggers>
                         </Line>
                     </Grid>
                 </Viewbox>
@@ -693,10 +742,11 @@
                                 <ScaleTransform ScaleX="{Binding PreviewScale}" ScaleY="{Binding PreviewScale}"/>
                             </TransformGroup>
                         </Grid.RenderTransform>
-
+                        
                         <Image MouseWheel="Image_MouseWheel" MouseMove="Image_MouseMove" MouseDown="Image_MouseDown" MouseUp="Image_MouseUp" MouseLeave="Image_MouseLeave"
                            MaxHeight="300" Source="{Binding DisplayImageDepth}" Stretch="Uniform" IsHitTestVisible="{Binding IsManualEditable}"/>
                         <Image MaxHeight="300" Source="{Binding DisplayImageContour}" Opacity="{Binding OverlayOpacity}" Stretch="Uniform" IsHitTestVisible="False"/>
+                        <Image MaxHeight="300" Source="{Binding DisplayManualOperationPath}" Stretch="Uniform" IsHitTestVisible="False"/>
                         <Viewbox MaxHeight="300" Stretch="Uniform" IsHitTestVisible="False">
                             <Canvas Visibility="{Binding IsManualEditing,Converter={StaticResource BooleanToVisibilityConverter}}" Width="{Binding OriginImageWidth}" Height="{Binding OriginImageHeight}">
                                 <Line Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=3,Mode=OneWay}" X1="{Binding StartMousePointX,Mode=OneWay}" Y1="{Binding StartMousePointY,Mode=OneWay}" X2="{Binding MousePointX,Mode=OneWay}" Y2="{Binding MousePointY,Mode=OneWay}" IsHitTestVisible="False" Stroke="White" StrokeThickness="2"/>
@@ -879,7 +929,7 @@
                     <RowDefinition Height="auto" MinHeight="200" />
                     <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
-                <Viewbox MaxHeight="300" HorizontalAlignment="Center" Margin="8,16" Stretch="UniformToFill">
+                <Viewbox MaxHeight="300" HorizontalAlignment="Center" Margin="8,16" Stretch="UniformToFill" MouseDown="Viewbox_MouseDown">
                     <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="200" Height="200"
                        Background="{StaticResource ChessboardBrush}">
                     </Border>
@@ -895,7 +945,7 @@
                         <Image  MaxHeight="300"
                         Visibility="Visible" Opacity="0.05"
                         Source="{Binding FilePath}" IsHitTestVisible="True"
-                        Stretch="Uniform" MouseMove="Image_MouseMove" MouseLeave="Image_MouseLeave" MouseUp="Image_MouseUp" MouseDown="Image_MouseDown">
+                        Stretch="Uniform" MouseMove="Image_MouseMove" MouseLeave="Image_MouseLeave" MouseUp="Image_MouseUp" MouseDown="Image_MouseDown" MouseWheel="Image_MouseWheel">
                         </Image>
                         <Image  MaxHeight="300" IsHitTestVisible="False"
                         Visibility="{Binding IsPreviewingOriginImage,Converter={StaticResource BooleanToVisibilityConverter}}"
@@ -1014,7 +1064,9 @@
                             </StackPanel>
                         </Expander>
                         <Expander Header="导出" IsExpanded="True" Margin="8">
-                            <ui:Button Appearance="Primary" Content="导出刮擦轨迹(.svg)" Command="{Binding ExportScratchCommand}"/>
+                            <ui:Button Appearance="Primary" HorizontalAlignment="Stretch" Content="导出刮擦轨迹(.svg)" Command="{Binding ExportScratchCommand}">
+                                
+                            </ui:Button>
                         </Expander>
                     </StackPanel>
                 </ScrollViewer>
@@ -1033,7 +1085,7 @@
                                 ToolTip="在 Bilibili 上查看教学视频"
                                 NavigateUri="https://www.bilibili.com/video/BV1moCHYxEPk"/>
             <TextBlock Foreground="LightGray" FontSize="8" VerticalAlignment="Center">
-                <Run Text="EZHolo @ v1.5"/>
+                <Run Text="EZHolo @ v1.5.1"/>
                 <LineBreak/>
                 <Run Text="Copyright © 2025 Yigu Wang"/>
             </TextBlock>

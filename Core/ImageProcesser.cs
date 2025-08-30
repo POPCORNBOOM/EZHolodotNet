@@ -176,6 +176,7 @@ namespace EZHolodotNet.Core
         public RelayCommand ConvertToManualCommand => new RelayCommand((p) => ConvertToManualPoint(p.ToString() ?? "c"));
         public RelayCommand ClearManualPointsCommand => new RelayCommand((p) => NewOperation(new(_manualPointsStored), false));
         public RelayCommand GradientDraftCommand => new RelayCommand((p) => GradientDraftExecute());
+        public RelayCommand DeduplicationCommand => new RelayCommand((p) => DeduplicationExecute());
         public RelayCommand UndoStepCommand => new RelayCommand((p) => Undo());
         public RelayCommand RedoStepCommand => new RelayCommand((p) => Redo());
         public RelayCommand SetManualToolCommand => new RelayCommand((p) => ManualTool = int.Parse(p.ToString() ?? "0"));
@@ -287,7 +288,10 @@ namespace EZHolodotNet.Core
             }
         }
         private List<Point> _manualPointsStored = new();
-        private List<Point> _manualPoints = new();
+        private List<Point> _manualPoints
+        {
+            get => IsManualMethodEnabled ? _manualPointsStored : new();
+        }
         private List<Point> _contourPoints = new();
         private List<Point> _brightnessPoints = new();
 
@@ -386,7 +390,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private readonly Mat _gradient = CreateGradientMat(100, 100);
+        private readonly Mat _gradient = CreateGradientMat(2, 256);
         [XmlIgnore] public WriteableBitmap GradientColor => ApplyColorMap(_gradient).ToWriteableBitmap();
         [XmlIgnore] public Mat ContoursOverDepthImage { get; set; } = new Mat();
         private WriteableBitmap _displayImageDepth;
@@ -414,7 +418,7 @@ namespace EZHolodotNet.Core
                     OnPropertyChanged(nameof(DisplayImageContour));
                 }
             }
-        }
+        }        
         private WriteableBitmap _displayImageScratchL;
         [XmlIgnore] public WriteableBitmap DisplayImageScratchL
         {
@@ -462,6 +466,8 @@ namespace EZHolodotNet.Core
             {
                 if (!Equals(_displayImageScratchLine, value))
                 {
+                    //Cv2.ImWrite("D:/Test.png", value.ToMat());
+                    
                     _displayImageScratchLine = value;
                     OnPropertyChanged(nameof(DisplayImageScratchLine));
                 }
@@ -1803,8 +1809,8 @@ namespace EZHolodotNet.Core
             else
                 DepthImage = new(OriginalImage.Size(), MatType.CV_32FC1);
             UpdateGradient();
-            //DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
         }
+
         private bool _isDepthContourMode = false;
         public bool IsDepthContourMode
         {
@@ -1954,7 +1960,6 @@ namespace EZHolodotNet.Core
             // 应用采样策略逻辑
             _contourPoints = IsContourMethodEnabled ? ExtractContours() : new();
             _brightnessPoints = IsBrightnessMethodEnabled ? GetPointsByLuminance() : new();
-            _manualPoints = IsManualMethodEnabled ? _manualPointsStored : new();
             // 绘图
             OnPropertyChanged(nameof(ContourPointCount));
             OnPropertyChanged(nameof(BrightnessPointCount));
@@ -2463,8 +2468,9 @@ namespace EZHolodotNet.Core
         public bool IsManualEditing => StartMousePoint != null;
         float _penPathLength = 0;
         Point? _lastPoint;
-        List<Point>? _draftingPoints;
-        List<Point>? _erasingPoints;
+        List<Point> _draftingPoints = new();
+        List<Point> _erasingPoints = new();
+        List<Point> _drawingPoints = new();
         Vec2f _startMovingPosition = new(0,0);
         Point? _movingLastPoint;
 
@@ -2508,9 +2514,12 @@ namespace EZHolodotNet.Core
                             _penPathLength += MathF.Sqrt(MathF.Pow(MousePixelPosition.X - _lastPoint.Value.X, 2) + MathF.Pow(MousePixelPosition.Y - _lastPoint.Value.Y, 2));
                             if (_penPathLength > 1 / _manualDensity)
                             {
+                                /*
                                 _manualPointsStored.Add(MousePixelPosition);
                                 NewOperation([MousePixelPosition]);
                                 //LastStepAmount ++;
+                                _penPathLength -= 1 / _manualDensity;*/
+                                _drawingPoints.Add(MousePixelPosition);
                                 _penPathLength -= 1 / _manualDensity;
                             }
                             break;
@@ -2555,15 +2564,24 @@ namespace EZHolodotNet.Core
                 StartMousePoint = MousePixelPosition;
                 _lastPoint = MousePixelPosition;
                 _penPathLength = 0;
-                _erasingPoints = new();
-                _draftingPoints = new();
+                _drawingPoints.Clear();
+                _erasingPoints.Clear();
+                _draftingPoints.Clear();
             }
             else //end
             {
                 if (!_isManualMethodEnabled) return;
                 if (IsManualEditing)
                 {
-                    if (ManualTool == 3)
+                    if (ManualTool == 1)
+                    {
+                        if (_drawingPoints.Count != 0)
+                        {
+                            NewOperation(_drawingPoints);
+                            _drawingPoints.Clear();
+                        }
+                    }
+                    else if (ManualTool == 3)
                     {
                         var interpolated =
                             GetUniformInterpolatedPoints(StartMousePoint.Value, MousePixelPosition, _manualDensity);
@@ -2652,7 +2670,7 @@ namespace EZHolodotNet.Core
                             }
 
                             NewOperation(points, offsets);
-                            _draftingPoints = new();
+                            _draftingPoints.Clear();
                         }
                     }
                 }
@@ -2722,6 +2740,53 @@ namespace EZHolodotNet.Core
                 ));
             }
             NewOperation(points, offsets);
+
+        }        
+        private void DeduplicationExecute()
+        {
+
+            if (_manualPointsStored.Count == 0)
+                return;
+            Dictionary<(int, int), List<Point>> gridMap = new Dictionary<(int, int), List<Point>>();
+
+            // 4. 将每个点映射到对应的网格
+            foreach (var point in _manualPointsStored)
+            {
+                int gridX = point.X / DeduplicationToolGridWidth;
+                int gridY = point.Y / DeduplicationToolGridHeight;
+                var gridKey = (gridX, gridY);
+
+                if (!gridMap.ContainsKey(gridKey))
+                {
+                    gridMap[gridKey] = new List<Point>();
+                }
+
+                gridMap[gridKey].Add(point);
+            }
+
+            // 5. 遍历每个网格，检查点数是否超过理想个数
+            List<Point> pointsToRemove = new List<Point>();
+
+            foreach (var grid in gridMap)
+            {
+                List<Point> gridPoints = grid.Value;
+
+                // 如果网格中的点数超过理想个数
+                if (gridPoints.Count > DeduplicationMaxCount)
+                {
+                    // 随机选择多余的点进行删除
+                    int pointsToDelete = gridPoints.Count - DeduplicationMaxCount;
+                    for (int i = 0; i < pointsToDelete; i++)
+                    {
+
+                        int indexToRemove = Random.Shared.Next(gridPoints.Count);
+                        pointsToRemove.Add(gridPoints[indexToRemove]);
+                        gridPoints.RemoveAt(indexToRemove);
+                    }
+                }
+            }
+
+            NewOperation(pointsToRemove, false);
 
         }
 
@@ -2996,7 +3061,7 @@ namespace EZHolodotNet.Core
                 DisplayImageScratchL = scratchImageL.ToWriteableBitmap();
                 DisplayImageScratchR = scratchImageR.ToWriteableBitmap();
                 DisplayImageScratchO = scratchImageO.ToWriteableBitmap();
-                DisplayImageScratchLine = scratchImageLine.ToWriteableBitmap();
+                DisplayImageScratchLine = ApplyColorMap(scratchImageLine).ToWriteableBitmap();
                 UpdateDisplayImageScratchStep();
             }
             catch (Exception e)
@@ -3161,9 +3226,45 @@ namespace EZHolodotNet.Core
         private Mat ApplyColorMap(Mat originMat)
         {
             Mat colorMat = new Mat();
-            Cv2.ConvertScaleAbs(originMat, colorMat,1);
-            Cv2.ApplyColorMap(colorMat, colorMat, (ColormapTypes)_depthColor);
-            return colorMat;
+            Cv2.ConvertScaleAbs(originMat, colorMat, 1);
+
+            // 检查通道数
+            int channels = colorMat.Channels();
+
+            // 处理四通道图像（RGBA）
+            if (channels == 4)
+            {
+                Mat[] bgraChannels = colorMat.Split();
+
+                Mat rgbMat = new Mat();
+                Cv2.Merge(new Mat[] { bgraChannels[0], bgraChannels[1], bgraChannels[2] }, rgbMat);
+
+                Mat alphaMat = bgraChannels[3].Clone();
+                Mat colored = new Mat();
+                Cv2.ApplyColorMap(rgbMat, colored, (ColormapTypes)_depthColor);
+
+                colorMat.Dispose();
+                rgbMat.Dispose();
+                foreach (var ch in bgraChannels) ch.Dispose();
+
+                Mat result = new Mat();
+                Cv2.Merge([colored, alphaMat], result);
+
+                alphaMat.Dispose();
+                colored.Dispose();
+
+                return result;
+            }
+            // 处理单通道图像（灰度）
+            else
+            {
+                Mat colored = new Mat();
+                Cv2.ApplyColorMap(colorMat, colored, (ColormapTypes)_depthColor);
+                colorMat.Dispose();
+                //colored.SaveImage($"D:/{DateTime.Now.ToString("fffff")}.png");
+                return colored;
+            }
+
         }
         private void SaveSvgToFile(string svgContent)
         {
@@ -3195,7 +3296,7 @@ namespace EZHolodotNet.Core
         }
         private static Mat CreateGradientMat(int w,int h)
         {
-            Mat gradientMat = new Mat(w, h, MatType.CV_8UC1, new Scalar(0));
+            Mat gradientMat = new Mat(h, w, MatType.CV_8UC1, new Scalar(0));
 
             for (int i = 0; i < gradientMat.Rows; i++)
             {
@@ -3249,7 +3350,8 @@ namespace EZHolodotNet.Core
 
                         //Trace.WriteLine($"w{gridWidth},h{gridHeight},maxcount{maxCount}");
                         // 3. 创建一个字典来存储每个网格内的点
-                        Dictionary<(int, int), List<Point>> gridMap = new Dictionary<(int, int), List<Point>>();
+                       
+                        /*Dictionary<(int, int), List<Point>> gridMap = new Dictionary<(int, int), List<Point>>();
 
                         // 4. 将每个点映射到对应的网格
                         foreach (var point in result)
@@ -3290,7 +3392,7 @@ namespace EZHolodotNet.Core
                         foreach (var point in pointsToRemove)
                         {
                             result.Remove(point);// TODO: 优化算法
-                        }
+                        }*/
                     }
                 }
 
