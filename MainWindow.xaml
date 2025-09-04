@@ -543,7 +543,7 @@
                                 <TextBlock Foreground="#D3D3D3" FontSize="8" Text="通常是一些耗时操作，建议完成上方的设置后再开启"/>
                                 <Expander Visibility="{Binding IsPostProcessEnabled,Converter={StaticResource BooleanToVisibilityConverter}}" IsExpanded="True" Header="采样后处理">
                                     <StackPanel>
-                                        <CheckBox Content="去重" IsChecked="{Binding IsDublicateRemoveEnabled}"/>
+                                        <!--<CheckBox Content="去重" IsChecked="{Binding IsDublicateRemoveEnabled}"/>-->
                                         <CheckBox IsChecked="{Binding IsExcludeMaskEnabled}">
                                             <TextBlock>
                                                 <Run Text="启用排除"/>
