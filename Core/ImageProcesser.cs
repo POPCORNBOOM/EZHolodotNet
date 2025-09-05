@@ -1786,7 +1786,7 @@ namespace EZHolodotNet.Core
             }
         }
 
-        private float _brightnessEnhanceGamma = 1.5f;
+        private float _brightnessEnhanceGamma = 0f;
         public float BrightnessEnhanceGamma
         {
             get => _brightnessEnhanceGamma;
@@ -1929,7 +1929,7 @@ namespace EZHolodotNet.Core
             {
                 _enhanced?.Dispose();
                 //_enhanced = EnhanceContrastGamma(GradientModuleImage, _depthContourDensityFactor);
-                _enhanced = AdjustContrastBrightness(GradientModuleImage, MathF.Pow(10, -_depthContourDetailFactor),MathF.Pow(10,_depthContourDensityFactor));
+                _enhanced = AdjustContrastBrightness(GradientModuleImage, -_depthContourDetailFactor*64 + 128,MathF.Pow(10,_depthContourDensityFactor));
                 if (_isBinaryDeNoise) 
                     Cv2.Threshold(_enhanced, _enhanced, 128, 255, ThresholdTypes.Binary);
                 if (_isShowEnhancedMat) 
@@ -1982,14 +1982,12 @@ namespace EZHolodotNet.Core
             // 1) 参数校验
             if (input.Empty())
                 throw new ArgumentException("输入图像为空");
-            a = Math.Clamp(a, 0f, 255f);
-            b = Math.Clamp(b, 0f, 100f);
-
+            a = Math.Clamp(a, 0, 255f);
+            //Trace.WriteLine(a+"b:"+b);
             // 2) 只处理 8bit 图像：若不是 8U，先转成 8U（按动态范围拉伸）
             Mat src8u = input;
             if (input.Depth() != MatType.CV_8U)
             {
-                // 将图像归一化到 [0,255] 并转为 8U
                 src8u = new Mat();
                 Mat tmp = new Mat();
                 input.ConvertTo(tmp, MatType.CV_32F);
@@ -1998,50 +1996,45 @@ namespace EZHolodotNet.Core
                 tmp.Dispose();
             }
 
-            // 3) 生成 LUT（0..255），实现分段幂函数
-            //    y(x) = { a * (x/a)^p,                           0 < x < a
-            //           255 - (255-a) * ((255-x)/(255-a))^p,     a < x < 255
-            //           保持端点：x=0->0, x=a->a, x=255->255 }
-            //    其中 p = b/5f；p>1 增强对比度，p<1 减弱对比度
-            float p = Math.Max(0.1f, b / 5f); // 给个下限，避免 p≈0
-            float epsA = Math.Max(a, 1f);           // 防止除 0
-            float epsU = Math.Max(255f - a, 1f);    // 防止除 0
+            float p = Math.Max(float.Epsilon, b);
+            float epsA = Math.Max(a, float.Epsilon);
+            float epsU = Math.Max(255f - a, float.Epsilon);
 
+            //Mat debug_curve = Mat.Zeros(MatType.CV_8UC1, 256, 256);
             byte[] lutArr = new byte[256];
             for (int x = 0; x <= 255; x++)
             {
-                float y;
+                int y;
                 if (x < a)
                 {
-                    // 下半段
-                    y = (float)(a * Math.Pow(x / epsA, p));
+                    y = (int)(a * Math.Pow(x / epsA, p));
                 }
                 else if (x > a)
                 {
-                    // 上半段
-                    y = (float)(255f - (255f - a) * Math.Pow((255f - x) / epsU, p));
+                    y = (int)(255f - (255f - a) * Math.Pow((255f - x) / epsU, p));
                 }
                 else
                 {
-                    y = a; // x==a
+                    y = (int)a;
                 }
-
+                //Trace.WriteLine(x+":"+y);
                 // 数值安全与量化
-                y = Math.Clamp(y, 0f, 255f);
-                lutArr[x] = (byte)Math.Round(y);
+                lutArr[x] = (byte)Math.Clamp(y, 0, 255);
+                //debug_curve.Set<byte>(y, x, 255);
             }
+            lutArr[0] = lutArr[1];
+            lutArr[255] = lutArr[254];
+
 
             // 建立 1x256 的 8U Mat
             Mat lut = new Mat(1, 256, MatType.CV_8UC1);
-
             // 把 byte[] 数据拷贝进去
             lut.SetArray(lutArr);
             // 4) 应用 LUT（对灰度或多通道 8U 图像都有效）
             Mat output = new Mat();
             Cv2.LUT(src8u, lut, output);
+            //Cv2.ImShow("lut", debug_curve);
 
-            // 如果我们在步骤2做了类型转换，这里直接返回增强后的 8U 结果；
-            // 若你想保持原始类型，可在此把 output 再按原范围反变换回去。
             if (!ReferenceEquals(src8u, input))
                 src8u.Dispose();
             lut.Dispose();
@@ -2072,6 +2065,7 @@ namespace EZHolodotNet.Core
             OnPropertyChanged(nameof(PointCount));
 
         }
+        /*
         public Mat EnhanceContrastGamma(Mat inputImage, float gamma = 1.5f)
         {
             // 创建查找表
@@ -2086,7 +2080,7 @@ namespace EZHolodotNet.Core
             Cv2.LUT(inputImage, lookUpTable, outputImage);
 
             return outputImage;
-        }
+        }*/
         public List<Point> GetPointsByLuminance()
         {
 
@@ -2095,9 +2089,11 @@ namespace EZHolodotNet.Core
             // 转换为灰度图像
             Mat grayImage = new Mat();
             Cv2.CvtColor(OriginalImage, grayImage, ColorConversionCodes.BGR2GRAY);
-            Mat grayImageEnhanced = EnhanceContrastGamma(grayImage, _brightnessEnhanceGamma);
+            //Mat grayImageEnhanced = EnhanceContrastGamma(grayImage, _brightnessEnhanceGamma);
+            Mat grayImageEnhanced = AdjustContrastBrightness(grayImage,- _brightnessDensityFactor * 64+128, MathF.Pow(10, _brightnessEnhanceGamma));
+            Cv2.ImShow("tes", grayImageEnhanced);
             // 创建存储结果的点列表
-            List<Point> points = new List<Point>();
+            List <Point> points = new List<Point>();
             int step = (int)(1 / _brightnessBaseDensity);
             // 遍历灰度图的每个像素
             if (IsDarknessMode)
@@ -2110,11 +2106,15 @@ namespace EZHolodotNet.Core
                         byte brightness = grayImageEnhanced.At<byte>(y, x);
 
                         // 随机采样生成点
+                        /*
                         Random random = new Random();
                         if (random.Next(0, 255) > brightness * Math.Exp(_brightnessDensityFactor))
                         {
                             points.Add(new Point(x, y));
-                        }
+                        }*/
+                        if (Random.Shared.Next(0, 255) > brightness)
+                            points.Add(new Point(x, y));
+
                     }
                 }
             }
@@ -2126,13 +2126,16 @@ namespace EZHolodotNet.Core
                     {
                         // 获取当前像素的亮度值 (0-255)
                         byte brightness = grayImageEnhanced.At<byte>(y, x);
-
+                        //Trace.WriteLine(brightness);
                         // 随机采样生成点
-                        Random random = new Random();
+                        /*Random random = new Random();
                         if (random.Next(0, 255) < brightness * Math.Exp(_brightnessDensityFactor))
                         {
                             points.Add(new Point(x, y));
-                        }
+                        }*/
+                        if (Random.Shared.Next(0, 255) < brightness)
+                            points.Add(new Point(x, y));
+
                     }
                 }
             }
