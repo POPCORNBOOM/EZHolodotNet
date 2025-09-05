@@ -2000,7 +2000,7 @@ namespace EZHolodotNet.Core
             float epsA = Math.Max(a, float.Epsilon);
             float epsU = Math.Max(255f - a, float.Epsilon);
 
-            //Mat debug_curve = Mat.Zeros(MatType.CV_8UC1, 256, 256);
+            //Mat debug_curve = Mat.Zeros(MatType.CV_8UC1, 512, 256);
             byte[] lutArr = new byte[256];
             for (int x = 0; x <= 255; x++)
             {
@@ -2020,20 +2020,17 @@ namespace EZHolodotNet.Core
                 //Trace.WriteLine(x+":"+y);
                 // 数值安全与量化
                 lutArr[x] = (byte)Math.Clamp(y, 0, 255);
-                //debug_curve.Set<byte>(y, x, 255);
+                //debug_curve.Set<byte>(255-y+x, x, 255);
             }
             lutArr[0] = lutArr[1];
             lutArr[255] = lutArr[254];
 
 
-            // 建立 1x256 的 8U Mat
             Mat lut = new Mat(1, 256, MatType.CV_8UC1);
-            // 把 byte[] 数据拷贝进去
             lut.SetArray(lutArr);
-            // 4) 应用 LUT（对灰度或多通道 8U 图像都有效）
             Mat output = new Mat();
             Cv2.LUT(src8u, lut, output);
-            //Cv2.ImShow("lut", debug_curve);
+            //Cv2.ImShow("lut_delta", debug_curve);
 
             if (!ReferenceEquals(src8u, input))
                 src8u.Dispose();
@@ -2091,7 +2088,7 @@ namespace EZHolodotNet.Core
             Cv2.CvtColor(OriginalImage, grayImage, ColorConversionCodes.BGR2GRAY);
             //Mat grayImageEnhanced = EnhanceContrastGamma(grayImage, _brightnessEnhanceGamma);
             Mat grayImageEnhanced = AdjustContrastBrightness(grayImage,- _brightnessDensityFactor * 64+128, MathF.Pow(10, _brightnessEnhanceGamma));
-            Cv2.ImShow("tes", grayImageEnhanced);
+            //Cv2.ImShow("tes", grayImageEnhanced);
             // 创建存储结果的点列表
             List <Point> points = new List<Point>();
             int step = (int)(1 / _brightnessBaseDensity);
