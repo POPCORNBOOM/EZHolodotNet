@@ -52,10 +52,10 @@
             <Label HorizontalAlignment="Right" Foreground="White" Margin="10">
                 <Label.Style>
                     <Style TargetType="Label">
-                        <Setter Property="Content" Value="Right"/>
+                        <Setter Property="Content" Value="右眼"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsParallelEye3DMode}" Value="true">
-                                <Setter Property="Content" Value="Left"/>
+                                <Setter Property="Content" Value="左眼"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -64,10 +64,10 @@
             <Label Grid.Column="1" HorizontalAlignment="Left" Foreground="White" Margin="10">
                 <Label.Style>
                     <Style TargetType="Label">
-                        <Setter Property="Content" Value="Left"/>
+                        <Setter Property="Content" Value="左眼"/>
                         <Style.Triggers>
                         <DataTrigger Binding="{Binding IsParallelEye3DMode}" Value="true">
-                            <Setter Property="Content" Value="Right"/>
+                                <Setter Property="Content" Value="右眼"/>
                         </DataTrigger>
                         </Style.Triggers>
                     </Style>

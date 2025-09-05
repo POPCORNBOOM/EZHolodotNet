@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using EZHolodotNet.Core;
+using System.Configuration;
 using System.Data;
 using System.Windows;
 
@@ -13,6 +14,7 @@ namespace EZHolodotNet
         {
             // 订阅未处理异常事件
             this.DispatcherUnhandledException += App_DispatcherUnhandledException;
+            this.Startup += Application_Startup;
         }
 
         private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
@@ -29,6 +31,14 @@ namespace EZHolodotNet
 
             // 如果需要崩溃应用程序，设置为 false
             // e.Handled = false;
+        }
+
+
+        private void Application_Startup(object sender, StartupEventArgs e)
+        {
+            // 在应用程序启动时执行初始化操作
+            // 例如，加载配置、初始化服务等
+
         }
 
         private void LogError(string message)

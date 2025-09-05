@@ -180,28 +180,84 @@ namespace EZHolodotNet.Core
         public RelayCommand UndoStepCommand => new RelayCommand((p) => Undo());
         public RelayCommand RedoStepCommand => new RelayCommand((p) => Redo());
         public RelayCommand SetManualToolCommand => new RelayCommand((p) => ManualTool = int.Parse(p.ToString() ?? "0"));
-        public RelayCommand ImportConfigCommand => new RelayCommand((p) => ImportConfig());
-        public RelayCommand ExportConfigCommand => new RelayCommand((p) => ExportConfig());
+        public RelayCommand ImportConfigCommand => new RelayCommand((p) => {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "Xml 文件 (*.xml)|*.xml",
+                DefaultExt = "xml",
+                Multiselect = false
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                ImportConfig(openFileDialog.FileName);
+
+            }
+        });
+        public RelayCommand ExportConfigCommand => new RelayCommand((p) => 
+        { // 使用保存对话框选择保存路径
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Xml 文件 (*.xml)|*.xml",
+                DefaultExt = "xml",
+                AddExtension = true,
+                FileName = $"{(Path.GetFileNameWithoutExtension(FilePath) == "" ? "EZHolo" : Path.GetFileNameWithoutExtension(FilePath))}_Config.xml"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+
+            }
+            ExportConfig(saveFileDialog.FileName);
+        });
         public RelayCommand ExportDepthCommand => new RelayCommand((p) => ExportDepth());
         public RelayCommand ImportDepthCommand => new RelayCommand((p) => ImportDepth());
         public RelayCommand ExportPointsCommand => new RelayCommand((p) => ExportPoints((string)p));
         public RelayCommand ExportSvgPointsCommand => new RelayCommand((p) => ExportPoints((string)p,"svg"));
-        public RelayCommand ImportPointsCommand => new RelayCommand((p) => ImportPoints());
+        public RelayCommand ImportPointsCommand => new RelayCommand((p) => {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "便携式网络图形 PNG 文件 (*.png)|*.png|JPEG 文件 (*.jpg;*.jpeg)|*.jpg;*.jpeg|可缩放矢量图形 SVG 文件 (*.svg)|*.svg|所有文件 (*.*)|*.*",
+                DefaultExt = "png"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                ImportPoints(openFileDialog.FileName);
+
+            }
+        });
         public RelayCommand Open3DPreviewCommand => new RelayCommand((p) => new ThreeDPreviewWindow(this).Show());
         public RelayCommand ChangePreviewCommand => new RelayCommand((p) => ChangePreviewExecute((string)p));
         public RelayCommand CloseWarningCommand => new RelayCommand((p) => mainWindow.WarningFlyout.Hide());
         public RelayCommand ChooseImageCommand => new RelayCommand((p) =>
         {
             Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
-            openFileDialog.Filter = "Image files (*.jpg, *.jpeg, *.png) | *.jpg; *.jpeg; *.png";
-            if (openFileDialog.ShowDialog() == true)
+            if(p == null)
             {
-                LoadImage(openFileDialog.FileName);
-                _manualPointsStored = new();
-                RefreshDisplay();
-                if (IsAutoGeneratePreview)
-                    ProcessScratch();
+                openFileDialog.Filter =
+                    "图像文件 (*.bmp, *.jpg, *.jpeg, *.png, *.tiff, *.webp) | *.bmp; *.jpg; *.jpeg; *.png; *.tiff; *.webp";
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    LoadImage(openFileDialog.FileName);
+
+                }
             }
+            else
+            {
+                string path = SaveClipboardImage();
+                if (path != "")
+                    LoadImage(path);
+                else
+                    ShowTipsTemporarilyAsync("剪贴板中没有图像");
+
+
+            }
+        });
+
+        public RelayCommand UnloadImageCommand => new RelayCommand((p) =>
+        {
+            UnloadImage();
         });
         public List<string> _modelsPath = new();
         public List<string> ModelsPath
@@ -273,6 +329,20 @@ namespace EZHolodotNet.Core
                 OnPropertyChanged(nameof(ModelFilePath));
             }
         }
+        public bool IsUsingLastConfigEveryTime
+        {
+            get => Properties.Settings.Default.IsUsingLastConfigEveryTime;
+            set
+            {
+                if (!Equals(Properties.Settings.Default.IsUsingLastConfigEveryTime, value))
+                {
+                    Properties.Settings.Default.IsUsingLastConfigEveryTime = value;
+                    Properties.Settings.Default.Save();
+                    OnPropertyChanged(nameof(IsUsingLastConfigEveryTime));
+                }
+            }
+        }
+
         private string _filePath = "";
         [XmlIgnore]
         public string FilePath
@@ -287,8 +357,8 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private List<Point> _manualPointsStored = new();
-        private List<Point> _manualPoints
+        private HashSet<Point> _manualPointsStored = new();
+        private HashSet<Point> _manualPoints
         {
             get => IsManualMethodEnabled ? _manualPointsStored : new();
         }
@@ -358,7 +428,8 @@ namespace EZHolodotNet.Core
                     _depthImage?.Dispose();
                     _depthImage = value;
                     OnPropertyChanged(nameof(DepthImage));
-                    DisplayImageDepth = ApplyColorMap(_depthImage).ToWriteableBitmap();
+                    if (_depthImage != null)
+                        DisplayImageDepth = ApplyColorMap(_depthImage).ToWriteableBitmap();
                 }
             }
         }
@@ -571,7 +642,8 @@ namespace EZHolodotNet.Core
             get => _mousePixelPosition;
             set
             {
-                _mousePixelPosition = value;
+                
+                _mousePixelPosition = new(Math.Clamp(value.X, 0, OriginImageWidth), Math.Clamp(value.Y, 0, OriginImageHeight));
                 OnPropertyChanged(nameof(MousePixelPosition));
                 OnPropertyChanged(nameof(MouseDepth));
                 OnPropertyChanged(nameof(MouseGradient));
@@ -622,7 +694,7 @@ namespace EZHolodotNet.Core
                 if (GradientImage.Cols == 0) return 0;
                 Vec2f gradientVector = GradientImage.Get<Vec2f>(MousePixelPosition.Y, MousePixelPosition.X);
                 float norm = MathF.Pow(MathF.Pow(gradientVector.Item0, 2) + MathF.Pow(gradientVector.Item1, 2), 0.5f);
-                MouseGradientVectorNormal = gradientVector * 255 / norm;
+                MouseGradientVectorNormal = norm == 0 ? new(0, 0) : gradientVector * 255 / norm;
                 return norm;
             }
         }
@@ -839,8 +911,8 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private int _zeroDepth = 128;
-        public int ZeroDepth
+        private float _zeroDepth = 128;
+        public float ZeroDepth
         {
             get => _zeroDepth;
             set
@@ -852,8 +924,8 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private int _ignoreZeroDepthDistance = 2;
-        public int IgnoreZeroDepthDistance
+        private float _ignoreZeroDepthDistance = 0;
+        public float IgnoreZeroDepthDistance
         {
             get => _ignoreZeroDepthDistance;
             set
@@ -1016,6 +1088,11 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        public float RadiusMax
+        {
+            get => Math.Clamp(OriginImageWidth/2,30,500);
+
+        }
         private float _eraserRadius = 25;
         public float EraserRadius
         {
@@ -1027,6 +1104,32 @@ namespace EZHolodotNet.Core
                     _eraserRadius = value;
                     OnPropertyChanged(nameof(EraserRadius));
                     OnPropertyChanged(nameof(EraserDiameter));
+                }
+            }
+        }
+        private float _eraserLower = 0;
+        public float EraserLower
+        {
+            get => _eraserLower;
+            set
+            {
+                if (!Equals(_eraserLower, value))
+                {
+                    _eraserLower = Math.Clamp(value, 0, _eraserUpper);
+                    OnPropertyChanged(nameof(EraserLower));
+                }
+            }
+        }
+        private float _eraserUpper = 100;
+        public float EraserUpper
+        {
+            get => _eraserUpper;
+            set
+            {
+                if (!Equals(_eraserUpper, value))
+                {
+                    _eraserUpper = Math.Clamp(value, _eraserLower, 255);
+                    OnPropertyChanged(nameof(EraserUpper));
                 }
             }
         }
@@ -1107,6 +1210,19 @@ namespace EZHolodotNet.Core
         public float DraftCenterY
         {
             get => _mousePixelPosition.Y - DraftRadius;
+        }
+        private bool _isDragEntered = false;
+        public bool IsDragEntered
+        {
+            get => _isDragEntered;
+            set
+            {
+                if (!Equals(_isDragEntered, value))
+                {
+                    _isDragEntered = value;
+                    OnPropertyChanged(nameof(IsDragEntered));
+                }
+            }
         }
         private bool _isSmartEraserEnabled = false;
         public bool IsSmartEraserEnabled
@@ -1465,92 +1581,23 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private float _deduplicationAccuracy = 0.8f;
 
-        public float DeduplicationAccuracy
+        private bool _isUniformDeduplicationEnabled = true;
+        public bool IsUniformDeduplicationEnabled
         {
-            get => _deduplicationAccuracy;
+            get => _isUniformDeduplicationEnabled;
             set
             {
-                if (!Equals(_deduplicationAccuracy, value))
+                if (!Equals(_isUniformDeduplicationEnabled, value))
                 {
-                    _deduplicationAccuracy = value;
-                    OnPropertyChanged(nameof(DeduplicationAccuracy));
-                    OnPropertyChanged(nameof(DeduplicationGridHeight));
-                    OnPropertyChanged(nameof(DeduplicationGridWidth));
-                    OnPropertyChanged(nameof(DeduplicationMaxCount));
-                    //RefreshDisplay();//实时更新较卡，已移交MouseUp Event，下同
+                    _isUniformDeduplicationEnabled = value;
+                    OnPropertyChanged(nameof(IsUniformDeduplicationEnabled));
+
                 }
             }
         }
-        private float _deduplicationDensity = 0.85f;
 
-        public float DeduplicationDensity
-        {
-            get => _deduplicationDensity;
-            set
-            {
-                if (!Equals(_deduplicationDensity, value))
-                {
-                    _deduplicationDensity = value;
-                    OnPropertyChanged(nameof(DeduplicationDensity));
-                    OnPropertyChanged(nameof(DeduplicationMaxCount));
-                    //RefreshDisplay();
-                }
-            }
-        }
-        public int DeduplicationGridWidth
-        {
-            get
-            {
-                int gridWidth = 2;
-                try
-                {
-                    gridWidth = (int)(OriginImageWidth * Math.Pow(0.5, Math.Log2(OriginImageWidth) * _deduplicationAccuracy));
-                }
-                catch (Exception e)
-                {
-
-                }
-                gridWidth = gridWidth <= 1 ? 2 : gridWidth;
-                return gridWidth;
-            }
-        }
-        public int DeduplicationGridHeight
-        {
-            get
-            {
-                int gridHeight = 2;
-                try
-                {
-                    gridHeight = (int)(OriginImageHeight * Math.Pow(0.5, Math.Log2(OriginImageHeight) * _deduplicationAccuracy));
-                }
-                catch (Exception e)
-                {
-
-                }
-                gridHeight = gridHeight <= 1 ? 2 : gridHeight;
-                return gridHeight;
-            }
-        }
-        public int DeduplicationMaxCount
-        {
-            get
-            {
-                int maxCount = 1;
-                try
-                {
-                    int gridSize = DeduplicationGridWidth * DeduplicationGridHeight;
-                    maxCount = (int)(gridSize * Math.Pow(0.5, Math.Log2(gridSize) * _deduplicationDensity));
-                }
-                catch (Exception e)
-                {
-
-                }
-                maxCount = maxCount == 0 ? 1 : maxCount;
-                return maxCount;
-            }
-        }        private float _deduplicationToolAccuracy = 0.8f;
+        private float _deduplicationToolAccuracy = 0.8f;
 
         public float DeduplicationToolAccuracy
         {
@@ -1584,27 +1631,30 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        public int DeduplicationToolGridWidth
+        public float DeduplicationToolGridWidth
         {
             get
             {
-                int gridWidth = 2;
+                /*
+                float gridWidth = 1;
                 try
                 {
-                    gridWidth = (int)(OriginImageWidth * Math.Pow(0.5, Math.Log2(OriginImageWidth) * _deduplicationToolAccuracy));
+                    gridWidth = OriginImageWidth * Math.Pow(0.5, Math.Log2(OriginImageWidth) * _deduplicationToolAccuracy);
                 }
                 catch (Exception e)
                 {
 
                 }
                 gridWidth = gridWidth <= 1 ? 2 : gridWidth;
-                return gridWidth;
+                return gridWidth;*/
+                return 1 + (OriginImageWidth / 2f - 1) * (1 - MathF.Pow(_deduplicationToolAccuracy, 0.2f));
             }
         }
-        public int DeduplicationToolGridHeight
+        public float DeduplicationToolGridHeight
         {
             get
             {
+                /*
                 int gridHeight = 2;
                 try
                 {
@@ -1615,7 +1665,8 @@ namespace EZHolodotNet.Core
 
                 }
                 gridHeight = gridHeight <= 1 ? 2 : gridHeight;
-                return gridHeight;
+                return gridHeight;*/
+                return 1 + (OriginImageHeight / 2f - 1) * (1 - MathF.Pow(_deduplicationToolAccuracy, 0.2f));
             }
         }
         public int DeduplicationToolMaxCount
@@ -1625,7 +1676,7 @@ namespace EZHolodotNet.Core
                 int maxCount = 1;
                 try
                 {
-                    int gridSize = DeduplicationToolGridWidth * DeduplicationToolGridHeight;
+                    int gridSize = (int)(DeduplicationToolGridWidth * DeduplicationToolGridHeight);
                     maxCount = (int)(gridSize * Math.Pow(0.5, Math.Log2(gridSize) * _deduplicationToolDensity));
                 }
                 catch (Exception e)
@@ -1797,18 +1848,62 @@ namespace EZHolodotNet.Core
             // 计算滑动平均FPS
             RealTimeFps = _fpsHistory.Average();
         }
+        public static string SaveClipboardImage()
+        {
+            // 检查剪贴板中是否有图像
+            if (!Clipboard.ContainsImage())
+            {
+                return "";
+            }
 
+            // 从剪贴板获取 BitmapSource
+            BitmapSource bitmapSource = Clipboard.GetImage();
+
+            PngBitmapEncoder encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+            string path = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)}\\{Guid.NewGuid().ToString()}.png";
+            using (var stream = new FileStream(path, FileMode.Create))
+            {
+                encoder.Save(stream);
+            }
+
+            return path;
+        }
         public void LoadImage(string filepath)
         {
             FilePath = filepath;
             OriginalImage = new Mat(filepath);
             OnPropertyChanged(nameof(OriginImageHeight));
             OnPropertyChanged(nameof(OriginImageWidth));
+            OnPropertyChanged(nameof(RadiusMax));
             if (IsModelLoaded)
                 DepthImage = DepthEstimation.ProcessImage(OriginalImage);
             else
                 DepthImage = new(OriginalImage.Size(), MatType.CV_32FC1);
             UpdateGradient();
+            _manualPointsStored = new();
+            RefreshDisplay();
+            if (IsAutoGeneratePreview)
+                ProcessScratch();
+        }
+        public void UnloadImage()
+        {
+            FilePath = "";
+            OriginalImage = new Mat();
+            OnPropertyChanged(nameof(OriginImageHeight));
+            OnPropertyChanged(nameof(OriginImageWidth));
+            OnPropertyChanged(nameof(RadiusMax));
+            //DepthImage = null;
+            DisplayImageDepth = null;
+            DisplayImageContour = null;
+            DisplayImageScratchL = null;
+            DisplayImageScratchR = null;
+            DisplayImageScratchO = null;
+            DisplayImageScratchLine = null;
+            DisplayImageScratchStep = null;
+            _manualPointsStored = new();
+            RefreshDisplay();
+            ProcessScratch();
         }
 
         private bool _isDepthContourMode = false;
@@ -2066,12 +2161,15 @@ namespace EZHolodotNet.Core
                         return;
                     }
 
+                    /*
                     // 归一化深度图像到 0-65535 范围
                     Mat normalizedDepth = new Mat();
                     double minVal, maxVal;
                     Cv2.MinMaxLoc(DepthImage, out minVal, out maxVal);
-                    DepthImage.ConvertTo(normalizedDepth, MatType.CV_32FC1, 65535.0 / (maxVal - minVal), -minVal * 65535.0 / (maxVal - minVal));
-
+                    DepthImage.ConvertTo(normalizedDepth, MatType.CV_8UC1, 65535.0 / (maxVal - minVal), -minVal * 65535.0 / (maxVal - minVal));
+                    */
+                    Mat normalizedDepth = new Mat();
+                    Cv2.ConvertScaleAbs(DepthImage, normalizedDepth);
                     // 保存为 PNG
                     Cv2.ImWrite(saveFileDialog.FileName, normalizedDepth);
 
@@ -2096,36 +2194,40 @@ namespace EZHolodotNet.Core
 
             if (openFileDialog.ShowDialog() == true)
             {
-                try
+                LoadDepth(openFileDialog.FileName);
+            }
+        }
+        public void LoadDepth(string path)
+        {
+            try
+            {
+                Mat loadedDepth = Cv2.ImRead(path, ImreadModes.Grayscale);
+                if (loadedDepth.Empty())
                 {
-                    Mat loadedDepth = Cv2.ImRead(openFileDialog.FileName, ImreadModes.Grayscale);
-                    if (loadedDepth.Empty())
-                    {
-                        //MessageBox.Show();
-                        ShowTipsTemporarilyAsync("无法读取深度图像");
+                    //MessageBox.Show();
+                    ShowTipsTemporarilyAsync("无法读取深度图像");
 
-                        return;
-                    }
-                    loadedDepth.ConvertTo(loadedDepth, MatType.CV_32FC1);
-
-                    // 如果图像尺寸与原始图像不一致，则调整为原始图像的尺寸
-                    if (loadedDepth.Rows != OriginalImage.Rows || loadedDepth.Cols != OriginalImage.Cols)
-                    {
-                        Mat resizedDepth = new Mat();
-                        Cv2.Resize(loadedDepth, resizedDepth, OriginalImage.Size());
-                        loadedDepth = resizedDepth;
-                    }
-
-                    DepthImage = loadedDepth;
-
-                    ShowTipsTemporarilyAsync("深度图像成功导入");
-
+                    return;
                 }
-                catch (Exception e)
+                loadedDepth.ConvertTo(loadedDepth, MatType.CV_32FC1);
+
+                // 如果图像尺寸与原始图像不一致，则调整为原始图像的尺寸
+                if (loadedDepth.Rows != OriginalImage.Rows || loadedDepth.Cols != OriginalImage.Cols)
                 {
-                    ShowTipsTemporarilyAsync($"导入深度图像时出错: {e.Message}");
-
+                    Mat resizedDepth = new Mat();
+                    Cv2.Resize(loadedDepth, resizedDepth, OriginalImage.Size());
+                    loadedDepth = resizedDepth;
                 }
+
+                DepthImage = loadedDepth;
+
+                ShowTipsTemporarilyAsync("深度图像成功导入");
+
+            }
+            catch (Exception e)
+            {
+                ShowTipsTemporarilyAsync($"导入深度图像时出错: {e.Message}");
+
             }
         }
 
@@ -2161,7 +2263,7 @@ namespace EZHolodotNet.Core
                         Mat pointMap = new Mat(OriginalImage.Rows, OriginalImage.Cols, MatType.CV_8UC1,
                             new Scalar(255));
 
-                        foreach (var point in type == "a" ? SampledPoints : _manualPointsStored)
+                        foreach (var point in type == "a" ? SampledPoints : _manualPointsStored.ToList())
                         {
                             if (point.X >= 0 && point.X < pointMap.Cols && point.Y >= 0 && point.Y < pointMap.Rows)
                             {
@@ -2186,7 +2288,7 @@ namespace EZHolodotNet.Core
                         svgBuilder.AppendLine($"<rect width=\"100%\" height=\"100%\" fill=\"white\"/>");
 
                         // 根据点的类型选择点集合
-                        var points = type == "a" ? SampledPoints : _manualPointsStored;
+                        var points = type == "a" ? SampledPoints : _manualPointsStored.ToList();
 
                         // 绘制所有点为黑色小圆点
                         foreach (var point in points)
@@ -2209,154 +2311,131 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private void ImportPoints()
+        public void ImportPoints(string filename)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog
-            {
-                Filter = "便携式网络图形 PNG 文件 (*.png)|*.png|JPEG 文件 (*.jpg;*.jpeg)|*.jpg;*.jpeg|可缩放矢量图形 SVG 文件 (*.svg)|*.svg|所有文件 (*.*)|*.*",
-                DefaultExt = "png"
-            };
 
-            if (openFileDialog.ShowDialog() == true)
+            try
             {
-                try
+                List<Point> result = new List<Point>();
+                string extension = System.IO.Path.GetExtension(filename).ToLower();
+
+                // SVG 文件处理
+                if (extension == ".svg")
                 {
-                    List<Point> result = new List<Point>();
-                    string extension = System.IO.Path.GetExtension(openFileDialog.FileName).ToLower();
+                    // 读取SVG文件内容
+                    string svgContent = File.ReadAllText(filename);
 
-                    // SVG 文件处理
-                    if (extension == ".svg")
+                    // 使用正则表达式提取所有圆点
+                    Regex circleRegex = new Regex(@"<circle[^>]*cx=""([\d\.]+)""[^>]*cy=""([\d\.]+)""[^>]*>",
+                                                  RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                    var matches = circleRegex.Matches(svgContent);
+                    if (matches.Count == 0)
                     {
-                        // 读取SVG文件内容
-                        string svgContent = File.ReadAllText(openFileDialog.FileName);
+                        ShowTipsTemporarilyAsync("未找到SVG中的点数据");
+                        return;
+                    }
 
-                        // 使用正则表达式提取所有圆点
-                        Regex circleRegex = new Regex(@"<circle[^>]*cx=""([\d\.]+)""[^>]*cy=""([\d\.]+)""[^>]*>",
-                                                      RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-                        var matches = circleRegex.Matches(svgContent);
-                        if (matches.Count == 0)
+                    // 解析坐标点
+                    foreach (Match match in matches)
+                    {
+                        if (match.Groups.Count >= 3)
                         {
-                            ShowTipsTemporarilyAsync("未找到SVG中的点数据");
-                            return;
+                            float cx = float.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                            float cy = float.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
+                            if (cx >= 0 && cx < OriginalImage.Cols && cy >= 0 && cy < OriginalImage.Rows)
+                                result.Add(new Point(cx, cy));
                         }
+                    }
 
-                        // 解析坐标点
-                        foreach (Match match in matches)
+                    ShowTipsTemporarilyAsync($"成功从SVG导入 {result.Count} 个点");
+                }
+                // 图像文件处理（PNG/JPG）
+                else
+                {
+                    Mat pointMap = Cv2.ImRead(filename, ImreadModes.Grayscale);
+                    if (pointMap.Empty())
+                    {
+                        ShowTipsTemporarilyAsync("无法读取点图");
+                        return;
+                    }
+
+                    pointMap.ConvertTo(pointMap, MatType.CV_8UC1);  // 确保是 CV_8UC1 类型
+
+                    // 如果图像尺寸与原始图像不一致，则调整为原始图像的尺寸
+                    if (pointMap.Rows != OriginalImage.Rows || pointMap.Cols != OriginalImage.Cols)
+                    {
+                        Mat resizedPointMap = new Mat();
+                        Cv2.Resize(pointMap, resizedPointMap, OriginalImage.Size());
+                        pointMap = resizedPointMap;
+                    }
+
+                    // 查找黑色点
+                    for (int y = 0; y < pointMap.Rows; y++)
+                    {
+                        for (int x = 0; x < pointMap.Cols; x++)
                         {
-                            if (match.Groups.Count >= 3)
+                            byte pixelValue = pointMap.At<byte>(y, x);
+                            // 考虑抗锯齿：低于200灰度的都视为点
+                            if (pixelValue < 200)
                             {
-                                float cx = float.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                                float cy = float.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
-                                if(cx >= 0 && cx < OriginalImage.Cols && cy >= 0 && cy < OriginalImage.Rows)
-                                    result.Add(new Point(cx, cy));
+                                result.Add(new Point(x, y));
                             }
                         }
-
-                        ShowTipsTemporarilyAsync($"成功从SVG导入 {result.Count} 个点");
-                    }
-                    // 图像文件处理（PNG/JPG）
-                    else
-                    {
-                        Mat pointMap = Cv2.ImRead(openFileDialog.FileName, ImreadModes.Grayscale);
-                        if (pointMap.Empty())
-                        {
-                            ShowTipsTemporarilyAsync("无法读取点图");
-                            return;
-                        }
-
-                        pointMap.ConvertTo(pointMap, MatType.CV_8UC1);  // 确保是 CV_8UC1 类型
-
-                        // 如果图像尺寸与原始图像不一致，则调整为原始图像的尺寸
-                        if (pointMap.Rows != OriginalImage.Rows || pointMap.Cols != OriginalImage.Cols)
-                        {
-                            Mat resizedPointMap = new Mat();
-                            Cv2.Resize(pointMap, resizedPointMap, OriginalImage.Size());
-                            pointMap = resizedPointMap;
-                        }
-
-                        // 查找黑色点
-                        for (int y = 0; y < pointMap.Rows; y++)
-                        {
-                            for (int x = 0; x < pointMap.Cols; x++)
-                            {
-                                byte pixelValue = pointMap.At<byte>(y, x);
-                                // 考虑抗锯齿：低于200灰度的都视为点
-                                if (pixelValue < 200)
-                                {
-                                    result.Add(new Point(x, y));
-                                }
-                            }
-                        }
-
-                        ShowTipsTemporarilyAsync($"成功从点图导入 {result.Count} 个点");
                     }
 
-                    NewOperation(result);
+                    ShowTipsTemporarilyAsync($"成功从点图导入 {result.Count} 个点");
                 }
-                catch (Exception e)
+
+                NewOperation(result);
+            }
+            catch (Exception e)
+            {
+                ShowTipsTemporarilyAsync($"导入点图时出错: {e.Message}");
+            }
+
+        }
+        public void HandleExit()
+        {
+            if(IsUsingLastConfigEveryTime)
+                ExportConfig("last_config.json");
+
+        }
+        public void ExportConfig(string path)
+        {
+            try
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(ImageProcesser));
+                using (StreamWriter fileWriter = new StreamWriter(path))
                 {
-                    ShowTipsTemporarilyAsync($"导入点图时出错: {e.Message}");
+                    serializer.Serialize(fileWriter, this);
                 }
+
+                ShowTipsTemporarilyAsync("配置成功导出。");
+            }
+            catch (Exception e)
+            {
+                ShowTipsTemporarilyAsync($"导出配置时出错: {e.Message}");
             }
         }
-        private void ExportConfig()
+        public void ImportConfig(string path)
         {
-            // 使用保存对话框选择保存路径
-            SaveFileDialog saveFileDialog = new SaveFileDialog
+            try
             {
-                Filter = "Xml 文件 (*.xml)|*.xml",
-                DefaultExt = "xml",
-                AddExtension = true,
-                FileName = $"{(Path.GetFileNameWithoutExtension(FilePath) == "" ? "EZHolo" : Path.GetFileNameWithoutExtension(FilePath))}_Config.xml"
-            };
-
-            if (saveFileDialog.ShowDialog() == true)
-            {
-                try
+                XmlSerializer serializer = new XmlSerializer(typeof(ImageProcesser));
+                using (FileStream fs = new FileStream(path, FileMode.Open))
                 {
-                    XmlSerializer serializer = new XmlSerializer(typeof(ImageProcesser));
-                    using (StreamWriter fileWriter = new StreamWriter(saveFileDialog.FileName))
-                    {
-                        serializer.Serialize(fileWriter, this);
-                    }
+                    ImageProcesser ipp = (ImageProcesser)serializer.Deserialize(fs);
+                    mainWindow.ImageProcesser = ipp;
+                    ipp.DepthEstimation = DepthEstimation;
+                    //ipp.RefreshBinding();
+                }
 
-                    ShowTipsTemporarilyAsync("配置成功导出。");
-                }
-                catch (Exception e)
-                {
-                    ShowTipsTemporarilyAsync($"导出配置时出错: {e.Message}");
-                }
+                ShowTipsTemporarilyAsync($"成功打开配置文件");
             }
-        }
-        private void ImportConfig()
-        {
-            OpenFileDialog openFileDialog = new OpenFileDialog
+            catch (Exception e)
             {
-                Filter = "Xml 文件 (*.xml)|*.xml",
-                DefaultExt = "xml",
-                Multiselect = false
-            };
-
-            if (openFileDialog.ShowDialog() == true)
-            {
-                try
-                {
-                    XmlSerializer serializer = new XmlSerializer(typeof(ImageProcesser));
-                    using (FileStream fs = new FileStream(openFileDialog.FileName, FileMode.Open))
-                    {
-                        ImageProcesser ipp = (ImageProcesser)serializer.Deserialize(fs);
-                        mainWindow.ImageProcesser = ipp;
-                        ipp.DepthEstimation = DepthEstimation;
-                        //ipp.RefreshBinding();
-                    }
-
-                    ShowTipsTemporarilyAsync($"成功打开配置文件");
-                }
-                catch (Exception e)
-                {
-                    ShowTipsTemporarilyAsync($"打开配置文件时出错: {e.Message}");
-                }
+                ShowTipsTemporarilyAsync($"打开配置文件时出错: {e.Message}");
             }
         }
         private void RefreshBinding()
@@ -2540,7 +2619,7 @@ namespace EZHolodotNet.Core
                                 {
                                     offsets.Add(movedistance * (1 - Math.Pow(pd.Distance / _smearRadius, 2)) * _smearStrength);
                                 }
-                                NewOperation(p1.Select(pd => _manualPointsStored.IndexOf(pd.Point)).ToList(), offsets);
+                                NewOperation(p1.Select(pd => pd.Point).ToList(), offsets);
                             }
                             break;
                         case 5://draft
@@ -2573,105 +2652,137 @@ namespace EZHolodotNet.Core
                 if (!_isManualMethodEnabled) return;
                 if (IsManualEditing)
                 {
-                    if (ManualTool == 1)
+                    switch (ManualTool)
                     {
-                        if (_drawingPoints.Count != 0)
-                        {
-                            NewOperation(_drawingPoints);
-                            _drawingPoints.Clear();
-                        }
-                    }
-                    else if (ManualTool == 3)
-                    {
-                        var interpolated =
-                            GetUniformInterpolatedPoints(StartMousePoint.Value, MousePixelPosition, _manualDensity);
-                        if (interpolated.Count == 2)
-                        {
-                            NewOperation([StartMousePoint.Value]);
-                            //_manualPointsStored.Add(StartMousePoint.Value);
-                            //LastStepAmount = 1;
-                        }
-                        else
-                        {
-                            NewOperation(interpolated);
-                            //_manualPointsStored.AddRange(interpolated);
-                            //LastStepAmount = interpolated.Count;
-                        }
-                    }
-                    else if (ManualTool == 2)
-                    {
-                        /*if (_erasingPoints.Count != 0)
-                        {
-                            if (_isSmartEraserEnabled)
+                        case 1:
                             {
-                                float averageDepth = 0;
-                                Dictionary<Point, float> pointDepth = new();
-                                foreach(var point in _erasingPoints)
+                                if (_drawingPoints.Count != 0)
                                 {
-                                    float d = DepthImage.Get<float>(point.Y, point.X);
-                                    pointDepth[point] = d;
-                                    averageDepth += d;
+                                    NewOperation(_drawingPoints);
+                                    _drawingPoints.Clear();
                                 }
-                                averageDepth /= _erasingPoints.Count;
-                                //取出depth大于averageDepth的points（List）赋值给_erasingPoints
+                                break;
                             }
-                            NewOperation(_erasingPoints, false);
-                            _erasingPoints.Clear();
-                        }*/
-                        if (_erasingPoints.Count != 0)
-                        {
-                            if (_isSmartEraserEnabled && _erasingPoints.Count > 1)
+                        case 3:
                             {
-                                // 并行计算深度值
-                                var pointsWithDepth = new (Point Point, float Depth)[_erasingPoints.Count];
-                                Parallel.For(0, _erasingPoints.Count, i =>
+                                var interpolated =
+                                    GetUniformInterpolatedPoints(StartMousePoint.Value, MousePixelPosition, _manualDensity);
+                                if (interpolated.Count == 2)
                                 {
-                                    var point = _erasingPoints[i];
-                                    pointsWithDepth[i] = (point, DepthImage.Get<float>(point.Y, point.X));
-                                });
-
-                                // 并行计算平均值（使用 SIMD 优化）
-                                float sum = 0;
-                                foreach (var (_, depth) in pointsWithDepth)
-                                {
-                                    sum += depth;
+                                    NewOperation([StartMousePoint.Value]);
+                                    //_manualPointsStored.Add(StartMousePoint.Value);
+                                    //LastStepAmount = 1;
                                 }
-                                float averageDepth = sum / pointsWithDepth.Length;
-
-                                // 并行过滤
-                                var filteredPoints = new System.Collections.Concurrent.ConcurrentBag<Point>();
-                                Parallel.ForEach(pointsWithDepth, item =>
+                                else
                                 {
-                                    if (item.Depth < averageDepth)
-                                        filteredPoints.Add(item.Point);
-                                });
-
-                                _erasingPoints = new List<Point>(filteredPoints);
+                                    NewOperation(interpolated);
+                                    //_manualPointsStored.AddRange(interpolated);
+                                    //LastStepAmount = interpolated.Count;
+                                }
                             }
-
-                            NewOperation(_erasingPoints, false);
-                            _erasingPoints.Clear();
-                        }
-                    }                    
-                    else if (ManualTool == 5)
-                    {
-                        if (_draftingPoints.Count != 0)
-                        {
-                            List<Point> offsets = new();
-                            List<int> points = new();
-                            foreach (var p in _draftingPoints)
+                            break;
+                        case 2:
                             {
-                                points.Add(_manualPointsStored.IndexOf(p));
-                                Vec2f v = GetGradientDirection(p) * DraftStrength;
-                                offsets.Add(new Point(
-                                    v.Item0,
-                                    v.Item1
-                                ));
-                            }
+                                /*if (_erasingPoints.Count != 0)
+                                {
+                                    if (_isSmartEraserEnabled)
+                                    {
+                                        float averageDepth = 0;
+                                        Dictionary<Point, float> pointDepth = new();
+                                        foreach(var point in _erasingPoints)
+                                        {
+                                            float d = DepthImage.Get<float>(point.Y, point.X);
+                                            pointDepth[point] = d;
+                                            averageDepth += d;
+                                        }
+                                        averageDepth /= _erasingPoints.Count;
+                                        //取出depth大于averageDepth的points（List）赋值给_erasingPoints
+                                    }
+                                    NewOperation(_erasingPoints, false);
+                                    _erasingPoints.Clear();
+                                }*/
+                                if (_erasingPoints.Count != 0)
+                                {
+                                    if (_isSmartEraserEnabled)
+                                    {
+                                        if (_erasingPoints.Count > 1)
+                                        {
+                                            // 并行计算深度值
+                                            var pointsWithDepth = new (Point Point, float Depth)[_erasingPoints.Count];
+                                            Parallel.For(0, _erasingPoints.Count, i =>
+                                            {
+                                                var point = _erasingPoints[i];
+                                                pointsWithDepth[i] = (point, DepthImage.Get<float>(point.Y, point.X));
+                                            });
 
-                            NewOperation(points, offsets);
-                            _draftingPoints.Clear();
-                        }
+                                            // 并行计算平均值（使用 SIMD 优化）
+                                            float sum = 0;
+                                            foreach (var (_, depth) in pointsWithDepth)
+                                            {
+                                                sum += depth;
+                                            }
+
+                                            float averageDepth = sum / pointsWithDepth.Length;
+                                            Trace.WriteLine($"avg:{averageDepth}");
+
+                                            // 并行过滤
+                                            var filteredPoints =
+                                                new System.Collections.Concurrent.ConcurrentBag<Point>();
+                                            Parallel.ForEach(pointsWithDepth, item =>
+                                            {
+                                                if (item.Depth < averageDepth)
+                                                    filteredPoints.Add(item.Point);
+                                            });
+
+                                            _erasingPoints = [.. filteredPoints];
+                                        }
+                                    }
+                                    else if (_eraserUpper - _eraserLower != 255)
+                                    {
+                                        var pointsWithDepth = new (Point Point, float Depth)[_erasingPoints.Count];
+                                        Parallel.For(0, _erasingPoints.Count, i =>
+                                        {
+                                            var point = _erasingPoints[i];
+                                            pointsWithDepth[i] = (point, DepthImage.Get<float>(point.Y, point.X));
+                                        }); 
+                                        var filteredPoints =
+                                            new System.Collections.Concurrent.ConcurrentBag<Point>();
+                                        Parallel.ForEach(pointsWithDepth, item =>
+                                        {
+                                            if (_eraserLower < item.Depth && item.Depth < _eraserUpper)
+                                                filteredPoints.Add(item.Point);
+                                        });
+                                        _erasingPoints = [.. filteredPoints];
+                                    }
+
+                                    NewOperation(_erasingPoints, false);
+                                    _erasingPoints.Clear();
+                                }
+                            }
+                            break;
+                        case 5:
+                            {
+                                if (_draftingPoints.Count != 0)
+                                {
+                                    List<Point> offsets = new();
+                                    List<Point> points = new();
+                                    foreach (var p in _draftingPoints)
+                                    {
+                                        points.Add(p);
+                                        Vec2f v = GetGradientDirection(p) * DraftStrength;
+                                        offsets.Add(new Point(
+                                            v.Item0,
+                                            v.Item1
+                                        ));
+                                    }
+
+                                    NewOperation(points, offsets);
+                                    _draftingPoints.Clear();
+                                }
+                            }
+                            break;
+                        default:
+                            break;
                     }
                 }
                 StartMousePoint = null;
@@ -2729,11 +2840,10 @@ namespace EZHolodotNet.Core
             if (_manualPointsStored.Count == 0)
                 return;
             List<Point> offsets = new();
-            List<int> points = new();
-            for (int i = 0; i < _manualPointsStored.Count; i++)
+            List<Point> points = new(_manualPointsStored);
+            foreach(var p in _manualPointsStored)
             {
-                points.Add(i);
-                Vec2f v = GetGradientDirection(_manualPointsStored[i]) * DraftStrength;
+                Vec2f v = GetGradientDirection(p) * DraftStrength;
                 offsets.Add(new Point(
                     v.Item0,
                     v.Item1
@@ -2752,8 +2862,8 @@ namespace EZHolodotNet.Core
             // 4. 将每个点映射到对应的网格
             foreach (var point in _manualPointsStored)
             {
-                int gridX = point.X / DeduplicationToolGridWidth;
-                int gridY = point.Y / DeduplicationToolGridHeight;
+                int gridX = (int)(point.X / DeduplicationToolGridWidth);
+                int gridY = (int)(point.Y / DeduplicationToolGridHeight);
                 var gridKey = (gridX, gridY);
 
                 if (!gridMap.ContainsKey(gridKey))
@@ -2766,16 +2876,33 @@ namespace EZHolodotNet.Core
 
             // 5. 遍历每个网格，检查点数是否超过理想个数
             List<Point> pointsToRemove = new List<Point>();
-
-            foreach (var grid in gridMap)
+            if (IsUniformDeduplicationEnabled)
             {
-                List<Point> gridPoints = grid.Value;
-
-                // 如果网格中的点数超过理想个数
-                if (gridPoints.Count > DeduplicationMaxCount)
+                foreach (var grid in gridMap)
                 {
-                    // 随机选择多余的点进行删除
-                    int pointsToDelete = gridPoints.Count - DeduplicationMaxCount;
+                    List<Point> gridPoints = grid.Value;
+
+                    // 如果网格中的点数超过理想个数
+                    if (gridPoints.Count > DeduplicationToolMaxCount)
+                    {
+                        // 随机选择多余的点进行删除
+                        int pointsToDelete = gridPoints.Count - DeduplicationToolMaxCount;
+                        for (int i = 0; i < pointsToDelete; i++)
+                        {
+
+                            int indexToRemove = Random.Shared.Next(gridPoints.Count);
+                            pointsToRemove.Add(gridPoints[indexToRemove]);
+                            gridPoints.RemoveAt(indexToRemove);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach (var grid in gridMap)
+                {
+                    List<Point> gridPoints = grid.Value;
+                    int pointsToDelete = (int)(gridPoints.Count * DeduplicationToolDensity);
                     for (int i = 0; i < pointsToDelete; i++)
                     {
 
@@ -2783,6 +2910,7 @@ namespace EZHolodotNet.Core
                         pointsToRemove.Add(gridPoints[indexToRemove]);
                         gridPoints.RemoveAt(indexToRemove);
                     }
+                    
                 }
             }
 
@@ -2863,84 +2991,90 @@ namespace EZHolodotNet.Core
         {
             private int maxWidth = 0;
             private int maxHeight = 0;
-            private List<Point> manualPoints;
-            private HashSet<Point> manualPointsSet;
-            public List<Point> Points { get; }
-            public List<int> PointIndice { get; }
+            private HashSet<Point> manualPointsCheckPoint;
+            private HashSet<Point> manualPoints;
+            private List<Point> _points = null;
+            //public List<int> PointIndice { get; }
             public bool? IsAddOperation { get; }  // 修改为 bool?，null 表示 Move 操作
             public List<Point>? Offset { get; }  // 移动操作的偏移量，null 时表示没有偏移
 
             // 构造函数：支持 Add 操作或 Remove 操作
-            public Operation(List<Point> manualPointsStored,List<Point> points, bool isAddOperation,int maxW,int maxH)
+            /*public Operation(List<Point> manualPointsStored,List<Point> points, bool isAddOperation,int maxW,int maxH)
             {
                 maxWidth = maxW;
                 maxHeight = maxH;
                 manualPoints = manualPointsStored;
                 manualPointsSet = new HashSet<Point>(manualPointsStored);
-                Points = new List<Point>(points);
+                _points = new List<Point>(points);
                 IsAddOperation = isAddOperation;  // Add 操作时传入 true 或 false
                 Offset = null;  // 没有偏移
-            }
+            }*/
 
-            // 构造函数：支持 Move 操作
-            public Operation(List<Point> manualPointsStored,List<int> points, List<Point> offset, int maxW, int maxH)
+            // 移动 操作
+            public Operation(HashSet<Point> manualPointsStored,List<Point> points, List<Point> offset, int maxW, int maxH)
             {
+                manualPointsCheckPoint = new HashSet<Point>(manualPointsStored);
                 maxWidth = maxW;
                 maxHeight = maxH;
                 manualPoints = manualPointsStored;
-                PointIndice = points;
+                _points = new(points);
                 IsAddOperation = null;  // null 表示 Move 操作
                 Offset = offset;  // 设置偏移量
             }
 
-            // 执行 Add 操作
+            // 增/删 操作
+            public Operation(HashSet<Point> manualPointsStored, List<Point> points, bool isAddOperation, int maxW, int maxH)
+            {
+                manualPointsCheckPoint = new HashSet<Point>(manualPointsStored);
+                maxWidth = maxW;
+                maxHeight = maxH;
+                manualPoints = manualPointsStored;
+                _points = new(points);
+                IsAddOperation = isAddOperation;
+                Offset = null;  // 没有偏移
+            }
+
+            // 执行 增/删/移 操作
             public void Execute()
             {
                 if (IsAddOperation.HasValue)
                 {
                     /*if (IsAddOperation.Value)
                     {
-                        manualPoints.AddRange(Points);
+                        manualPoints.AddRange(_points);
                     }
                     else
                     {
-                        //manualPoints.RemoveAll(p => Points.Contains(p));
-                        foreach(var point in Points)
+                        //manualPoints.RemoveAll(p => _points.Contains(p));
+                        foreach(var point in _points)
                         {
                             manualPoints.Remove(point);
                         }
                     }*/
-                    if (IsAddOperation.Value)
+                    if (IsAddOperation.Value)// add
                     {
-                        manualPoints.AddRange(Points);
-                        if (manualPointsSet != null)
-                        {
-                            manualPointsSet.UnionWith(Points);
-                        }
+                        manualPoints.UnionWith(_points);
                     }
-                    else
+                    else// remove
                     {
-                        var pointsToRemove = new HashSet<Point>(Points);
-                        manualPoints.RemoveAll(p => pointsToRemove.Contains(p));
-                        if (manualPointsSet != null)
-                        {
-                            manualPointsSet.ExceptWith(Points);
-                        }
+                        manualPoints.ExceptWith(_points);
                     }
                 }
-                else
+                else // Move
                 {
-                    if (Offset.Count == PointIndice.Count)
+                    if (Offset.Count == _points.Count)
                     {
-                        for (int i = 0; i < PointIndice.Count; i++)
+                        manualPoints.ExceptWith(_points);
+                        HashSet<Point> movedPoints = new HashSet<Point>();
+                        for (int i = 0; i < _points.Count; i++)
                         {
                             // 移动每个点
-                            float x = Math.Clamp(manualPoints[PointIndice[i]].Xf + Offset[i].Xf, 0, maxWidth);
-                            float y = Math.Clamp(manualPoints[PointIndice[i]].Yf + Offset[i].Yf, 0, maxHeight);
-                            Offset[i] = new(x - manualPoints[PointIndice[i]].Xf,y - manualPoints[PointIndice[i]].Yf) ;
-
-                            manualPoints[PointIndice[i]] = new(x, y);
+                            float x = Math.Clamp(_points[i].Xf + Offset[i].Xf, 0, maxWidth);
+                            float y = Math.Clamp(_points[i].Yf + Offset[i].Yf, 0, maxHeight);
+                            Offset[i] = new(x - _points[i].Xf, y - _points[i].Yf) ;
+                            movedPoints.Add(new Point(x, y));
                         }
+                        manualPoints.UnionWith(movedPoints);
                     }
                 }
             }
@@ -2948,29 +3082,9 @@ namespace EZHolodotNet.Core
             // 执行 Move 操作
             public void Undo()
             {
-                if (IsAddOperation.HasValue)
-                {
-                    if (IsAddOperation.Value)
-                    {
-                        manualPoints.RemoveAll(p => Points.Contains(p));
-                    }
-                    else
-                    {
-                        manualPoints.AddRange(Points);
-                    }
-                }
-                else
-                {
-                    if (Offset.Count == PointIndice.Count)
-                    {
-                        for (int i = 0; i < PointIndice.Count; i++)
-                        {
-                            // 移动每个点
-                            manualPoints[PointIndice[i]] = new(manualPoints[PointIndice[i]].Xf - Offset[i].Xf, manualPoints[PointIndice[i]].Yf - Offset[i].Yf);
-                        }
-                    }
+                manualPoints.Clear();
+                manualPoints.UnionWith(manualPointsCheckPoint);
 
-                }
             }
         }
 
@@ -2985,7 +3099,7 @@ namespace EZHolodotNet.Core
         /// <param name="isAddOperation">true:Add;false:Remove;</param>
         public void NewOperation(List<Point> points, bool isAddOperation = true)
         {
-
+            if (points.Count == 0) return;
             // 记录操作
             var o = new Operation(_manualPointsStored, points, isAddOperation,OriginImageWidth,OriginImageHeight);
             o.Execute();
@@ -2994,7 +3108,7 @@ namespace EZHolodotNet.Core
 
             RefreshDisplay();
         }        
-        public void NewOperation(List<int> points, List<Point> offsets)
+        public void NewOperation(List<Point> points, List<Point> offsets)
         {
 
             // 记录操作
@@ -3081,6 +3195,7 @@ namespace EZHolodotNet.Core
             }
             ScratchImageStepCache.Clear();
         }
+        [XmlIgnore]
         public Dictionary<string, BitmapSource> ScratchImageStepCache = new Dictionary<string, BitmapSource>();
 
         public async Task<BitmapSource?> ProcessAndCacheScratchTick(float tick)
@@ -3091,7 +3206,7 @@ namespace EZHolodotNet.Core
             // 直接从缓存获取WriteableBitmap（如果存在）
             if (ScratchImageStepCache.TryGetValue(tick.ToString("0.000"), out BitmapSource cachedBitmap))
             {
-                Trace.WriteLine($"CacheGot{tick:0.000}");
+                //Trace.WriteLine($"CacheGot{tick:0.000}");
                 return cachedBitmap;
             }
 
@@ -3099,7 +3214,7 @@ namespace EZHolodotNet.Core
             {
                 try
                 {
-                    Trace.WriteLine($"new{tick:0.000}");
+                    //Trace.WriteLine($"new{tick:0.000}");
                     IsNotProcessingSvg = false;
                     await SvgPainter.PreviewPath(
                         SampledPoints,

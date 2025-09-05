@@ -1,7 +1,10 @@
 ﻿using EZHolodotNet.Core;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
+using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -76,6 +79,15 @@ namespace EZHolodotNet
                 InitializeComponent();
                 ImageProcesser = new(this);
                 DataContext = ImageProcesser;
+                if (Properties.Settings.Default.IsUsingLastConfigEveryTime)
+                {
+                    //检查软件目录下是否有 last_config.json 文件
+                    if (File.Exists("last_config.json"))
+                    {
+                        ImageProcesser.ImportConfig("last_config.json");
+                    }
+
+                }
             }
             catch (Exception e)
             {
@@ -187,6 +199,84 @@ namespace EZHolodotNet
         {
             if (e.MiddleButton == MouseButtonState.Pressed)
                 ImageProcesser.ProcessMovingView();
+
+        }
+
+        private void BorderOriginalImage_DragEnter(object sender, DragEventArgs e)
+        {
+            // 检查是否是文件拖拽
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (IsImageFile(files[0]))
+                {
+                    e.Effects = DragDropEffects.Copy;
+                    return;
+                }
+            }
+            e.Effects = DragDropEffects.None;
+        }
+
+        private void BorderOriginalImage_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length > 0 && IsImageFile(files[0]))
+                {
+                    ImageProcesser.LoadImage(files[0]);
+                }
+            }
+            ImageProcesser.IsDragEntered = false;
+
+        }
+        private bool IsImageFile(string filePath)
+        {
+            string[] imageExtensions = { ".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".webp"};
+            string ext = System.IO.Path.GetExtension(filePath).ToLower();
+            return imageExtensions.Contains(ext);
+        }
+
+        private void Window_DragEnter(object sender, DragEventArgs e)
+        {
+            ImageProcesser.IsDragEntered = true;
+        }
+
+        private void Window_DragLeave(object sender, DragEventArgs e)
+        {
+            ImageProcesser.IsDragEntered = false;
+
+        }
+
+        private void BorderDepthImage_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length > 0 && IsImageFile(files[0]))
+                {
+                    ImageProcesser.LoadDepth(files[0]);
+                }
+            }
+            ImageProcesser.IsDragEntered = false;
+        }
+
+        private void BorderPointMap_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length > 0 && System.IO.Path.GetExtension(files[0]).ToLower()==".svg")
+                {
+                    ImageProcesser.ImportPoints(files[0]);
+                }
+            }
+            ImageProcesser.IsDragEntered = false;
+        }
+
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            ImageProcesser.HandleExit();
 
         }
     }

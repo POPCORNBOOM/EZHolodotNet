@@ -35,8 +35,8 @@ namespace EZHolodotNet.Core
         public static async Task<string> BuildSvgPath(
             List<Point> points,
             Mat? depthImage,
-            int zeroHeight = 128, 
-            int ignoreHeightDistance = 0,
+            float zeroHeight = 128,
+            float ignoreHeightDistance = 0,
             float aFactor = 0.16f,
             float bFactor = 1000,
             int previewDense = 10,
@@ -138,7 +138,7 @@ namespace EZHolodotNet.Core
                 return sb.ToString();
             });
         }
-        public static async Task PreviewPath(List<Point> points, Mat? depthImage, int zeroHeight = 128, int ignoreHeightDistance = 0, float aFactor = 0.16f, float bFactor = 1000, int previewDense = 10, Mat? originalImageL = null, Mat? originalImageR = null, Mat? originalImageO = null, Mat? originalImageLine = null,bool drawLineDensity = false)
+        public static async Task PreviewPath(List<Point> points, Mat? depthImage, float zeroHeight = 128, float ignoreHeightDistance = 0, float aFactor = 0.16f, float bFactor = 1000, int previewDense = 10, Mat? originalImageL = null, Mat? originalImageR = null, Mat? originalImageO = null, Mat? originalImageLine = null,bool drawLineDensity = false)
         {
             await Task.Run(() =>
             {
@@ -339,7 +339,7 @@ namespace EZHolodotNet.Core
             });
 
         }
-        public static async Task PreviewPath(List<Point> points, Mat? depthImage, Mat? originalImage, Mat? outImage, float step, int zeroHeight = 128, int ignoreHeightDistance = 0, float aFactor = 0.16f, float bFactor = 1000, int previewDense = 10, bool isPositiveDepthPointOnly = false,string color = "c")
+        public static async Task PreviewPath(List<Point> points, Mat? depthImage, Mat? originalImage, Mat? outImage, float step, float zeroHeight = 128, float ignoreHeightDistance = 0, float aFactor = 0.16f, float bFactor = 1000, int previewDense = 10, bool isPositiveDepthPointOnly = false,string color = "c")
         {
             await Task.Run(() =>
             {

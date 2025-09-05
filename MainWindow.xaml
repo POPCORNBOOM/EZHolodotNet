@@ -5,11 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:local="clr-namespace:EZHolodotNet"
-        mc:Ignorable="d"
+        mc:Ignorable="d" AllowDrop="True" DragEnter="Window_DragEnter" DragLeave="Window_DragLeave" Closing="Window_Closing"
         Title="EZHolo" Height="720" Width="800" MinHeight="450" MinWidth="850" MouseMove="Window_MouseMove" MouseUp="Window_MouseUp" MouseLeave="Window_MouseLeave">
     <Window.InputBindings>
         <!-- 文件操作 -->
+        <KeyBinding Gesture="Ctrl+V" Command="{Binding ChooseImageCommand}" CommandParameter="FROMCLIPBOARD"/>
         <KeyBinding Gesture="Ctrl+R" Command="{Binding ChooseImageCommand}"/>
+        <KeyBinding Gesture="Ctrl+U" Command="{Binding UnloadImageCommand}"/>
         <KeyBinding Gesture="Ctrl+E" Command="{Binding ExportScratchCommand}"/>
 
         <!-- 深度图操作 -->
@@ -35,6 +37,17 @@
         <KeyBinding Gesture="F5" Command="{Binding ProcessDepthCommand}"/>
         <KeyBinding Gesture="Ctrl+G" Command="{Binding CreateScratchCommand}"/>
         <KeyBinding Gesture="F12" Command="{Binding DebugCommand}" CommandParameter="DepthContourMapContrust"/>
+        
+        <!--手动采样工具 -->
+        <KeyBinding Key="Q" Command="{Binding SetManualToolCommand}" CommandParameter="0"/>
+        <KeyBinding Key="W" Command="{Binding SetManualToolCommand}" CommandParameter="1"/>
+        <KeyBinding Key="E" Command="{Binding SetManualToolCommand}" CommandParameter="2"/>
+        <KeyBinding Key="A" Command="{Binding SetManualToolCommand}" CommandParameter="3"/>
+        <KeyBinding Key="S" Command="{Binding SetManualToolCommand}" CommandParameter="4"/>
+        <KeyBinding Key="D" Command="{Binding SetManualToolCommand}" CommandParameter="5"/>
+        <KeyBinding Key="Z" Command="{Binding SetManualToolCommand}" CommandParameter="6"/>
+        
+        
     </Window.InputBindings>
     <Window.Resources>
         <Storyboard x:Key="FadeInAnimation">
@@ -92,7 +105,8 @@
 
         <Menu Grid.ColumnSpan="3">
             <ui:MenuItem Header="文件(_F)" Icon="{ui:SymbolIcon Symbol=Document24}">
-                <ui:MenuItem Header="打开图像" InputGestureText="Ctrl+R" Icon="{ui:SymbolIcon Symbol=ImageAdd24}" Command="{Binding ChooseImageCommand}"/>
+                <ui:MenuItem Header="打开新图像" InputGestureText="Ctrl+R" Icon="{ui:SymbolIcon Symbol=ImageAdd24}" Command="{Binding ChooseImageCommand}"/>
+                <ui:MenuItem Header="关闭图像" InputGestureText="Ctrl+U" IsEnabled="{Binding IsOriginalImageLoaded}" Icon="{ui:SymbolIcon Symbol=ImageOff24}" Command="{Binding UnloadImageCommand}"/>
                 <Separator/>
 
                 <ui:MenuItem Header="深度图" Icon="{ui:SymbolIcon Symbol=DocumentCatchUp24}">
@@ -120,7 +134,7 @@
                      Icon="{ui:SymbolIcon Symbol=ArrowImport24}" Command="{Binding ImportPointsCommand}"/>
                 </ui:MenuItem>
                 <Separator/>
-
+                <ui:ToggleSwitch Content="每次启动使用上次退出时的配置" IsChecked="{Binding IsUsingLastConfigEveryTime}"/>
                 <ui:MenuItem Header="保存配置" InputGestureText="Ctrl+S" 
                  Icon="{ui:SymbolIcon Symbol=DocumentSave24}" Command="{Binding ExportConfigCommand}"/>
                 <ui:MenuItem Header="加载配置" InputGestureText="Ctrl+L" 
@@ -140,6 +154,53 @@
                 <Separator/>
                 <ui:MenuItem Header="开源信息" Icon="{ui:SymbolIcon Symbol=BookInformation24}" Command="{Binding OpenCustomMessageBoxCommand}"/>
                 <Separator/>
+                <ui:MenuItem Header="快捷键一览表" Icon="{ui:SymbolIcon Symbol=Keyboard24}">
+                    <!-- 文件操作 -->
+                    <ui:MenuItem InputGestureText="Ctrl+V" Header="从剪贴板导入图片"/>
+                    <ui:MenuItem InputGestureText="Ctrl+R" Header="从文件导入图片"/>
+                    <ui:MenuItem InputGestureText="Ctrl+U" Header="关闭图片"/>
+                    <ui:MenuItem InputGestureText="Ctrl+E" Header="导出刮擦轨迹"/>
+                    <Separator/>
+
+                    <!-- 深度图操作 -->
+                    <ui:MenuItem InputGestureText="Ctrl+Shift+E" Header="导出深度图"/>
+                    <ui:MenuItem InputGestureText="Ctrl+Shift+I" Header="从文件导入深度图"/>
+                    <Separator/>
+
+                    <!-- 点图操作 -->
+                    <ui:MenuItem InputGestureText="Ctrl+Shift+P" Header="以PNG格式导出点图(合一)"/>
+                    <ui:MenuItem InputGestureText="Ctrl+Alt+P" Header="以PNG格式导出点图(仅手动)"/>
+                    <ui:MenuItem InputGestureText="Ctrl+Shift+S" Header="以SVG格式无损导出点图(合一)"/>
+                    <ui:MenuItem InputGestureText="Ctrl+Alt+S" Header="以SVG格式无损导出点图(仅手动)"/>
+                    <ui:MenuItem InputGestureText="Ctrl+Shift+M" Header="从文件导入点图"/>
+                    <Separator/>
+
+                    <!-- 配置操作 -->
+                    <ui:MenuItem InputGestureText="Ctrl+S" Header="保存软件配置"/>
+                    <ui:MenuItem InputGestureText="Ctrl+L" Header="加载软件配置"/>
+                    <Separator/>
+
+                    <!-- 编辑操作 -->
+                    <ui:MenuItem InputGestureText="Ctrl+Z" Header="撤销手动采样操作"/>
+                    <ui:MenuItem InputGestureText="Ctrl+Y" Header="重做手动采样操作"/>
+                    <Separator/>
+
+                    <!-- 工具操作 -->
+                    <ui:MenuItem InputGestureText="F5" Header="重新估算深度图"/>
+                    <ui:MenuItem InputGestureText="Ctrl+G" Header="生成刮擦轨迹"/>
+                    <Separator/>
+
+                    <!--手动采样工具 -->
+                    <ui:MenuItem InputGestureText="Q" Header="切换到鼠标"/>
+                    <ui:MenuItem InputGestureText="W" Header="切换到铅笔工具"/>
+                    <ui:MenuItem InputGestureText="E" Header="切换到橡皮擦工具"/>
+                    <ui:MenuItem InputGestureText="A" Header="切换到线条工具"/>
+                    <ui:MenuItem InputGestureText="S" Header="切换到涂抹工具"/>
+                    <ui:MenuItem InputGestureText="D" Header="切换到梯度偏移工具"/>
+                    <ui:MenuItem InputGestureText="Z" Header="切换到密度降低工具"/>
+                </ui:MenuItem>
+
+                <Separator/>
                 <ui:MenuItem Header="Debug工具" InputGestureText="F12" Command="{Binding DebugCommand}" CommandParameter="DepthContourMapContrust"/>
             </ui:MenuItem>
         </Menu>
@@ -151,9 +212,13 @@
                     <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
                 <Viewbox MaxHeight="300" HorizontalAlignment="Center" Margin="8,16" VerticalAlignment="Stretch" Stretch="UniformToFill" MouseDown="Viewbox_MouseDown">
-                    <Border Width="200" 
+                    <Border x:Name="BorderOriginalImage" Width="200" 
                             Height="200"
-                            Background="{StaticResource ChessboardBrush}">
+                            Background="{StaticResource ChessboardBrush}"
+                            AllowDrop="True"
+                            DragEnter="BorderOriginalImage_DragEnter"
+                            Drop="BorderOriginalImage_Drop">
+                        
                     </Border>
                 </Viewbox>
                 <Grid Margin="16" ClipToBounds="True">
@@ -166,6 +231,50 @@
                         </Image.RenderTransform>
                     </Image>
                 </Grid>
+                <TextBlock HorizontalAlignment="Center" FontSize="10" Foreground="White" VerticalAlignment="Center" TextAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsOriginalImageLoaded}" Value="true">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                    <Run Text="开始你的工作" FontSize="14"/>
+                    <LineBreak/>
+                    <Run Text="文件 - 打开图片 或 “点击选择图片”"/>                    
+                    <LineBreak/>
+                    <Run Text="或者"/>
+                    <Hyperlink Command="{Binding ChooseImageCommand}" CommandParameter="FROMCLIPBOARD">
+                        <Hyperlink.Style>
+                            <Style TargetType="Hyperlink">
+                                <Setter Property="Foreground" Value="#559CE4"/>
+                                <Style.Triggers>
+                                    <EventTrigger RoutedEvent="Mouse.MouseEnter">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <ColorAnimation Duration="0:0:0.1" Storyboard.TargetProperty="Foreground.Color" To="#E46633"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                    <EventTrigger RoutedEvent="Mouse.MouseLeave">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <ColorAnimation Duration="0:0:0.5" Storyboard.TargetProperty="Foreground.Color" To="#559CE4"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Hyperlink.Style>
+                        <Run Text="点击这里从" />
+                        <ui:SymbolIcon Symbol="Clipboard24" Margin="-4,-2,-2,-2"/>
+                        <Run Text="剪贴板导入" />
+                    </Hyperlink>
+                </TextBlock>
+
                 <TextBlock VerticalAlignment="Bottom" Foreground="#B3B3B3" Margin="8,16" FontSize="7">
                     <Run Text="{Binding FilePath,Mode=OneWay}"/>
                     <Run Text="@"/>
@@ -179,6 +288,17 @@
                     <TextBlock Text="建议尺寸：~518x518 px" Foreground="#D3D3D3" Margin="4,4,0,0" FontSize="12"/>
 
                 </StackPanel>
+                <Border Background="#E3559CE4" BorderThickness="2" BorderBrush="#80B9EE" 
+                        Margin="10,18" 
+                        Visibility="{Binding IsDragEntered,Converter={StaticResource BoolToVisibilityConverter}}"
+                        Drop="BorderOriginalImage_Drop" IsHitTestVisible="True">
+                    <TextBlock TextAlignment="Center" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Image24" FontSize="32"/>
+                        <LineBreak/>
+                        <Run Text="导入原图"/>
+                    </TextBlock>
+                </Border>
+
                 <ScrollViewer Grid.Row="2">
                     <StackPanel Margin="8">
                         <Expander Header="深度估算" IsExpanded="True" Margin="8">
@@ -199,21 +319,21 @@
                                     <ui:Button Margin="2,0,0,0" Grid.Column="2" VerticalAlignment="Stretch" Icon="{ui:SymbolIcon Symbol=Folder24}" Command="{Binding OpenFolderCommand}"/>
                                     <ui:Button Margin="2,0,0,0" Grid.Column="3" VerticalAlignment="Stretch" Icon="{ui:SymbolIcon Symbol=ArrowClockwise24}" Command="{Binding RefreshModelCommand}"/>
                                 </Grid>
-                                <Button Margin="0,4,0,0" Content="重新估算" ToolTip="重新基于原图估算深度图和梯度" HorizontalAlignment="Stretch" Command="{Binding ProcessDepthCommand}"/>
+                                <Button IsEnabled="{Binding IsOriginalImageLoaded}" Margin="0,4,0,0" Content="重新估算" ToolTip="重新基于原图估算深度图和梯度" HorizontalAlignment="Stretch" Command="{Binding ProcessDepthCommand}"/>
 
                                 <Grid Margin="0,4,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="1*" />
                                         <ColumnDefinition Width="1*" />
                                     </Grid.ColumnDefinitions>
-                                    <ui:Button Margin="0,0,2,0" Content="导出深度*" ToolTip="将会丢失小数精度" HorizontalAlignment="Stretch" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportDepthCommand}"/>
-                                    <ui:Button Grid.Column="1" Margin="2,0,0,0" HorizontalAlignment="Stretch" Content="导入深度" Icon="{ui:SymbolIcon Symbol=ArrowImport24}" Command="{Binding ImportDepthCommand}"/>
+                                    <ui:Button IsEnabled="{Binding IsOriginalImageLoaded}" Margin="0,0,2,0" Content="导出深度*" ToolTip="将会丢失小数精度" HorizontalAlignment="Stretch" Icon="{ui:SymbolIcon Symbol=ArrowExportUp24}" Command="{Binding ExportDepthCommand}"/>
+                                    <ui:Button IsEnabled="{Binding IsOriginalImageLoaded}" Grid.Column="1" Margin="2,0,0,0" HorizontalAlignment="Stretch" Content="导入深度" Icon="{ui:SymbolIcon Symbol=ArrowImport24}" Command="{Binding ImportDepthCommand}"/>
                                 </Grid>
 
                             </StackPanel>
                         </Expander>
 
-                        <Expander IsExpanded="True" Margin="8" Header="关键点采样">
+                        <Expander IsExpanded="True" Margin="8" Header="关键点采样" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter}}">
                             <StackPanel>
                                 <CheckBox Content="轮廓采样策略" IsChecked="{Binding IsContourMethodEnabled}"/>
                                 <Expander Visibility="{Binding IsContourMethodEnabled,Converter={StaticResource BooleanToVisibilityConverter}}" IsExpanded="True" Header="轮廓采样">
@@ -355,33 +475,33 @@
                                                 <RowDefinition Height="1*" />
                                             </Grid.RowDefinitions>
                                             <ToggleButton Padding="0,7" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,2,0" 
-                                                          ToolTip="鼠标"  Command="{Binding SetManualToolCommand}" CommandParameter="0" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=0}">
+                                                          ToolTip="鼠标，快捷键Q"  Command="{Binding SetManualToolCommand}" CommandParameter="0" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=0}">
                                                 <ui:SymbolIcon Symbol="Cursor24"/>
                                             </ToggleButton>
                                             <ToggleButton Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,0" Grid.Column="1" 
-                                                          ToolTip="【可撤销】铅笔，在“深度/采样预览图”中拖拽或单击，以在手动采样中添加一系列采样点或单个采样点"  Command="{Binding SetManualToolCommand}" CommandParameter="1" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=1}">
+                                                          ToolTip="【可撤销】铅笔，快捷键W，在“深度/采样预览图”中拖拽或单击，以在手动采样中添加一系列采样点或单个采样点"  Command="{Binding SetManualToolCommand}" CommandParameter="1" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=1}">
                                                 <ui:SymbolIcon Symbol="Pen24"/>
                                             </ToggleButton>
                                             <ToggleButton Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,0,0,0" Grid.Column="2" 
-                                                          ToolTip="【可撤销】橡皮擦，在“深度/采样预览图”中拖拽或单击，以在手动采样中移除一系列采样点" Command="{Binding SetManualToolCommand}" CommandParameter="2" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=2}">
+                                                          ToolTip="【可撤销】橡皮擦，快捷键E，在“深度/采样预览图”中拖拽或单击，以在手动采样中移除一系列采样点" Command="{Binding SetManualToolCommand}" CommandParameter="2" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=2}">
                                                 <ui:SymbolIcon Symbol="Eraser24"/>
                                             </ToggleButton>
                                             
                                             <ToggleButton Padding="0,7" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,4,2,0" Grid.Row="1" Grid.Column="0" 
-                                                          ToolTip="【可撤销】线条，在“深度/采样预览图”中拖拽或单击，以在手动采样中添加一系列采样点或单个采样点" Command="{Binding SetManualToolCommand}" CommandParameter="3" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=3}">
+                                                          ToolTip="【可撤销】线条，快捷键A，在“深度/采样预览图”中拖拽或单击，以在手动采样中添加一系列采样点或单个采样点" Command="{Binding SetManualToolCommand}" CommandParameter="3" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=3}">
                                                 <ui:SymbolIcon Symbol="Line24"/>
                                             </ToggleButton>
                                             <ToggleButton Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,4,2,0" Grid.Row="1" Grid.Column="1" 
-                                                          ToolTip="【可撤销】涂抹，在“深度/采样预览图”中拖拽或单击，以在手动采样中微调采样点的位置" Command="{Binding SetManualToolCommand}" CommandParameter="4" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=4}">
+                                                          ToolTip="【可撤销】涂抹，快捷键S，在“深度/采样预览图”中拖拽或单击，以在手动采样中微调采样点的位置" Command="{Binding SetManualToolCommand}" CommandParameter="4" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=4}">
                                                 <ui:SymbolIcon Symbol="HandDraw24"/>
                                             </ToggleButton>
                                             <ToggleButton Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,4,0,0" Grid.Row="1" Grid.Column="2" 
-                                                          ToolTip="【可撤销】梯度偏移，在“深度/采样预览图”中拖拽或单击，以在手动采样中对采样点向梯度方向/反方向施加偏移" Command="{Binding SetManualToolCommand}" CommandParameter="5" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=5}">
+                                                          ToolTip="【可撤销】梯度偏移，快捷键D，在“深度/采样预览图”中拖拽或单击，以在手动采样中对采样点向梯度方向/反方向施加偏移" Command="{Binding SetManualToolCommand}" CommandParameter="5" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=5}">
                                                 <ui:SymbolIcon Symbol="CalendarPattern20"/>
                                             </ToggleButton>
                                             
                                             <ToggleButton Padding="0,7" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,4,2,0" Grid.Row="2" Grid.Column="0" 
-                                                          ToolTip="【可撤销】" Command="{Binding SetManualToolCommand}" CommandParameter="6" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=6}">
+                                                          ToolTip="【可撤销】密度降低，快捷键Z，辅助你降低手动采样点量" Command="{Binding SetManualToolCommand}" CommandParameter="6" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=6}">
                                                 <ui:SymbolIcon Symbol="ArrowSyncDismiss24"/>
                                             </ToggleButton>
                                             <ToggleButton Visibility="Collapsed" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,4,2,0" Grid.Row="2" Grid.Column="1" 
@@ -417,13 +537,13 @@
 
                                                 <ui:TextBlock>
                                                     <Run Text="橡皮擦半径"/>
-                                                    <Run Text="{Binding EraserRadius,StringFormat={}{0:0}}"/>
+                                                    <Run Text="{Binding EraserRadius,StringFormat={}{0:0.0}}"/>
                                                     <Run Text="px"/>
                                                 </ui:TextBlock>
 
-                                                <Slider Minimum="1" Maximum="50"
+                                                <Slider Minimum="0" Maximum="{Binding RadiusMax}"
                                         Value="{Binding EraserRadius}" 
-                                        TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                        TickFrequency="0.1" IsSnapToTickEnabled="True"/>
                                                 <!--
                                                 <ui:TextBlock>
                                                     <Run Text="选择性擦除"/>
@@ -435,7 +555,24 @@
                                         Value="{Binding EraserRadius}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
                                                 -->
+                                                <ui:TextBlock Visibility="{Binding IsSmartEraserEnabled,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}">
+                                                    <Run Text="最深可擦拭点高度"/>
+                                                    <Run Text="{Binding EraserLower,StringFormat={}{0:0.0}}"/>
+                                                </ui:TextBlock>
+
+                                                <Slider Minimum="0" Maximum="255" Visibility="{Binding IsSmartEraserEnabled,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}"
+                                                        Value="{Binding EraserLower}" 
+                                                        TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+                                                <ui:TextBlock Visibility="{Binding IsSmartEraserEnabled,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}">
+                                                    <Run Text="最浅可擦拭点高度" />
+                                                    <Run Text="{Binding EraserUpper,StringFormat={}{0:0.0}}"/>
+                                                </ui:TextBlock>
+
+                                                <Slider Minimum="0" Maximum="255" Visibility="{Binding IsSmartEraserEnabled,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}"
+                                                        Value="{Binding EraserUpper}" 
+                                                        TickFrequency="0.1" IsSnapToTickEnabled="True"/>
                                                 <CheckBox Content="智能边缘橡皮" ToolTip="开启后将自动选择背景采样点清除，对前景采样点则保留" IsChecked="{Binding IsSmartEraserEnabled}"/>
+
                                             </StackPanel>
                                         </Expander>
                                         <Expander Margin="0,0,0,4" Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=4,Mode=OneWay}" IsExpanded="True" Header="涂抹设置">
@@ -443,13 +580,13 @@
 
                                                 <ui:TextBlock>
                                                     <Run Text="涂抹半径"/>
-                                                    <Run Text="{Binding SmearRadius,StringFormat={}{0:0}}"/>
+                                                    <Run Text="{Binding SmearRadius,StringFormat={}{0:0.0}}"/>
                                                     <Run Text="px"/>
                                                 </ui:TextBlock>
 
-                                                <Slider Minimum="1" Maximum="50"
+                                                <Slider Minimum="1" Maximum="{Binding RadiusMax}"
                                         Value="{Binding SmearRadius}" 
-                                        TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                        TickFrequency="0.1" IsSnapToTickEnabled="True"/>
                                                 <ui:TextBlock>
                                                     <Run Text="涂抹强度"/>
                                                     <Run Text="{Binding SmearStrenth,StringFormat={}{0:0%}}"/>
@@ -465,13 +602,13 @@
 
                                                 <ui:TextBlock>
                                                     <Run Text="偏移画刷半径"/>
-                                                    <Run Text="{Binding DraftRadius,StringFormat={}{0:0}}"/>
+                                                    <Run Text="{Binding DraftRadius,StringFormat={}{0:0.0}}"/>
                                                     <Run Text="px"/>
                                                 </ui:TextBlock>
 
-                                                <Slider Minimum="1" Maximum="50"
+                                                <Slider Minimum="1" Maximum="{Binding RadiusMax}"
                                                         Value="{Binding DraftRadius}" 
-                                                        TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                                        TickFrequency="0.1" IsSnapToTickEnabled="True"/>
                                                 <ui:TextBlock>
                                                     <Run Text="偏移强度"/>
                                                     <Run Text="{Binding DraftStrength,StringFormat={}{0:0%}}"/>
@@ -487,6 +624,7 @@
                                         </Expander>
                                         <Expander Margin="0,0,0,4" Visibility="{Binding ManualTool,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=6,Mode=OneWay}" IsExpanded="True" Header="密度降低工具">
                                             <StackPanel>
+                                                <ui:ToggleSwitch Content="均匀约束" IsChecked="{Binding IsUniformDeduplicationEnabled}"/>
                                                 <TextBlock>
                                                     <Run Text="去重精度"/>
                                                     <Run Text="{Binding DeduplicationToolAccuracy,StringFormat={}{0:0.0%}}"/>
@@ -497,15 +635,26 @@
                                                     <Run Text="{Binding DeduplicationToolDensity,StringFormat={}{0:0.0%}}"/>
                                                 </TextBlock>
                                                 <Slider Minimum="0" Maximum="1" Value="{Binding DeduplicationToolDensity}"/>
-                                                <TextBlock FontSize="8" Foreground="#FF808080">
+                                                <TextBlock Visibility="{Binding IsUniformDeduplicationEnabled,Converter={StaticResource BoolToVisibilityConverter}}" FontSize="8" Foreground="#FF808080">
                                                     <Run Text="去重块大小"/>
-                                                    <Run Text="{Binding DeduplicationToolGridWidth,StringFormat={}{0:0},Mode=OneWay}"/>
+                                                    <Run Text="{Binding DeduplicationToolGridWidth,StringFormat={}{0:0.0},Mode=OneWay}"/>
                                                     <Run Text="x"/>
-                                                    <Run Text="{Binding DeduplicationToolGridHeight,StringFormat={}{0:0},Mode=OneWay}"/>
+                                                    <Run Text="{Binding DeduplicationToolGridHeight,StringFormat={}{0:0.0},Mode=OneWay}"/>
                                                     <Run Text="px"/>
                                                     <LineBreak/>
                                                     <Run Text="单块最大采样点数"/>
                                                     <Run Text="{Binding DeduplicationToolMaxCount,StringFormat={}{0:0},Mode=OneWay}"/>
+                                                </TextBlock>
+                                                <TextBlock Visibility="{Binding IsUniformDeduplicationEnabled,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}" FontSize="8" Foreground="#FF808080">
+                                                    <Run Text="去重块大小"/>
+                                                    <Run Text="{Binding DeduplicationToolGridWidth,StringFormat={}{0:0.0},Mode=OneWay}"/>
+                                                    <Run Text="x"/>
+                                                    <Run Text="{Binding DeduplicationToolGridHeight,StringFormat={}{0:0.0},Mode=OneWay}"/>
+                                                    <Run Text="px"/>
+                                                    <LineBreak/>
+                                                    <Run Text="移除每块"/>
+                                                    <Run Text="{Binding DeduplicationToolDensity,StringFormat={}{0:0%},Mode=OneWay}"/>
+                                                    <Run Text="的点"/>
                                                 </TextBlock>
                                                 <ui:Button HorizontalAlignment="Stretch" Margin="0,4,0,0" Content="运行去重" Command="{Binding DeduplicationCommand}"/>
 
@@ -580,19 +729,37 @@
         <GridSplitter Grid.Row="1" Grid.Column="1" Grid.RowSpan="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
         <GridSplitter Grid.Row="1" Grid.Column="3" Grid.RowSpan="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
         <Border Grid.Row="1" Grid.Column="2">
-            <Grid>
+            <Grid ClipToBounds="True">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="333" />
                     <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
-                <Image MaxHeight="300" Margin="4,0" Source="{Binding GradientColor}" Stretch="Fill"/>
-                <Viewbox MaxHeight="300" Margin="0,16" VerticalAlignment="Top" Stretch="Fill">
-                    <Grid Height="255">
+                <Image MaxHeight="300" Margin="0" Source="{Binding GradientColor}" Stretch="Fill"/>
+                <Viewbox MaxHeight="300" Margin="0" VerticalAlignment="Stretch" Stretch="Fill">
+                    <Grid Height="255" ClipToBounds="True">
                         <Line X1="0"
+                                X2="10"
+                                Y1="{Binding EraserLower,Mode=OneWay,NotifyOnTargetUpdated=True}"
+                                Y2="{Binding EraserLower,Mode=OneWay,NotifyOnTargetUpdated=True}"
+                                Stroke="Black" StrokeThickness="1" RenderTransformOrigin="0.5,0.5">
+                            <Line.RenderTransform>
+                                <RotateTransform Angle="180"/>
+                            </Line.RenderTransform>
+                        </Line>
+                        <Line X1="0"
+                                X2="10"
+                                Y1="{Binding EraserUpper,Mode=OneWay,NotifyOnTargetUpdated=True}"
+                                Y2="{Binding EraserUpper,Mode=OneWay,NotifyOnTargetUpdated=True}"
+                                Stroke="White" StrokeThickness="1" RenderTransformOrigin="0.5,0.5">
+                            <Line.RenderTransform>
+                                <RotateTransform Angle="180"/>
+                            </Line.RenderTransform>
+                        </Line>
+                            <Line X1="0"
                                 X2="10"
                                 Y1="{Binding MouseDepth,Mode=OneWay,NotifyOnTargetUpdated=True}"
                                 Y2="{Binding MouseDepth,Mode=OneWay,NotifyOnTargetUpdated=True}"
-                                Stroke="#FF559CE4" StrokeThickness="2" RenderTransformOrigin="0.5,0.5">
+                                Stroke="#FF559CE4" StrokeThickness="1" RenderTransformOrigin="0.5,0.5">
                             <Line.RenderTransform>
                                 <RotateTransform Angle="180"/>
                             </Line.RenderTransform>
@@ -648,47 +815,6 @@
                         </Line>
                     </Grid>
                 </Grid>
-                <TextBlock HorizontalAlignment="Center" FontSize="10" Foreground="White" VerticalAlignment="Center" TextAlignment="Center">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsOriginalImageLoaded}" Value="true">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                    <Run Text="开始你的工作" FontSize="14"/>
-                    <LineBreak/>
-                    <Run Text="文件 - 打开图片 或 “点击选择图片”"/>                    
-                    <LineBreak/>
-                    <Run Text="或者点击"/>
-                    <Hyperlink Command="{Binding ChooseImageCommand}">
-                        <Hyperlink.Style>
-                            <Style TargetType="Hyperlink">
-                                <Setter Property="Foreground" Value="#559CE4"/>
-                                <Style.Triggers>
-                                    <EventTrigger RoutedEvent="Mouse.MouseEnter">
-                                        <BeginStoryboard>
-                                            <Storyboard>
-                                                <ColorAnimation Duration="0:0:0.1" Storyboard.TargetProperty="Foreground.Color" To="#E46633"/>
-                                            </Storyboard>
-                                        </BeginStoryboard>
-                                    </EventTrigger>
-                                    <EventTrigger RoutedEvent="Mouse.MouseLeave">
-                                        <BeginStoryboard>
-                                            <Storyboard>
-                                                <ColorAnimation Duration="0:0:0.5" Storyboard.TargetProperty="Foreground.Color" To="#559CE4"/>
-                                            </Storyboard>
-                                        </BeginStoryboard>
-                                    </EventTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Hyperlink.Style>
-                        <Run Text="这里" />
-                    </Hyperlink>
-                </TextBlock>
                 <TextBlock HorizontalAlignment="Center" FontSize="10" Foreground="White" VerticalAlignment="Center" TextAlignment="Center">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
@@ -757,9 +883,36 @@
                         </Viewbox>
                     </Grid>
                 </Grid>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="1*" />
+                        <RowDefinition Height="1*" />
+                    </Grid.RowDefinitions>
+                    <Border Background="#E3559CE4" BorderThickness="2" BorderBrush="#80B9EE" 
+                        Margin="10,18,10,1" 
+                        Visibility="{Binding IsDragEntered,Converter={StaticResource BoolToVisibilityConverter}}"
+                        Drop="BorderDepthImage_Drop">
+                        <TextBlock TextAlignment="Center" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="DocumentCatchUp24" FontSize="32"/>
+                        <LineBreak/>
+                        <Run Text="导入深度图"/>
+                        </TextBlock>
+                    </Border>
+                    <Border Background="#E3559CE4" Grid.Row="1" BorderThickness="2" BorderBrush="#80B9EE" 
+                        Margin="10,1,10,18" 
+                        Visibility="{Binding IsDragEntered,Converter={StaticResource BoolToVisibilityConverter}}"
+                        Drop="BorderPointMap_Drop">
+                        <TextBlock TextAlignment="Center" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="GridDots24" FontSize="32"/>
+                        <LineBreak/>
+                        <Run Text="导入点图"/>
+                        </TextBlock>
+                    </Border>
+                </Grid>
+                <TextBlock Grid.Row="1" Foreground="#FFD3D3D3" Text="┑(￣Д ￣)┍" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}"/>
                 <ScrollViewer Grid.Row="1">
                     <StackPanel Margin="8">
-                        <Expander Header="深度与采样预览" IsExpanded="True" Margin="8">
+                        <Expander Header="深度与采样预览" IsExpanded="True" Margin="8" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter}}">
                             <StackPanel>
                                 <ui:TextBlock>
                                     <Run Text="深度图色彩"/>
@@ -835,7 +988,7 @@
                                 </Expander>
                             </StackPanel>
                         </Expander>
-                        <Expander Header="刮擦轨迹生成" IsExpanded="True" Margin="8">
+                        <Expander Header="刮擦轨迹生成" IsExpanded="True" Margin="8" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter}}">
 
                             <StackPanel IsEnabled="{Binding IsNotProcessingSvg}" Grid.Row="1" Margin="8,0">
                                 <ui:Flyout Margin="0"
@@ -974,9 +1127,11 @@
                        Stretch="Uniform"/>
                     </Grid>
                 </Grid>
+                <TextBlock Grid.Row="1" Foreground="#FFD3D3D3" Text="（ ゜- ゜）つロ" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}"/>
+
                 <ScrollViewer Grid.Row="1">
                     <StackPanel Margin="8">
-                        <Expander Header="刮擦轨迹预览" IsExpanded="True" Margin="8">
+                        <Expander Header="刮擦轨迹预览" IsExpanded="True" Margin="8" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter}}">
 
                             <StackPanel IsEnabled="{Binding IsNotProcessingSvg}" Grid.Row="1" Margin="8">
                                 <CheckBox Content="原图" IsChecked="{Binding IsPreviewingOriginImage}"/>
@@ -1063,7 +1218,7 @@
                                 </Expander>
                             </StackPanel>
                         </Expander>
-                        <Expander Header="导出" IsExpanded="True" Margin="8">
+                        <Expander Header="导出" IsExpanded="True" Margin="8" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter}}">
                             <ui:Button Appearance="Primary" HorizontalAlignment="Stretch" Content="导出刮擦轨迹(.svg)" Command="{Binding ExportScratchCommand}">
                                 
                             </ui:Button>
@@ -1085,7 +1240,7 @@
                                 ToolTip="在 Bilibili 上查看教学视频"
                                 NavigateUri="https://www.bilibili.com/video/BV1moCHYxEPk"/>
             <TextBlock Foreground="LightGray" FontSize="8" VerticalAlignment="Center">
-                <Run Text="EZHolo @ v1.5.1"/>
+                <Run Text="EZHolo @ v1.5.2"/>
                 <LineBreak/>
                 <Run Text="Copyright © 2025 Yigu Wang"/>
             </TextBlock>
