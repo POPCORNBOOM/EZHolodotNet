@@ -272,6 +272,7 @@ namespace EZHolodotNet.Core
         public RelayCommand ProcessDepthCommand => new RelayCommand((p) => ProcessDepth());
         public RelayCommand CreateScratchCommand => new RelayCommand((p) => ProcessScratch());
         public RelayCommand ExportScratchCommand => new RelayCommand((p) => ProcessExportScratch((string)p));
+        public RelayCommand ExportSketchCommand => new RelayCommand((p) => ProcessExportSketch());
         public RelayCommand OpenCustomMessageBoxCommand => new RelayCommand((p) => OpenCustomMessageBox());
         private void OpenCustomMessageBox()
         {
@@ -294,7 +295,7 @@ namespace EZHolodotNet.Core
                 try
                 {
                     if (_modelsPath != null)
-                        filepath = _modelsPath[_selectedModelPathIndex];
+                        filepath = _modelsPath[_selectedModelPathIndex==-1?0: _selectedModelPathIndex];
                 }
                 catch (Exception e)
                 {
@@ -339,6 +340,19 @@ namespace EZHolodotNet.Core
                     Properties.Settings.Default.IsUsingLastConfigEveryTime = value;
                     Properties.Settings.Default.Save();
                     OnPropertyChanged(nameof(IsUsingLastConfigEveryTime));
+                }
+            }
+        }
+        public int IsMachineUser
+        {
+            get => Properties.Settings.Default.IsMachineUser;
+            set
+            {
+                if (!Equals(Properties.Settings.Default.IsMachineUser, value))
+                {
+                    Properties.Settings.Default.IsMachineUser = value;
+                    Properties.Settings.Default.Save();
+                    OnPropertyChanged(nameof(IsMachineUser));
                 }
             }
         }
@@ -2426,6 +2440,7 @@ namespace EZHolodotNet.Core
                 using (FileStream fs = new FileStream(path, FileMode.Open))
                 {
                     ImageProcesser ipp = (ImageProcesser)serializer.Deserialize(fs);
+                    ipp.mainWindow = mainWindow;
                     mainWindow.ImageProcesser = ipp;
                     ipp.DepthEstimation = DepthEstimation;
                     //ipp.RefreshBinding();
@@ -3336,6 +3351,38 @@ namespace EZHolodotNet.Core
             finally
             {
                 IsNotProcessingSvg = true;
+            }
+        }
+        public void ProcessExportSketch()
+        {
+            if (OriginalImage == null) return;
+            if (OriginalImage.Width == 0) return;
+            if (!CheckOverflow()) return;
+            // 使用保存对话框选择保存路径
+            OpenFolderDialog openFolderDialog = new OpenFolderDialog();
+
+
+            if (openFolderDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    IsNotProcessingSvg = false;
+                    //string mysvg = await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly);
+                    string outputPath = $"{openFolderDialog.FolderName}\\{Path.GetFileNameWithoutExtension(FilePath)}草图集";
+                    if (!Directory.Exists(outputPath))
+                        Directory.CreateDirectory(outputPath);
+
+                    SvgPainter.BuildSketch(SampledPoints, DepthImage, outputPath, ZeroDepth, IgnoreZeroDepthDistance,1, 64);
+                    //SaveSvgToFile(mysvg);
+                }
+                catch (Exception e)
+                {
+                    Trace.WriteLine(e.Message);
+                }
+                finally
+                {
+                    IsNotProcessingSvg = true;
+                }
             }
         }
         private Mat ApplyColorMap(Mat originMat)

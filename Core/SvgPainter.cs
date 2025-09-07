@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime.Tensors;
+using OpenCvSharp;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -8,22 +11,26 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.ML.OnnxRuntime.Tensors;
-using Microsoft.ML.OnnxRuntime;
-using OpenCvSharp;
 using Size = System.Drawing.Size;
 
 namespace EZHolodotNet.Core
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Diagnostics;
     using Microsoft.ML.OnnxRuntime;
     using Microsoft.ML.OnnxRuntime.Tensors;
     using OpenCvSharp;  // 引入OpenCVSharp用于图像处理
-    using System.Windows.Media;
+    using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Globalization;
+    using System.Linq;
+    using System.Reflection;
+    using System.Text.Encodings.Web;
+    using System.Text.Json;
+    using System.Text.RegularExpressions;
+    using System.Text.Unicode;
+    using System.Windows.Media;
+    using System.Windows.Shapes;
 
     public class SvgPainter
     {
@@ -137,6 +144,274 @@ namespace EZHolodotNet.Core
                 sb.Append(SvgFooter);
                 return sb.ToString();
             });
+        }
+
+        public static async Task<bool> BuildSketch(
+            List<Point> points,
+            Mat depthImage,
+            string outputDirectory,
+            float zeroHeight = 128,
+            float ignoreHeightDistance = 0,
+            float radiusFactor = 1f,
+            float angleFactor = 30f,
+            int layerCount = 32,
+            float radiusLimit = 5,
+            float extraWidthFactor = 1.3f)
+        {
+            if (depthImage == null) throw new ArgumentNullException(nameof(depthImage));
+            if (points == null || points.Count == 0) return false;
+
+            // 确保输出目录存在
+            Directory.CreateDirectory(outputDirectory);
+
+            float layerRange = 255f / layerCount;
+            var depthGroups = new ConcurrentDictionary<int, ConcurrentBag<Point>>();
+            float extraWidth = (extraWidthFactor - 1) * depthImage.Cols;
+
+            await Task.Run(() =>
+            {
+                // 计算整个点云的边界（用于归一化坐标）
+                /*float minX = points.Min(p => p.X);
+                float maxX = points.Max(p => p.X);
+                float minY = points.Min(p => p.Y);
+                float maxY = points.Max(p => p.Y);*/
+
+                // 使用分区器优化并行处理
+                var rangePartitioner = Partitioner.Create(0, points.Count);
+
+                Parallel.ForEach(rangePartitioner, (range, state) =>
+                {
+                    for (int i = range.Item1; i < range.Item2; i++)
+                    {
+                        Point point = points[i];
+
+                        // 边界检查
+                        if (point.X < 0 || point.Y < 0 ||
+                            point.Y >= depthImage.Rows ||
+                            point.X >= depthImage.Cols)
+                        {
+                            continue;
+                        }
+
+                        float depthValue = depthImage.Get<float>(point.Y, point.X);
+
+                        int layerIndex = (int)(depthValue / layerRange);
+                        if(!depthGroups.ContainsKey(layerIndex))
+                        {
+                            depthGroups[layerIndex] = new ConcurrentBag<Point>();
+                        }
+                        depthGroups[layerIndex].Add(point);
+
+                    }
+                });
+                float maxLayerRadius = ((depthGroups.Keys.Max() + 0.5f) * layerRange - zeroHeight) * radiusFactor;
+                float minLayerRadius = ((depthGroups.Keys.Min() + 0.5f) * layerRange - zeroHeight) * radiusFactor;
+                // 为每一层生成SVG
+                Parallel.ForEach(depthGroups, layer =>
+                {
+                    if (layer.Value.Count == 0) return;
+                    float maxY = float.MinValue;
+                    float minY = float.MaxValue;
+                    float depth = (layer.Key + 0.5f) * layerRange - zeroHeight;
+                    float radius = depth * radiusFactor;
+                    float lineSpaceing = radius * MathF.Cos(angleFactor * MathF.PI / 180);
+                    //float halfX = radius * MathF.Sin(angleFactor * MathF.PI / 180);
+
+                    bool isConcave = depth > 0;
+                    // 创建SVG文件
+                    string svgPath = System.IO.Path.Combine(outputDirectory, $"Layer_{layer.Key}.svg");
+                    using (StreamWriter writer = new StreamWriter(svgPath))
+                    {
+                        writer.WriteLine("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
+                        writer.WriteLine($"<svg width=\"{depthImage.Cols + extraWidth + 1}\" height=\"{depthImage.Rows + 1}\" viewBox=\"0 0 {depthImage.Cols + extraWidth + 1} {depthImage.Rows + 1}\" xmlns=\"http://www.w3.org/2000/svg\">");
+
+                        // 添加所有点
+                        foreach (Point point in layer.Value)
+                        {
+                            maxY = MathF.Max(maxY, point.Yf);
+                            minY = MathF.Min(minY, point.Yf);
+                            writer.WriteLine($"<circle cx=\"{point.Xf}\" cy=\"{point.Yf}\" r=\"1%\" fill=\"black\"/>");
+                            //writer.WriteLine($"<path d=\"M {point.Xf-halfX} {point.Yf-lineSpaceing} A {radius} {radius} 0 0 1 {point.Xf + halfX} {point.Yf - lineSpaceing}\" stroke=\"black\" stroke-width=\"1px\" fill=\"transparent\"/>");
+                        }
+
+                        //辅助裁切线
+                        if(MathF.Abs(radius) > radiusLimit)
+                        {
+                            float lineY = isConcave ? minY : maxY;
+                            float lineEnd = isConcave ? 0 : depthImage.Rows;
+                            writer.WriteLine($"<line x1=\"0\" y1=\"{lineY}\" x2=\"{depthImage.Cols}\" y2=\"{lineEnd}\" stroke=\"#aaa\" stroke-width=\"0.5px\"/>");
+                            writer.WriteLine($"<line x1=\"0\" y1=\"{lineEnd}\" x2=\"{depthImage.Cols}\" y2=\"{lineY}\" stroke=\"#aaa\" stroke-width=\"0.5px\"/>");
+
+                            while (lineY < depthImage.Rows && lineY > 0)
+                            {
+                                writer.WriteLine($"<line x1=\"0\" y1=\"{lineY}\" x2=\"{depthImage.Cols}\" y2=\"{lineY}\" stroke-dasharray=\"1 2\" stroke=\"#aaa\" stroke-width=\"0.5px\"/>");
+                                lineY += lineSpaceing;
+                            }
+                        }
+
+                        // 圆规半径标识线
+                        float markerX = extraWidth /2 + depthImage.Cols;
+                        float markerY1 = (depthImage.Rows - radius) / 2;
+                        float markerY2 = markerY1 + radius;
+                        writer.WriteLine($"<line x1=\"{markerX}\" y1=\"{markerY1}\" x2=\"{markerX}\" y2=\"{markerY2}\" stroke=\"#000\" stroke-width=\"1%\" stroke-linecap=\"round\"/>");
+
+
+                        // 装饰线
+                        writer.WriteLine($"<rect x=\"0\" y=\"0\" width=\"{depthImage.Cols + extraWidth}\" height=\"{depthImage.Rows}\" style=\"stroke: #000; stroke-width: 1; fill: none;\"/>");
+                        writer.WriteLine($"<line x1=\"{depthImage.Cols}\" y1=\"0\" x2=\"{depthImage.Cols}\" y2=\"{depthImage.Rows}\" stroke=\"#aaa\" stroke-width=\"0.5px\"/>");
+                        
+                        // 添加层信息文本
+                        writer.WriteLine($"<text x=\"10\" y=\"20\" font-family=\"Arial\" font-size=\"12\" fill=\"#BBB\">---Layer{layer.Key}/{layerCount};Points{layer.Value.Count}---</text>");
+                        writer.WriteLine("</svg>");
+                    }
+
+
+                });
+                float desiredHeight = 20;
+                string BaseBoardPath = System.IO.Path.Combine(outputDirectory, $"Base.svg");
+                float totalHeight = depthImage.Rows + maxLayerRadius - minLayerRadius + 1;
+                float totalWidth = depthImage.Cols + 2 * extraWidth +1;
+                float stretchFactor = desiredHeight / (layerRange * radiusFactor); // 5: marker text desired height
+                using (StreamWriter writer = new StreamWriter(BaseBoardPath))
+                {
+                    writer.WriteLine("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
+                    writer.WriteLine($"<svg width=\"{totalWidth}\" height=\"{totalHeight}\" viewBox=\"{-extraWidth} {minLayerRadius} {totalWidth} {totalHeight}\" xmlns=\"http://www.w3.org/2000/svg\">");
+                    
+                    writer.WriteLine($"<rect x=\"{-extraWidth}\" y=\"{minLayerRadius}\" width=\"{totalWidth}\" height=\"{totalHeight}\" style=\"stroke: #000; stroke-width: 1; fill: none;\"/>");
+                    
+                    writer.WriteLine($"<rect x=\"0\" y=\"0\" width=\"{depthImage.Cols}\" height=\"{depthImage.Rows}\" style=\"stroke: #000; stroke-width: 1; fill: none;\"/>");
+                    writer.WriteLine($"<line x1=\"{depthImage.Cols}\" y1=\"{minLayerRadius}\" x2=\"{depthImage.Cols}\" y2=\"{maxLayerRadius+depthImage.Rows}\" stroke=\"Black\" stroke-width=\"0.5px\"/>");
+                    writer.WriteLine($"<line x1=\"0\" y1=\"{minLayerRadius}\" x2=\"0\" y2=\"{maxLayerRadius+depthImage.Rows}\" stroke=\"Black\" stroke-width=\"0.5px\"/>");
+                    
+                    writer.WriteLine($"<line x1=\"0\" y1=\"0\" x2=\"{depthImage.Cols}\" y2=\"{depthImage.Rows}\" stroke=\"#aaa\" stroke-width=\"0.5px\"/>");
+                    writer.WriteLine($"<line x1=\"0\" y1=\"{depthImage.Rows}\" x2=\"{depthImage.Cols}\" y2=\"0\" stroke=\"#aaa\" stroke-width=\"0.5px\"/>");
+
+                    foreach (int l in depthGroups.Keys)
+                    {
+                        float depth = (l + 0.5f) * layerRange - zeroHeight;
+                        float radius = depth * radiusFactor;
+
+                        if(radius>0)
+                        {
+                            writer.WriteLine(
+                                $"<line x1=\"0\" y1=\"{radius}\" x2=\"{-extraWidth * 1 / 3}\" y2=\"{radius}\" stroke=\"Black\" stroke-width=\"0.5px\"/>");
+                            writer.WriteLine(
+                                $"<line x1=\"{-extraWidth * 2 / 3}\" y1=\"{radius * stretchFactor}\" x2=\"{-extraWidth * 1 / 3}\" y2=\"{radius}\" stroke=\"Black\" stroke-width=\"0.5px\"/>");
+                            writer.WriteLine(
+                                $"<line x1=\"{-extraWidth * 2 / 3}\" y1=\"{radius * stretchFactor}\" x2=\"{-extraWidth}\" y2=\"{radius * stretchFactor}\" stroke=\"Black\" stroke-width=\"0.5px\"/>");
+                            writer.WriteLine($"<text x=\"{-extraWidth}\" y=\"{radius * stretchFactor}\" font-family=\"Arial\" font-size=\"{desiredHeight}\" fill=\"#000\">{l}</text>");
+                        }
+                        else
+                        {
+                            writer.WriteLine(
+                                $"<line x1=\"{depthImage.Cols}\" y1=\"{radius + depthImage.Rows}\" x2=\"{depthImage.Cols + extraWidth * 1 / 3}\" y2=\"{radius + depthImage.Rows}\" stroke=\"Black\" stroke-width=\"0.5px\"/>");
+                            writer.WriteLine(
+                                $"<line x1=\"{depthImage.Cols + extraWidth * 1 / 3}\" y1=\"{radius + depthImage.Rows}\" x2=\"{depthImage.Cols + extraWidth * 2 / 3}\" y2=\"{radius * stretchFactor + depthImage.Rows}\" stroke=\"Black\" stroke-width=\"0.5px\"/>");
+                            writer.WriteLine(
+                                $"<line x1=\"{depthImage.Cols + extraWidth * 2 / 3}\" y1=\"{radius * stretchFactor + depthImage.Rows}\" x2=\"{depthImage.Cols + extraWidth}\" y2=\"{radius * stretchFactor + depthImage.Rows}\" stroke=\"Black\" stroke-width=\"0.5px\"/>");
+                            writer.WriteLine($"<text x=\"{depthImage.Cols + extraWidth}\" y=\"{radius * stretchFactor + depthImage.Rows}\" font-family=\"Arial\" font-size=\"{desiredHeight}\" fill=\"#000\" text-anchor=\"end\">{l}</text>");
+                        }
+
+                    }
+                    writer.WriteLine($"<text x=\"10\" y=\"20\" font-family=\"Arial\" font-size=\"12\" fill=\"#BBB\">---Ext{(extraWidthFactor-1)*2}---</text>");
+                    writer.WriteLine("</svg>");
+
+                }
+            });
+            GenerateHtmlSummary(
+                outputDirectory: outputDirectory,
+                title: "Depth Sketch Layers",
+                pageTitle: "Sketch Layers Print Pack",
+                layerRange
+            );
+
+            return true;
+        }
+
+        private static void GenerateHtmlSummary(string outputDirectory, string title, string pageTitle, float layerRange)
+        {
+            // 读取HTML模板
+            string templatePath = System.IO.Path.Combine(AppContext.BaseDirectory, "TEMPLATE.html");
+            if (!File.Exists(templatePath))
+                throw new FileNotFoundException($"未找到模板文件：{templatePath}");
+
+            string templateContent = File.ReadAllText(templatePath, Encoding.UTF8);
+
+            // 获取所有SVG文件
+            var svgFiles = Directory.GetFiles(outputDirectory, "*.svg")
+                .Select(f => new FileInfo(f))
+                .OrderBy(f => ExtractLayerNumber(f.Name))
+                .ToList();
+
+            if (svgFiles.Count == 0) return;
+
+            // 查找Base.svg文件并提取扩展因子
+            float baseExtendFactor = 1.0f; // 默认扩展因子
+            var baseFile = svgFiles.FirstOrDefault(f => f.Name.Equals("Base.svg", StringComparison.OrdinalIgnoreCase));
+            if (baseFile != null)
+            {
+                string baseContent = File.ReadAllText(baseFile.FullName);
+                // 使用正则表达式匹配扩展因子
+                var match = Regex.Match(baseContent, @"---Ext([\d\.]+)---");
+                if (match.Success && float.TryParse(match.Groups[1].Value, out float factor))
+                {
+                    baseExtendFactor = factor;
+                }
+            }
+
+            // 生成图层内容
+            var layerContentBuilder = new StringBuilder();
+            foreach (var svgFile in svgFiles)
+            {
+                int layerNumber = ExtractLayerNumber(svgFile.Name);
+                string svgContent = File.ReadAllText(svgFile.FullName);
+                bool isBase = svgFile.Name.Equals("Base.svg", StringComparison.OrdinalIgnoreCase);
+
+                // 清理SVG内容（移除XML声明和命名空间）
+                string cleanSvg = svgContent
+                    .Replace("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>", "")
+                    .Replace("xmlns=\"http://www.w3.org/2000/svg\"", "")
+                    .Trim();
+
+                // 添加base类名和扩展因子样式
+                string layerClass = isBase ? "layer-item base" : "layer-item";
+                string styleAttr = isBase ? $" style=\"--ext-mul: {1+baseExtendFactor}\"" : "";
+
+                layerContentBuilder.AppendLine($"        <div class=\"{layerClass}\"{styleAttr}>");
+                layerContentBuilder.AppendLine($"            <h3>{(isBase ? "Base" : $"图层 {layerNumber} [{(layerNumber * layerRange):0.0}~{(layerNumber + 1) * layerRange:0.0}]")}</h3>");
+                layerContentBuilder.AppendLine($"            {cleanSvg}");
+                layerContentBuilder.AppendLine("        </div>");
+            }
+
+            // 替换模板中的占位符
+            string finalHtml = templateContent
+                .Replace("{{PAGE_TITLE}}", pageTitle)
+                .Replace("{{TITLE}}", title)
+                .Replace("{{LAYER_COUNT}}", svgFiles.Count.ToString())
+                .Replace("{{GENERATE_TIME}}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
+                .Replace("{{LAYER_CONTENT}}", layerContentBuilder.ToString().TrimEnd())
+                .Replace("{{TOTAL_FILE_SIZE}}", FormatFileSize(svgFiles.Sum(f => f.Length)))
+                .Replace("{{OUTPUT_DIRECTORY}}", outputDirectory);
+
+            // 写入最终HTML文件
+            string htmlPath = System.IO.Path.Combine(outputDirectory, "LayerSummary.html");
+            File.WriteAllText(htmlPath, finalHtml, Encoding.UTF8);
+
+            Console.WriteLine($"HTML汇总文件已生成: {htmlPath}");
+        }
+        // 辅助方法：从文件名中提取图层编号
+        private static int ExtractLayerNumber(string fileName)
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(fileName, @"Layer_(\d+)\.svg");
+            return match.Success ? int.Parse(match.Groups[1].Value) : 0;
+        }
+
+        // 辅助方法：格式化文件大小
+        private static string FormatFileSize(long bytes)
+        {
+            if (bytes < 1024) return $"{bytes} B";
+            if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+            return $"{bytes / (1024.0 * 1024.0):F1} MB";
         }
         public static async Task PreviewPath(List<Point> points, Mat? depthImage, float zeroHeight = 128, float ignoreHeightDistance = 0, float aFactor = 0.16f, float bFactor = 1000, int previewDense = 10, Mat? originalImageL = null, Mat? originalImageR = null, Mat? originalImageO = null, Mat? originalImageLine = null,bool drawLineDensity = false)
         {

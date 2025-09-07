@@ -34,5 +34,17 @@ namespace EZHolodotNet.Properties {
                 this["IsUsingLastConfigEveryTime"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int IsMachineUser {
+            get {
+                return ((int)(this["IsMachineUser"]));
+            }
+            set {
+                this["IsMachineUser"] = value;
+            }
+        }
     }
 }

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{PAGE_TITLE}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --page-width: auto; /* 用于自定义纸张时在屏幕预览限制容器宽度 */
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+            .header h1 {
+                color: #333;
+                margin-bottom: 10px;
+            }
+
+            .header .subtitle {
+                color: #666;
+                font-size: 14px;
+            }
+
+        .controls {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+            .controls label {
+                margin-right: 8px;
+                font-weight: 500;
+            }
+
+            .controls select, .controls input[type="number"] {
+                padding: 5px 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                margin-left: 5px;
+            }
+
+        .grid-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: flex-start;
+            max-width: var(--page-width);
+            margin: 0 auto;
+        }
+
+        .layer-item {
+            background: transparent;
+            border: 0px;
+            padding: 15px;
+        }
+
+            .layer-item h3 {
+                color: #333;
+                margin-bottom: 4px;
+                font-size: 14px;
+                text-align: left;
+            }
+
+            .layer-item svg {
+                width: 100%;
+                height: auto;
+                border: 0px solid #eee;
+                background: transparent;
+            }
+
+        .stats {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            color: #666;
+        }
+
+        /* 响应式网格布局 */
+        .grid-2x2 .layer-item {
+            width: calc(50% - 7.5px);
+        }
+        /* Base 特殊宽度（固定网格） */
+        .grid-2x2 .layer-item.base { width: calc((50% - 7.5px) * var(--ext-mul, 1)); }
+
+        .grid-3x3 .layer-item {
+            width: calc(33.333% - 10px);
+        }
+        .grid-3x3 .layer-item.base { width: calc((33.333% - 10px) * var(--ext-mul, 1)); }
+
+        .grid-4x4 .layer-item {
+            width: calc(25% - 11.25px);
+        }
+        .grid-4x4 .layer-item.base { width: calc((25% - 11.25px) * var(--ext-mul, 1)); }
+
+        .grid-5x5 .layer-item {
+            width: calc(20% - 12px);
+        }
+        .grid-5x5 .layer-item.base { width: calc((20% - 12px) * var(--ext-mul, 1)); }
+
+        .grid-6x6 .layer-item {
+            width: calc(16.666% - 12.5px);
+        }
+        .grid-6x6 .layer-item.base { width: calc((16.666% - 12.5px) * var(--ext-mul, 1)); }
+
+        /* 自定义单项宽度（mm） */
+        .grid-custom .layer-item {
+            width: calc(var(--item-width-mm, 80) * 1mm);
+        }
+        /* Base 特殊宽度（自定义） */
+        .grid-custom .layer-item.base {
+            width: calc(var(--item-width-mm, 80) * 1mm * var(--ext-mul, 1));
+        }
+
+        /* Base容器样式 */
+        .base-container {
+            width: 100%;
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+            .base-container h2 {
+                color: #333;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+
+        .base-svg {
+            width: calc(100% * var(--ext-mul, 1));
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+            .base-svg svg {
+                width: 100%;
+                height: auto;
+                border: 1px solid #eee;
+                background: white;
+            }
+
+        /* 打印样式 */
+        @media print {
+            body {
+                background: white;
+                padding: 10px;
+            }
+
+            .header, .controls, .stats {
+                display: none;
+            }
+
+            .grid-container {
+                gap: 10px;
+            }
+
+            .layer-item {
+                break-inside: avoid;
+            }
+        }
+
+        /* 移动端适配（自定义布局不覆盖） */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .grid-container:not(.grid-custom) .layer-item {
+                width: calc(50% - 7.5px) !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .grid-container:not(.grid-custom) .layer-item {
+                width: 100% !important;
+            }
+        }
+    </style>
+
+    <!-- 动态注入打印纸张尺寸 -->
+    <style id="pageSizeStyle"></style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{TITLE}}</h1>
+        <div class="subtitle">共 {{LAYER_COUNT}} 个图层 • 生成时间: {{GENERATE_TIME}}</div>
+    </div>
+
+    <div class="controls">
+        <label for="gridLayout">布局:</label>
+        <select id="gridLayout" onchange="changeGridLayout(this.value)">
+            <option value="grid-2x2">2x2</option>
+            <option value="grid-3x3" selected>3x3</option>
+            <option value="grid-4x4">4x4</option>
+            <option value="grid-5x5">5x5</option>
+            <option value="grid-6x6">6x6</option>
+            <option value="grid-custom">自定义宽度</option>
+        </select>
+
+        <span id="customControls" style="margin-left: 12px; display: none;">
+            <label for="paperSize">纸张:</label>
+            <select id="paperSize" onchange="applyPaperSize(this.value)">
+                <option value="A3">A3</option>
+                <option value="A4" selected>A4</option>
+                <option value="A5">A5</option>
+            </select>
+
+            <label for="itemWidth" style="margin-left: 10px;">单项宽度(mm):</label>
+            <input id="itemWidth" type="number" min="10" max="500" step="1" value="80" oninput="applyItemWidthMm(this.value)" style="width: 90px;" />
+        </span>
+
+        <button onclick="window.print()" style="margin-left: 20px; padding: 5px 15px; background: #007acc; color: white; border: none; border-radius: 4px; cursor: pointer;">打印</button>
+    </div>
+
+    <div id="gridContainer" class="grid-container grid-3x3">
+        {{LAYER_CONTENT}}
+    </div>
+
+    {{BASE_CONTENT}}
+
+    <div class="stats">
+        总计: {{LAYER_COUNT}} 个图层 | 文件大小: {{TOTAL_FILE_SIZE}} | 生成路径: {{OUTPUT_DIRECTORY}}
+    </div>
+
+    <script>
+        function changeGridLayout(layoutClass) {
+            const container = document.getElementById('gridContainer');
+            const customControls = document.getElementById('customControls');
+            container.className = 'grid-container ' + layoutClass;
+
+            if (layoutClass === 'grid-custom') {
+                customControls.style.display = 'inline-block';
+                // 应用当前输入值
+                applyItemWidthMm(document.getElementById('itemWidth').value);
+                applyPaperSize(document.getElementById('paperSize').value);
+            } else {
+                customControls.style.display = 'none';
+                // 清理自定义设置
+                container.style.removeProperty('--item-width-mm');
+                resetPageSizeStyle();
+                document.documentElement.style.removeProperty('--page-width');
+            }
+        }
+
+        function applyItemWidthMm(val) {
+            const container = document.getElementById('gridContainer');
+            let mm = parseFloat(val);
+            if (!isFinite(mm)) mm = 80;
+            mm = Math.max(1, Math.min(1000, mm));
+            container.style.setProperty('--item-width-mm', mm);
+        }
+
+        function applyPaperSize(size) {
+            // 打印纸张尺寸
+            const pageStyle = document.getElementById('pageSizeStyle');
+            pageStyle.textContent = '@page { size: ' + size + '; margin: 10mm; }';
+
+            // 屏幕预览：限制容器最大宽度为纸张短边（竖向）
+            const mmMap = { A3: 297, A4: 210, A5: 148 }; // 竖版短边宽度(mm)
+            const mm = mmMap[size] || 210;
+            document.documentElement.style.setProperty('--page-width', mm + 'mm');
+        }
+
+        function resetPageSizeStyle() {
+            const pageStyle = document.getElementById('pageSizeStyle');
+            pageStyle.textContent = '';
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('图层汇总页面已加载，共', document.querySelectorAll('.layer-item').length, '个图层');
+        });
+    </script>
+</body>
+</html>

@@ -221,7 +221,7 @@
                         
                     </Border>
                 </Viewbox>
-                <Grid Margin="16" ClipToBounds="True">
+                <Grid Margin="8,16" ClipToBounds="True">
                     <Image MouseWheel="Image_MouseWheel" MouseMove="Image_MouseMove" MouseDown="Image_MouseDown" MouseUp="Image_MouseUp" MouseLeave="Image_MouseLeave" RenderTransformOrigin="0.5,0.5" MaxHeight="300" Source="{Binding FilePath}" Stretch="Uniform">
                         <Image.RenderTransform>
                             <TransformGroup>
@@ -858,7 +858,7 @@
                 </TextBlock>
 
 
-                <Grid Margin="16" ClipToBounds="True">
+                <Grid Margin="8,16" ClipToBounds="True">
 
 
                     <Grid RenderTransformOrigin="0.5,0.5" Grid.ColumnSpan="2" Grid.RowSpan="2">
@@ -1087,7 +1087,7 @@
                        Background="{StaticResource ChessboardBrush}">
                     </Border>
                 </Viewbox>
-                <Grid  Margin="16" ClipToBounds="True">
+                <Grid  Margin="8,16" ClipToBounds="True">
                     <Grid RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform>
                             <TransformGroup>
@@ -1219,9 +1219,15 @@
                             </StackPanel>
                         </Expander>
                         <Expander Header="导出" IsExpanded="True" Margin="8" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter}}">
-                            <ui:Button Appearance="Primary" HorizontalAlignment="Stretch" Content="导出刮擦轨迹(.svg)" Command="{Binding ExportScratchCommand}">
-                                
-                            </ui:Button>
+                            <StackPanel>
+                                <ui:Button Appearance="Primary" HorizontalAlignment="Stretch" Content="导出刮擦轨迹(.svg)" Command="{Binding ExportScratchCommand}">
+
+                                </ui:Button>
+                                <ui:Button Appearance="Primary" HorizontalAlignment="Stretch" Content="导出手绘图纸(.svg)[*尝鲜]" Command="{Binding ExportSketchCommand}">
+
+                                </ui:Button>
+
+                            </StackPanel>
                         </Expander>
                     </StackPanel>
                 </ScrollViewer>
