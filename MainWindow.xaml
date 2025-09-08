@@ -13,6 +13,7 @@
         <KeyBinding Gesture="Ctrl+R" Command="{Binding ChooseImageCommand}"/>
         <KeyBinding Gesture="Ctrl+U" Command="{Binding UnloadImageCommand}"/>
         <KeyBinding Gesture="Ctrl+E" Command="{Binding ExportScratchCommand}"/>
+        <KeyBinding Gesture="Ctrl+Alt+E" Command="{Binding ExportSketchCommand}"/>
 
         <!-- 深度图操作 -->
         <KeyBinding Gesture="Ctrl+Shift+E" Command="{Binding ExportDepthCommand}"/>
@@ -139,7 +140,9 @@
                  Icon="{ui:SymbolIcon Symbol=DocumentSave24}" Command="{Binding ExportConfigCommand}"/>
                 <ui:MenuItem Header="加载配置" InputGestureText="Ctrl+L" 
                  Icon="{ui:SymbolIcon Symbol=DocumentChevronDouble24}" Command="{Binding ImportConfigCommand}"/>
+                <Separator/>
                 <ui:MenuItem Header="导出刮擦轨迹" InputGestureText="Ctrl+E" Icon="{ui:SymbolIcon Symbol=InkStroke24}" Command="{Binding ExportScratchCommand}"/>
+                <ui:MenuItem Header="导出手刻刮擦轨迹图纸" InputGestureText="Ctrl+Alt+E" Icon="{ui:SymbolIcon Symbol=BubbleMultiple20}" Command="{Binding ExportSketchCommand}"/>
             </ui:MenuItem>
 
             <ui:MenuItem Header="编辑(_E)" Icon="{ui:SymbolIcon Symbol=Edit24}">
@@ -160,6 +163,8 @@
                     <ui:MenuItem InputGestureText="Ctrl+R" Header="从文件导入图片"/>
                     <ui:MenuItem InputGestureText="Ctrl+U" Header="关闭图片"/>
                     <ui:MenuItem InputGestureText="Ctrl+E" Header="导出刮擦轨迹"/>
+                    <ui:MenuItem Header="导出手刻刮擦轨迹图纸" InputGestureText="Ctrl+Alt+E"/>
+
                     <Separator/>
 
                     <!-- 深度图操作 -->
@@ -611,12 +616,12 @@
                                                         TickFrequency="0.1" IsSnapToTickEnabled="True"/>
                                                 <ui:TextBlock>
                                                     <Run Text="偏移强度"/>
-                                                    <Run Text="{Binding DraftStrength,StringFormat={}{0:0%}}"/>
+                                                    <Run Text="{Binding DraftStrength,StringFormat={}{0:0.0%}}"/>
                                                 </ui:TextBlock>
 
-                                                <Slider Minimum="-1" Maximum="1"
+                                                <Slider Minimum="-0.5" Maximum="0.5"
                                         Value="{Binding DraftStrength}" 
-                                        TickFrequency="0.01" IsSnapToTickEnabled="True"/>
+                                        TickFrequency="0.001" IsSnapToTickEnabled="True"/>
 
                                                 <ui:Button HorizontalAlignment="Stretch" Margin="0,4,0,0" Content="对所有点施加偏移" Command="{Binding GradientDraftCommand}"/>
 
@@ -1026,12 +1031,12 @@
 
                                 <ui:Button HorizontalAlignment="Stretch" Content="生成轨迹预览>>" Appearance="Primary" Command="{Binding CreateScratchCommand}"/>
                                 <Rectangle HorizontalAlignment="Stretch" Fill="#DFDFDF" Height="1" Margin="-8,8"/>
-                                <!--
+
                                 <ui:TextBlock>
-                                    <Run Text="仅保留大于零深度的点"/>
+                                    <Run Text="手刻草图生成模式"/>
                                 </ui:TextBlock>
-                                <ui:ToggleSwitch IsChecked="{Binding IsPositiveDepthPointOnly}"/>
--->
+                                <ui:ToggleSwitch IsChecked="{Binding IsGeneratingHandCraftSketchMode}"/>
+
                                 <ui:TextBlock>
                                     <Run Text="忽略距离零深度"/>
                                     <Run Text="{Binding IgnoreZeroDepthDistance,StringFormat={}{0:0}}"/>
@@ -1049,7 +1054,7 @@
                             Value="{Binding ZeroDepth}" 
                             TickFrequency="1" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
 
-                                <Expander IsExpanded="True" Margin="0,4,0,0" Header="轨迹参数">
+                                <Expander Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}" IsExpanded="True" Margin="0,4,0,0" Header="轨迹参数">
                                     <StackPanel>
                                         <ui:TextBlock>
                                             <Run Text="曲率(a)系数"/>
@@ -1065,6 +1070,25 @@
                                         </ui:TextBlock>
                                         <Slider Minimum="500" Maximum="3000" 
                             Value="{Binding BFactor}" 
+                            TickFrequency="0.01" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
+                                    </StackPanel>
+                                </Expander>
+                                <Expander Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter}}" IsExpanded="True" Margin="0,4,0,0" Header="轨迹参数">
+                                    <StackPanel>
+                                        <ui:TextBlock>
+                                            <Run Text="半径系数"/>
+                                            <Run Text="{Binding RadiusFactor,StringFormat={}{0:0.00}}"/>
+                                        </ui:TextBlock>
+                                        <Slider Minimum="0.5" Maximum="2" 
+                            Value="{Binding RadiusFactor}" 
+                            TickFrequency="0.01" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
+
+                                        <ui:TextBlock>
+                                            <Run Text="角度系数"/>
+                                            <Run Text="{Binding AngleFactor,StringFormat={}{0:0}}"/>
+                                        </ui:TextBlock>
+                                        <Slider Minimum="10" Maximum="60" 
+                            Value="{Binding AngleFactor}" 
                             TickFrequency="0.01" IsSnapToTickEnabled="True" PreviewMouseUp="Slider_MouseUp"/>
                                     </StackPanel>
                                 </Expander>
@@ -1193,10 +1217,7 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBlock VerticalAlignment="Center">
                                                 <Run Text="点颜色"/>
-                                                <InlineUIContainer>
-                                                    <ui:Button Padding="0" Width="14" Height="14" Margin="0" Icon="{ui:SymbolIcon Symbol=Question24}"
-                                                            ToolTip="单色HEX：#色号 原色：c 深度：d"/>
-                                                </InlineUIContainer>
+                                                <ui:SymbolIcon Symbol="Question24" Margin="-2" ToolTip="单色HEX：#色号 原色：c 深度：d"/>
                                             </TextBlock>
                                             <ui:TextBox PlaceholderText="# / c / d" Grid.Column="1" Visibility="{Binding IsPreviewingStep,Converter={StaticResource BooleanToVisibilityConverter}}"
                                             Text="{Binding PreviewColorful,UpdateSourceTrigger=LostFocus}"/>
@@ -1220,10 +1241,16 @@
                         </Expander>
                         <Expander Header="导出" IsExpanded="True" Margin="8" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter}}">
                             <StackPanel>
-                                <ui:Button Appearance="Primary" HorizontalAlignment="Stretch" Content="导出刮擦轨迹(.svg)" Command="{Binding ExportScratchCommand}">
+                                <ui:Button Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}" Appearance="Primary" HorizontalAlignment="Stretch" Content="导出刮擦轨迹(.svg)" Command="{Binding ExportScratchCommand}">
 
                                 </ui:Button>
-                                <ui:Button Appearance="Primary" HorizontalAlignment="Stretch" Content="导出手绘图纸(.svg)[*尝鲜]" Command="{Binding ExportSketchCommand}">
+                                <ui:TextBlock Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter}}" ToolTip="">
+                                    <Run Text="图纸层数"/>
+                                    <ui:SymbolIcon Symbol="Question24" Margin="-2" ToolTip="输出草图的层数，理论上越大精度越高，但是你的工作量也会线性增长"/>
+
+                                </ui:TextBlock>
+                                <ui:NumberBox Margin="0,4" Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter}}" Value="{Binding LayerCount}"/>
+                                <ui:Button Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter}}" Appearance="Primary" HorizontalAlignment="Stretch" Content="导出手刻图纸(.svg)[*尝鲜]" Command="{Binding ExportSketchCommand}">
 
                                 </ui:Button>
 
@@ -1246,7 +1273,7 @@
                                 ToolTip="在 Bilibili 上查看教学视频"
                                 NavigateUri="https://www.bilibili.com/video/BV1moCHYxEPk"/>
             <TextBlock Foreground="LightGray" FontSize="8" VerticalAlignment="Center">
-                <Run Text="EZHolo @ v1.5.2"/>
+                <Run Text="EZHolo @ v1.6"/>
                 <LineBreak/>
                 <Run Text="Copyright © 2025 Yigu Wang"/>
             </TextBlock>

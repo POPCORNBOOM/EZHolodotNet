@@ -951,6 +951,45 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        private float _radiusFactor = 1f;
+        public float RadiusFactor
+        {
+            get => _radiusFactor;
+            set
+            {
+                if (!Equals(_radiusFactor, value))
+                {
+                    _radiusFactor = value;
+                    OnPropertyChanged(nameof(RadiusFactor));
+                }
+            }
+        }
+        private float _angleFactor = 45f;
+        public float AngleFactor
+        {
+            get => _angleFactor;
+            set
+            {
+                if (!Equals(_angleFactor, value))
+                {
+                    _angleFactor = Math.Clamp(value, 10, 60);
+                    OnPropertyChanged(nameof(AngleFactor));
+                }
+            }
+        }
+        private int _layerCount = 32;
+        public int LayerCount
+        {
+            get => _layerCount;
+            set
+            {
+                if (!Equals(_layerCount, value))
+                {
+                    _layerCount = Math.Clamp(value, 5, 64);
+                    OnPropertyChanged(nameof(LayerCount));
+                }
+            }
+        }
         private float _aFactor = 0.66f;
         public float AFactor
         {
@@ -1468,16 +1507,16 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private bool _isPositiveDepthPointOnly = false;
-        public bool IsPositiveDepthPointOnly
+        private bool _isGeneratingHandCraftSketchMode = false;
+        public bool IsGeneratingHandCraftSketchMode
         {
-            get => _isPositiveDepthPointOnly;
+            get => _isGeneratingHandCraftSketchMode;
             set
             {
-                if (!Equals(_isPositiveDepthPointOnly, value))
+                if (!Equals(_isGeneratingHandCraftSketchMode, value))
                 {
-                    _isPositiveDepthPointOnly = value;
-                    OnPropertyChanged(nameof(IsPositiveDepthPointOnly));
+                    _isGeneratingHandCraftSketchMode = value;
+                    OnPropertyChanged(nameof(IsGeneratingHandCraftSketchMode));
                     if (IsAutoGeneratePreview)
                         ProcessScratch();
                 }
@@ -3186,7 +3225,11 @@ namespace EZHolodotNet.Core
             try
             {
                 IsNotProcessingSvg = false;
-                await SvgPainter.PreviewPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, scratchImageL,scratchImageR,scratchImageO, scratchImageLine,IsPreviewingLineDensity);
+                if (IsGeneratingHandCraftSketchMode) 
+                    await SvgPainter.PreviewPathArc(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, RadiusFactor, AngleFactor, LayerCount, PreviewDense, scratchImageL, scratchImageR, scratchImageO, scratchImageLine, IsPreviewingLineDensity);
+                else
+                    await SvgPainter.PreviewPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, scratchImageL, scratchImageR, scratchImageO, scratchImageLine, IsPreviewingLineDensity);
+                
                 DisplayImageScratchL = scratchImageL.ToWriteableBitmap();
                 DisplayImageScratchR = scratchImageR.ToWriteableBitmap();
                 DisplayImageScratchO = scratchImageO.ToWriteableBitmap();
@@ -3231,19 +3274,33 @@ namespace EZHolodotNet.Core
                 {
                     //Trace.WriteLine($"new{tick:0.000}");
                     IsNotProcessingSvg = false;
-                    await SvgPainter.PreviewPath(
-                        SampledPoints,
-                        DepthImage,
-                        OriginalImage,
-                        scratchImageStep,
-                        tick,
-                        ZeroDepth,
-                        IgnoreZeroDepthDistance,
-                        AFactor,
-                        BFactor,
-                        PreviewDense,
-                        IsPositiveDepthPointOnly,
-                        PreviewColorful);
+                    if(IsGeneratingHandCraftSketchMode)
+                        await SvgPainter.PreviewPathArc(
+                            SampledPoints,
+                            DepthImage,
+                            OriginalImage,
+                            scratchImageStep,
+                            tick,
+                            ZeroDepth,
+                            IgnoreZeroDepthDistance,
+                            RadiusFactor,
+                            AngleFactor,
+                            LayerCount,
+                            PreviewDense,
+                            PreviewColorful);
+                    else
+                        await SvgPainter.PreviewPath(
+                            SampledPoints,
+                            DepthImage,
+                            OriginalImage,
+                            scratchImageStep,
+                            tick,
+                            ZeroDepth,
+                            IgnoreZeroDepthDistance,
+                            AFactor,
+                            BFactor,
+                            PreviewDense,
+                            PreviewColorful);
 
                     // 创建新的WriteableBitmap并缓存
                     var newBitmap = scratchImageStep.ToBitmapSource();
@@ -3273,7 +3330,10 @@ namespace EZHolodotNet.Core
             try
             {
                 IsNotProcessingSvg = false;
-                await SvgPainter.PreviewPath(SampledPoints, DepthImage, OriginalImage, scratchImageStep,_previewT, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly,PreviewColorful);
+                if (IsGeneratingHandCraftSketchMode)
+                    await SvgPainter.PreviewPathArc(SampledPoints, DepthImage, OriginalImage, scratchImageStep, _previewT, ZeroDepth, IgnoreZeroDepthDistance, RadiusFactor, AngleFactor, LayerCount, PreviewDense, PreviewColorful);
+                else
+                    await SvgPainter.PreviewPath(SampledPoints, DepthImage, OriginalImage, scratchImageStep, _previewT, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, PreviewColorful);
                 DisplayImageScratchStep = scratchImageStep.ToWriteableBitmap();
             }
             catch (Exception e)
@@ -3305,7 +3365,7 @@ namespace EZHolodotNet.Core
 
                         /*await SvgPainter.PreviewPathParallel(SampledPoints, DepthImage, OriginalImage, scratchImageL,
                                 scratchImageR, PreviewStep, PreviewStepDistance, ZeroDepth, IgnoreZeroDepthDistance, AFactor,
-                                BFactor, PreviewDense, IsPositiveDepthPointOnly, PreviewColorful);
+                                BFactor, PreviewDense, IsGeneratingHandCraftSketchMode, PreviewColorful);
 
                         // 水平拼接两张图片
                         Mat concatenated = new Mat();
@@ -3341,7 +3401,7 @@ namespace EZHolodotNet.Core
             try
             {
                 IsNotProcessingSvg = false;
-                string mysvg = await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly);
+                string mysvg = await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsGeneratingHandCraftSketchMode);
                 SaveSvgToFile(mysvg);
             }
             catch (Exception e)
@@ -3367,12 +3427,12 @@ namespace EZHolodotNet.Core
                 try
                 {
                     IsNotProcessingSvg = false;
-                    //string mysvg = await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsPositiveDepthPointOnly);
+                    //string mysvg = await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsGeneratingHandCraftSketchMode);
                     string outputPath = $"{openFolderDialog.FolderName}\\{Path.GetFileNameWithoutExtension(FilePath)}草图集";
                     if (!Directory.Exists(outputPath))
                         Directory.CreateDirectory(outputPath);
 
-                    SvgPainter.BuildSketch(SampledPoints, DepthImage, outputPath, ZeroDepth, IgnoreZeroDepthDistance,1, 64);
+                    SvgPainter.BuildSketch(SampledPoints, DepthImage, outputPath, ZeroDepth, IgnoreZeroDepthDistance, RadiusFactor, AngleFactor, LayerCount,10,1.3f,System.IO.Path.GetFileNameWithoutExtension(FilePath)+" 草图集");
                     //SaveSvgToFile(mysvg);
                 }
                 catch (Exception e)

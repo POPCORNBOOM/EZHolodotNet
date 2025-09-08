@@ -104,27 +104,33 @@
             width: calc(50% - 7.5px);
         }
         /* Base 特殊宽度（固定网格） */
-        .grid-2x2 .layer-item.base { width: calc((50% - 7.5px) * var(--ext-mul, 1)); }
+        .grid-2x2 .layer-item.base { width: calc((50% - 7.5px - 4px) * var(--ext-mul, 1)); }
 
         .grid-3x3 .layer-item {
             width: calc(33.333% - 10px);
         }
-        .grid-3x3 .layer-item.base { width: calc((33.333% - 10px) * var(--ext-mul, 1)); }
+        .grid-3x3 .layer-item.base { width: calc((33.333% - 10px - 4px) * var(--ext-mul, 1)); }
 
         .grid-4x4 .layer-item {
             width: calc(25% - 11.25px);
         }
-        .grid-4x4 .layer-item.base { width: calc((25% - 11.25px) * var(--ext-mul, 1)); }
+            .grid-4x4 .layer-item.base {
+                width: calc((25% - 11.25px - 4px) * var(--ext-mul, 1));
+            }
 
         .grid-5x5 .layer-item {
             width: calc(20% - 12px);
         }
-        .grid-5x5 .layer-item.base { width: calc((20% - 12px) * var(--ext-mul, 1)); }
+            .grid-5x5 .layer-item.base {
+                width: calc((20% - 12px - 4px) * var(--ext-mul, 1));
+            }
 
         .grid-6x6 .layer-item {
             width: calc(16.666% - 12.5px);
         }
-        .grid-6x6 .layer-item.base { width: calc((16.666% - 12.5px) * var(--ext-mul, 1)); }
+            .grid-6x6 .layer-item.base {
+                width: calc((16.666% - 12.5px - 4px) * var(--ext-mul, 1));
+            }
 
         /* 自定义单项宽度（mm） */
         .grid-custom .layer-item {
@@ -241,8 +247,6 @@
     <div id="gridContainer" class="grid-container grid-3x3">
         {{LAYER_CONTENT}}
     </div>
-
-    {{BASE_CONTENT}}
 
     <div class="stats">
         总计: {{LAYER_COUNT}} 个图层 | 文件大小: {{TOTAL_FILE_SIZE}} | 生成路径: {{OUTPUT_DIRECTORY}}
