@@ -735,8 +735,7 @@ namespace EZHolodotNet.Core
                     float depth = depthImage.Get<float>(point.Y, point.X);
 
                     // 公共过滤条件
-                    if (depth < zeroHeight) continue;
-                    if (color.StartsWith("c") && MathF.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
+                    if (MathF.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
 
                     // 公共计算部分
                     float curvature = (depth - zeroHeight) * imageWidth / bFactor;

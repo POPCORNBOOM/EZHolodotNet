@@ -171,6 +171,10 @@ namespace EZHolodotNet.Core
             PreviewY = 0;
             PreviewScale = 1;
         });
+        public RelayCommand SwitchLanguageCommand => new RelayCommand((p) =>
+        {
+            LanguageManager.Instance.ChangeLanguage(new CultureInfo((string)p));
+        });
         public RelayCommand OpenFolderCommand => new RelayCommand((p) => Process.Start("explorer.exe", AppDomain.CurrentDomain.BaseDirectory));
         public RelayCommand RefreshModelCommand => new RelayCommand((p) => ReloadModel());
         public RelayCommand ConvertToManualCommand => new RelayCommand((p) => ConvertToManualPoint(p.ToString() ?? "c"));

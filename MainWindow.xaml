@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:local="clr-namespace:EZHolodotNet"
+        xmlns:core="clr-namespace:EZHolodotNet.Core"
         mc:Ignorable="d" AllowDrop="True" DragEnter="Window_DragEnter" DragLeave="Window_DragLeave" Closing="Window_Closing"
         Title="EZHolo" Height="720" Width="800" MinHeight="450" MinWidth="850" MouseMove="Window_MouseMove" MouseUp="Window_MouseUp" MouseLeave="Window_MouseLeave">
     <Window.InputBindings>
@@ -155,6 +156,11 @@
                  Icon="{ui:SymbolIcon Symbol=CatchUp24}" Command="{Binding ProcessDepthCommand}"/>
                 <ui:MenuItem Header="生成轨迹预览" InputGestureText="Ctrl+G" Icon="{ui:SymbolIcon Symbol=EyeLines24}" Command="{Binding CreateScratchCommand}"/>
                 <Separator/>
+                <ui:MenuItem Header="语言" Icon="{ui:SymbolIcon Symbol=BookOpenGlobe24}">
+                    <ui:MenuItem Header="中文(简体)" InputGestureText="zh-CN" Command="{Binding SwitchLanguageCommand}" CommandParameter="zh-CN"/>
+                    <ui:MenuItem Header="中文(繁体)" InputGestureText="zh-Hant" Command="{Binding SwitchLanguageCommand}" CommandParameter="zh-Hant"/>
+                </ui:MenuItem>
+                <Separator/>
                 <ui:MenuItem Header="开源信息" Icon="{ui:SymbolIcon Symbol=BookInformation24}" Command="{Binding OpenCustomMessageBoxCommand}"/>
                 <Separator/>
                 <ui:MenuItem Header="快捷键一览表" Icon="{ui:SymbolIcon Symbol=Keyboard24}">
@@ -247,6 +253,7 @@
                             </Style.Triggers>
                         </Style>
                     </TextBlock.Style>
+                    <Run Text="{Binding [Title_EZHOLO], Source={x:Static core:LanguageManager.Instance}}" FontSize="14"/>
                     <Run Text="开始你的工作" FontSize="14"/>
                     <LineBreak/>
                     <Run Text="文件 - 打开图片 或 “点击选择图片”"/>                    
