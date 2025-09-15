@@ -61,11 +61,1820 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
+        ///   查找类似 all 的本地化字符串。
+        /// </summary>
+        internal static string Globe_All {
+            get {
+                return ResourceManager.GetString("Globe_All", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Deduplication 的本地化字符串。
+        /// </summary>
+        internal static string Globe_Dedeplication {
+            get {
+                return ResourceManager.GetString("Globe_Dedeplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export 的本地化字符串。
+        /// </summary>
+        internal static string Globe_Export {
+            get {
+                return ResourceManager.GetString("Globe_Export", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 document 的本地化字符串。
+        /// </summary>
+        internal static string Globe_File {
+            get {
+                return ResourceManager.GetString("Globe_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Got it 的本地化字符串。
+        /// </summary>
+        internal static string Globe_Got_It {
+            get {
+                return ResourceManager.GetString("Globe_Got_It", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Or 的本地化字符串。
+        /// </summary>
+        internal static string Globe_Or {
+            get {
+                return ResourceManager.GetString("Globe_Or", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Original image 的本地化字符串。
+        /// </summary>
+        internal static string Globe_Original_Image {
+            get {
+                return ResourceManager.GetString("Globe_Original_Image", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Trajectory 的本地化字符串。
+        /// </summary>
+        internal static string Globe_Path {
+            get {
+                return ResourceManager.GetString("Globe_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Point 的本地化字符串。
+        /// </summary>
+        internal static string Globe_Point {
+            get {
+                return ResourceManager.GetString("Globe_Point", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Step 的本地化字符串。
+        /// </summary>
+        internal static string Globe_Step {
+            get {
+                return ResourceManager.GetString("Globe_Step", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 OK 的本地化字符串。
+        /// </summary>
+        internal static string Globe_Sure {
+            get {
+                return ResourceManager.GetString("Globe_Sure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Close image 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Close_Image {
+            get {
+                return ResourceManager.GetString("Shortcut_Close_Image", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Debug tools 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Debug {
+            get {
+                return ResourceManager.GetString("Shortcut_Debug", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Depth estimation 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Depth_Estimate {
+            get {
+                return ResourceManager.GetString("Shortcut_Depth_Estimate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export depth map 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Export_Depth_Map {
+            get {
+                return ResourceManager.GetString("Shortcut_Export_Depth_Map", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export point map as PNG (merged) 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Export_Point_to_PNG_Combined {
+            get {
+                return ResourceManager.GetString("Shortcut_Export_Point_to_PNG_Combined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export point map as PNG (manual only) 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Export_Point_to_PNG_Manual {
+            get {
+                return ResourceManager.GetString("Shortcut_Export_Point_to_PNG_Manual", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Losslessly export point map as SVG (merged) 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Export_Point_to_SVG_Combined {
+            get {
+                return ResourceManager.GetString("Shortcut_Export_Point_to_SVG_Combined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Losslessly export point map as SVG (manual only) 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Export_Point_to_SVG_Manual {
+            get {
+                return ResourceManager.GetString("Shortcut_Export_Point_to_SVG_Manual", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Generate scratch trajectory 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Generate_Path {
+            get {
+                return ResourceManager.GetString("Shortcut_Generate_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Import depth map from file 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Import_Depth_From_File {
+            get {
+                return ResourceManager.GetString("Shortcut_Import_Depth_From_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Import point map from file 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Import_Point_from_File {
+            get {
+                return ResourceManager.GetString("Shortcut_Import_Point_from_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Load software configuration 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Load_Config {
+            get {
+                return ResourceManager.GetString("Shortcut_Load_Config", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Re-estimate depth map 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Re_estimate {
+            get {
+                return ResourceManager.GetString("Shortcut_Re-estimate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Redo manual sampling 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Redo {
+            get {
+                return ResourceManager.GetString("Shortcut_Redo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Save software configuration 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Save_Config {
+            get {
+                return ResourceManager.GetString("Shortcut_Save_Config", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Switch to mouse 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Switch_to_Cursor {
+            get {
+                return ResourceManager.GetString("Shortcut_Switch_to_Cursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Switch to density reduction tool 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Switch_to_Dedense {
+            get {
+                return ResourceManager.GetString("Shortcut_Switch_to_Dedense", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Switch to gradient offset tool 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Switch_to_Draft {
+            get {
+                return ResourceManager.GetString("Shortcut_Switch_to_Draft", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Switch to eraser tool 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Switch_to_Eraser {
+            get {
+                return ResourceManager.GetString("Shortcut_Switch_to_Eraser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Switch to line tool 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Switch_to_Line {
+            get {
+                return ResourceManager.GetString("Shortcut_Switch_to_Line", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Switch to pencil tool 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Switch_to_Pencil {
+            get {
+                return ResourceManager.GetString("Shortcut_Switch_to_Pencil", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Switch to smudge tool 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Switch_to_Smear {
+            get {
+                return ResourceManager.GetString("Shortcut_Switch_to_Smear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Undo manual sampling 的本地化字符串。
+        /// </summary>
+        internal static string Shortcut_Undo {
+            get {
+                return ResourceManager.GetString("Shortcut_Undo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 3D View 的本地化字符串。
+        /// </summary>
+        internal static string Text_3D_View {
+            get {
+                return ResourceManager.GetString("Text_3D_View", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Angle coefficient 的本地化字符串。
+        /// </summary>
+        internal static string Text_Angle_Factor {
+            get {
+                return ResourceManager.GetString("Text_Angle_Factor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Apply offset to all points 的本地化字符串。
+        /// </summary>
+        internal static string Text_Apply_Drafting_to_all_Points {
+            get {
+                return ResourceManager.GetString("Text_Apply_Drafting_to_all_Points", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Auto-play 的本地化字符串。
+        /// </summary>
+        internal static string Text_Auto_Play {
+            get {
+                return ResourceManager.GetString("Text_Auto_Play", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Auto-update preview 的本地化字符串。
+        /// </summary>
+        internal static string Text_Auto_Update_Preview {
+            get {
+                return ResourceManager.GetString("Text_Auto_Update_Preview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Base density 的本地化字符串。
+        /// </summary>
+        internal static string Text_Basical_Density {
+            get {
+                return ResourceManager.GetString("Text_Basical_Density", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Binary denoising 的本地化字符串。
+        /// </summary>
+        internal static string Text_Binary_Denoise {
+            get {
+                return ResourceManager.GetString("Text_Binary_Denoise", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Blur factor 的本地化字符串。
+        /// </summary>
+        internal static string Text_Blur_Factor {
+            get {
+                return ResourceManager.GetString("Text_Blur_Factor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Brightness sampling 的本地化字符串。
+        /// </summary>
+        internal static string Text_Brightness {
+            get {
+                return ResourceManager.GetString("Text_Brightness", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Brightness sampling strategy 的本地化字符串。
+        /// </summary>
+        internal static string Text_Brightness_Sampling_Strategy {
+            get {
+                return ResourceManager.GetString("Text_Brightness_Sampling_Strategy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Brush density 的本地化字符串。
+        /// </summary>
+        internal static string Text_Brush_Density {
+            get {
+                return ResourceManager.GetString("Text_Brush_Density", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Click to select image 的本地化字符串。
+        /// </summary>
+        internal static string Text_Click_to_Choose_Image {
+            get {
+                return ResourceManager.GetString("Text_Click_to_Choose_Image", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Depth map color 的本地化字符串。
+        /// </summary>
+        internal static string Text_Color_of_Depth_Map {
+            get {
+                return ResourceManager.GetString("Text_Color_of_Depth_Map", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Point color 的本地化字符串。
+        /// </summary>
+        internal static string Text_Color_of_Points {
+            get {
+                return ResourceManager.GetString("Text_Color_of_Points", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Contour sampling 的本地化字符串。
+        /// </summary>
+        internal static string Text_Contour {
+            get {
+                return ResourceManager.GetString("Text_Contour", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Contour sampling strategy 的本地化字符串。
+        /// </summary>
+        internal static string Text_Contour_Sampling_Strategy {
+            get {
+                return ResourceManager.GetString("Text_Contour_Sampling_Strategy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Contour sampling interval 的本地化字符串。
+        /// </summary>
+        internal static string Text_Contour_Spacing {
+            get {
+                return ResourceManager.GetString("Text_Contour_Spacing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Contrast 的本地化字符串。
+        /// </summary>
+        internal static string Text_Contrast {
+            get {
+                return ResourceManager.GetString("Text_Contrast", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Cross-eye (strabismus) 的本地化字符串。
+        /// </summary>
+        internal static string Text_Cross_Eyes {
+            get {
+                return ResourceManager.GetString("Text_Cross_Eyes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Curvature (a) coefficient 的本地化字符串。
+        /// </summary>
+        internal static string Text_Curvature_Factor {
+            get {
+                return ResourceManager.GetString("Text_Curvature_Factor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Darkness mode (invert) 的本地化字符串。
+        /// </summary>
+        internal static string Text_Darkness_Mode {
+            get {
+                return ResourceManager.GetString("Text_Darkness_Mode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Density reduction tool 的本地化字符串。
+        /// </summary>
+        internal static string Text_Dedensing_Tool {
+            get {
+                return ResourceManager.GetString("Text_Dedensing_Tool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Deduplication accuracy 的本地化字符串。
+        /// </summary>
+        internal static string Text_Deduplication_Accuracy {
+            get {
+                return ResourceManager.GetString("Text_Deduplication_Accuracy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Deduplication block size 的本地化字符串。
+        /// </summary>
+        internal static string Text_Deduplication_Block_Size {
+            get {
+                return ResourceManager.GetString("Text_Deduplication_Block_Size", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Deduplication strength 的本地化字符串。
+        /// </summary>
+        internal static string Text_Deduplication_Strength {
+            get {
+                return ResourceManager.GetString("Text_Deduplication_Strength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Deepest erasable point height 的本地化字符串。
+        /// </summary>
+        internal static string Text_Deepest {
+            get {
+                return ResourceManager.GetString("Text_Deepest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Minimum retained depth 的本地化字符串。
+        /// </summary>
+        internal static string Text_Deepest_Preserving_Height {
+            get {
+                return ResourceManager.GetString("Text_Deepest_Preserving_Height", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Density factor 的本地化字符串。
+        /// </summary>
+        internal static string Text_Density_Factor {
+            get {
+                return ResourceManager.GetString("Text_Density_Factor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Depth &amp; Sampling Preview 的本地化字符串。
+        /// </summary>
+        internal static string Text_Depth_and_Sampling_Preview {
+            get {
+                return ResourceManager.GetString("Text_Depth_and_Sampling_Preview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Detail factor 的本地化字符串。
+        /// </summary>
+        internal static string Text_Detail_Factor {
+            get {
+                return ResourceManager.GetString("Text_Detail_Factor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Offset brush radius 的本地化字符串。
+        /// </summary>
+        internal static string Text_Drafting_Brush_Radius {
+            get {
+                return ResourceManager.GetString("Text_Drafting_Brush_Radius", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Offset intensity 的本地化字符串。
+        /// </summary>
+        internal static string Text_Drafting_Strength {
+            get {
+                return ResourceManager.GetString("Text_Drafting_Strength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Gradient offset tool 的本地化字符串。
+        /// </summary>
+        internal static string Text_Drafting_Tool {
+            get {
+                return ResourceManager.GetString("Text_Drafting_Tool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Dynamic preview 的本地化字符串。
+        /// </summary>
+        internal static string Text_Dynamic_Preview {
+            get {
+                return ResourceManager.GetString("Text_Dynamic_Preview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Enable exclusion 的本地化字符串。
+        /// </summary>
+        internal static string Text_Enable_Excluding {
+            get {
+                return ResourceManager.GetString("Text_Enable_Excluding", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 End point 的本地化字符串。
+        /// </summary>
+        internal static string Text_End_Point {
+            get {
+                return ResourceManager.GetString("Text_End_Point", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Eraser radius 的本地化字符串。
+        /// </summary>
+        internal static string Text_Eraser_Radius {
+            get {
+                return ResourceManager.GetString("Text_Eraser_Radius", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Eraser settings 的本地化字符串。
+        /// </summary>
+        internal static string Text_Eraser_Settings {
+            get {
+                return ResourceManager.GetString("Text_Eraser_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export depth* 的本地化字符串。
+        /// </summary>
+        internal static string Text_Export_Depth {
+            get {
+                return ResourceManager.GetString("Text_Export_Depth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export hand-carved drawing (.svg) [*beta] 的本地化字符串。
+        /// </summary>
+        internal static string Text_Export_Handcraft_Blueprint {
+            get {
+                return ResourceManager.GetString("Text_Export_Handcraft_Blueprint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export point map 的本地化字符串。
+        /// </summary>
+        internal static string Text_Export_Point_Map {
+            get {
+                return ResourceManager.GetString("Text_Export_Point_Map", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export scratch trajectory (.svg) 的本地化字符串。
+        /// </summary>
+        internal static string Text_Export_Scratch_Path {
+            get {
+                return ResourceManager.GetString("Text_Export_Scratch_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 External operations 的本地化字符串。
+        /// </summary>
+        internal static string Text_External_Operation {
+            get {
+                return ResourceManager.GetString("Text_External_Operation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Eye distance 的本地化字符串。
+        /// </summary>
+        internal static string Text_Eyes_Spacing {
+            get {
+                return ResourceManager.GetString("Text_Eyes_Spacing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Generate track preview &gt;&gt; 的本地化字符串。
+        /// </summary>
+        internal static string Text_Generate_Preview_Path {
+            get {
+                return ResourceManager.GetString("Text_Generate_Preview_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似    Gradient 的本地化字符串。
+        /// </summary>
+        internal static string Text_Gradient {
+            get {
+                return ResourceManager.GetString("Text_Gradient", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Hand-carved sketch generation mode 的本地化字符串。
+        /// </summary>
+        internal static string Text_Handcraft_Blueprint_Generating_Mode {
+            get {
+                return ResourceManager.GetString("Text_Handcraft_Blueprint_Generating_Mode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似    Height 的本地化字符串。
+        /// </summary>
+        internal static string Text_Height {
+            get {
+                return ResourceManager.GetString("Text_Height", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Ignore near-zero depth 的本地化字符串。
+        /// </summary>
+        internal static string Text_Ignoring_Range_of_Points_around_Zero_1 {
+            get {
+                return ResourceManager.GetString("Text_Ignoring_Range_of_Points_around_Zero_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Points within unit 的本地化字符串。
+        /// </summary>
+        internal static string Text_Ignoring_Range_of_Points_around_Zero_2 {
+            get {
+                return ResourceManager.GetString("Text_Ignoring_Range_of_Points_around_Zero_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Import depth 的本地化字符串。
+        /// </summary>
+        internal static string Text_Import_Depth {
+            get {
+                return ResourceManager.GetString("Text_Import_Depth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Import depth map 的本地化字符串。
+        /// </summary>
+        internal static string Text_Import_Depth_Map {
+            get {
+                return ResourceManager.GetString("Text_Import_Depth_Map", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Import original image 的本地化字符串。
+        /// </summary>
+        internal static string Text_Import_Original_Image {
+            get {
+                return ResourceManager.GetString("Text_Import_Original_Image", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Import point map 的本地化字符串。
+        /// </summary>
+        internal static string Text_Import_Point_Map {
+            get {
+                return ResourceManager.GetString("Text_Import_Point_Map", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Loaded: 的本地化字符串。
+        /// </summary>
+        internal static string Text_Loaded {
+            get {
+                return ResourceManager.GetString("Text_Loaded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Lower threshold 的本地化字符串。
+        /// </summary>
+        internal static string Text_Lower_Boundary {
+            get {
+                return ResourceManager.GetString("Text_Lower_Boundary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Manual sampling 的本地化字符串。
+        /// </summary>
+        internal static string Text_Manual {
+            get {
+                return ResourceManager.GetString("Text_Manual", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Manual sampling strategy 的本地化字符串。
+        /// </summary>
+        internal static string Text_Manual_Sampling_Strategy {
+            get {
+                return ResourceManager.GetString("Text_Manual_Sampling_Strategy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Maximum frame rate 的本地化字符串。
+        /// </summary>
+        internal static string Text_Maximum_Frame_Per_Second {
+            get {
+                return ResourceManager.GetString("Text_Maximum_Frame_Per_Second", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Maximum sampling points per block 的本地化字符串。
+        /// </summary>
+        internal static string Text_Maximum_Point_Count_for_Single_Block {
+            get {
+                return ResourceManager.GetString("Text_Maximum_Point_Count_for_Single_Block", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Switch to manual sampling 的本地化字符串。
+        /// </summary>
+        internal static string Text_Migrate_to_Manual {
+            get {
+                return ResourceManager.GetString("Text_Migrate_to_Manual", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Model 的本地化字符串。
+        /// </summary>
+        internal static string Text_Model {
+            get {
+                return ResourceManager.GetString("Text_Model", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Number of drawing layers 的本地化字符串。
+        /// </summary>
+        internal static string Text_Number_of_Layers {
+            get {
+                return ResourceManager.GetString("Text_Number_of_Layers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Selective erase 的本地化字符串。
+        /// </summary>
+        internal static string Text_Optional_Erasing {
+            get {
+                return ResourceManager.GetString("Text_Optional_Erasing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Origin 的本地化字符串。
+        /// </summary>
+        internal static string Text_Original_Point {
+            get {
+                return ResourceManager.GetString("Text_Original_Point", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Output limit: 的本地化字符串。
+        /// </summary>
+        internal static string Text_Output_Maximum {
+            get {
+                return ResourceManager.GetString("Text_Output_Maximum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Parallel eye (defocused eye) 的本地化字符串。
+        /// </summary>
+        internal static string Text_Parallel_Eyes {
+            get {
+                return ResourceManager.GetString("Text_Parallel_Eyes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Parallel eye mode 的本地化字符串。
+        /// </summary>
+        internal static string Text_Parallel_Eyes_Mode {
+            get {
+                return ResourceManager.GetString("Text_Parallel_Eyes_Mode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Trajectory parameters 的本地化字符串。
+        /// </summary>
+        internal static string Text_Path_Arguments {
+            get {
+                return ResourceManager.GetString("Text_Path_Arguments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Brush settings 的本地化字符串。
+        /// </summary>
+        internal static string Text_Pencil_Settings {
+            get {
+                return ResourceManager.GetString("Text_Pencil_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似    Pixels 的本地化字符串。
+        /// </summary>
+        internal static string Text_Pixel {
+            get {
+                return ResourceManager.GetString("Text_Pixel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Playback settings 的本地化字符串。
+        /// </summary>
+        internal static string Text_Playing_Settings {
+            get {
+                return ResourceManager.GetString("Text_Playing_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Position 的本地化字符串。
+        /// </summary>
+        internal static string Text_Position {
+            get {
+                return ResourceManager.GetString("Text_Position", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Post-sampling processing 的本地化字符串。
+        /// </summary>
+        internal static string Text_Post_Process {
+            get {
+                return ResourceManager.GetString("Text_Post_Process", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Preview control 的本地化字符串。
+        /// </summary>
+        internal static string Text_Preview_Control {
+            get {
+                return ResourceManager.GetString("Text_Preview_Control", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Preview density 的本地化字符串。
+        /// </summary>
+        internal static string Text_Preview_Density {
+            get {
+                return ResourceManager.GetString("Text_Preview_Density", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Advanced deduplication 的本地化字符串。
+        /// </summary>
+        internal static string Text_Pro_Deduplication {
+            get {
+                return ResourceManager.GetString("Text_Pro_Deduplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Radius coefficient 的本地化字符串。
+        /// </summary>
+        internal static string Text_Radius_Factor {
+            get {
+                return ResourceManager.GetString("Text_Radius_Factor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Sampling point map / Depth map ratio 的本地化字符串。
+        /// </summary>
+        internal static string Text_Ratio_of_Point_and_Depth {
+            get {
+                return ResourceManager.GetString("Text_Ratio_of_Point_and_Depth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Re-estimate 的本地化字符串。
+        /// </summary>
+        internal static string Text_Re_estimate {
+            get {
+                return ResourceManager.GetString("Text_Re-estimate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Remove each block 的本地化字符串。
+        /// </summary>
+        internal static string Text_Remove_X_Points_for_Each_Block_1 {
+            get {
+                return ResourceManager.GetString("Text_Remove_X_Points_for_Each_Block_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Points of 的本地化字符串。
+        /// </summary>
+        internal static string Text_Remove_X_Points_for_Each_Block_2 {
+            get {
+                return ResourceManager.GetString("Text_Remove_X_Points_for_Each_Block_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Reset view 的本地化字符串。
+        /// </summary>
+        internal static string Text_Restore_View {
+            get {
+                return ResourceManager.GetString("Text_Restore_View", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Run deduplication 的本地化字符串。
+        /// </summary>
+        internal static string Text_Run_Deduplication {
+            get {
+                return ResourceManager.GetString("Text_Run_Deduplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Key point sampling 的本地化字符串。
+        /// </summary>
+        internal static string Text_Sampling {
+            get {
+                return ResourceManager.GetString("Text_Sampling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Zoom 的本地化字符串。
+        /// </summary>
+        internal static string Text_Scale {
+            get {
+                return ResourceManager.GetString("Text_Scale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Scratch trajectory generation 的本地化字符串。
+        /// </summary>
+        internal static string Text_Scratch_Path_Generate {
+            get {
+                return ResourceManager.GetString("Text_Scratch_Path_Generate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Scratch trajectory preview 的本地化字符串。
+        /// </summary>
+        internal static string Text_Scratch_Path_Preview {
+            get {
+                return ResourceManager.GetString("Text_Scratch_Path_Preview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Shallowest erasable point height 的本地化字符串。
+        /// </summary>
+        internal static string Text_Shallowest {
+            get {
+                return ResourceManager.GetString("Text_Shallowest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Maximum retained depth 的本地化字符串。
+        /// </summary>
+        internal static string Text_Shallowest_Preserving_Height {
+            get {
+                return ResourceManager.GetString("Text_Shallowest_Preserving_Height", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Show contour map 的本地化字符串。
+        /// </summary>
+        internal static string Text_Show_Contour_Image {
+            get {
+                return ResourceManager.GetString("Text_Show_Contour_Image", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Show track density 的本地化字符串。
+        /// </summary>
+        internal static string Text_Show_Path_Density {
+            get {
+                return ResourceManager.GetString("Text_Show_Path_Density", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Smart edge eraser 的本地化字符串。
+        /// </summary>
+        internal static string Text_Smart_Eraser {
+            get {
+                return ResourceManager.GetString("Text_Smart_Eraser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Smudge radius 的本地化字符串。
+        /// </summary>
+        internal static string Text_Smear_Radius {
+            get {
+                return ResourceManager.GetString("Text_Smear_Radius", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Smudge settings 的本地化字符串。
+        /// </summary>
+        internal static string Text_Smear_Settings {
+            get {
+                return ResourceManager.GetString("Text_Smear_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Smudge intensity 的本地化字符串。
+        /// </summary>
+        internal static string Text_Smear_Strength {
+            get {
+                return ResourceManager.GetString("Text_Smear_Strength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Start point 的本地化字符串。
+        /// </summary>
+        internal static string Text_Start_Point {
+            get {
+                return ResourceManager.GetString("Text_Start_Point", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Stretch (b) coefficient 的本地化字符串。
+        /// </summary>
+        internal static string Text_Stretching_Factor {
+            get {
+                return ResourceManager.GetString("Text_Stretching_Factor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Tools 的本地化字符串。
+        /// </summary>
+        internal static string Text_Tool {
+            get {
+                return ResourceManager.GetString("Text_Tool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Total sampling points 的本地化字符串。
+        /// </summary>
+        internal static string Text_Total_Point_Count {
+            get {
+                return ResourceManager.GetString("Text_Total_Point_Count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Uniform constraint 的本地化字符串。
+        /// </summary>
+        internal static string Text_Uniform_Constraint {
+            get {
+                return ResourceManager.GetString("Text_Uniform_Constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Upper threshold 的本地化字符串。
+        /// </summary>
+        internal static string Text_Upper_Boundary {
+            get {
+                return ResourceManager.GetString("Text_Upper_Boundary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Use last exit configuration on startup 的本地化字符串。
+        /// </summary>
+        internal static string Text_Use_Last_Config {
+            get {
+                return ResourceManager.GetString("Text_Use_Last_Config", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Based on depth 的本地化字符串。
+        /// </summary>
+        internal static string Text_Using_Depth {
+            get {
+                return ResourceManager.GetString("Text_Using_Depth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 View 的本地化字符串。
+        /// </summary>
+        internal static string Text_View {
+            get {
+                return ResourceManager.GetString("Text_View", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Zero height 的本地化字符串。
+        /// </summary>
+        internal static string Text_Zero {
+            get {
+                return ResourceManager.GetString("Text_Zero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Click here to import from 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Click_Here_to {
+            get {
+                return ResourceManager.GetString("Tips_Click_Here_to", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Can&apos;t move the image back? 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Could_Not_Take_Image_Back_1 {
+            get {
+                return ResourceManager.GetString("Tips_Could_Not_Take_Image_Back_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Depth &amp; Sampling Preview - View - Reset View 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Could_Not_Take_Image_Back_2 {
+            get {
+                return ResourceManager.GetString("Tips_Could_Not_Take_Image_Back_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Or click 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Could_Not_Take_Image_Back_3 {
+            get {
+                return ResourceManager.GetString("Tips_Could_Not_Take_Image_Back_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Here 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Could_Not_Take_Image_Back_4 {
+            get {
+                return ResourceManager.GetString("Tips_Could_Not_Take_Image_Back_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The depth image was successfully exported. 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Depth_Successfully_Exported {
+            get {
+                return ResourceManager.GetString("Tips_Depth_Successfully_Exported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Depth image is successfully imported 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Depth_Successfully_Imported {
+            get {
+                return ResourceManager.GetString("Tips_Depth_Successfully_Imported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Recommended size: ~518x518 px 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Desired_Size_518px {
+            get {
+                return ResourceManager.GetString("Tips_Desired_Size_518px", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Measure the distance between your pupils and scale the window 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Eyes_1 {
+            get {
+                return ResourceManager.GetString("Tips_Eyes_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Adjust the red dot spacing on the screen ≤ your pupil distance 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Eyes_2 {
+            get {
+                return ResourceManager.GetString("Tips_Eyes_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Looking into the distance, you may feel dazed. 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Eyes_3 {
+            get {
+                return ResourceManager.GetString("Tips_Eyes_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Maintain this feeling and turn your head toward the screen, you are in close-range vision 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Eyes_4 {
+            get {
+                return ResourceManager.GetString("Tips_Eyes_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 This will result in a double-image state. At this moment, the two red dots on the screen will split into four. 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Eyes_5 {
+            get {
+                return ResourceManager.GetString("Tips_Eyes_5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Try to control your eyes to merge the right image of the left dot and the left image of the right dot 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Eyes_6 {
+            get {
+                return ResourceManager.GetString("Tips_Eyes_6", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 It&apos;s cross-eye 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Eyes_7 {
+            get {
+                return ResourceManager.GetString("Tips_Eyes_7", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 An error occurred while exporting the depth image: 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Fail_to_Export_Depth {
+            get {
+                return ResourceManager.GetString("Tips_Fail_to_Export_Depth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 An error occurred while importing a depth image: 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Fail_to_Import_Depth {
+            get {
+                return ResourceManager.GetString("Tips_Fail_to_Import_Depth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Unable to read depth images 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Fail_to_Load_depth {
+            get {
+                return ResourceManager.GetString("Tips_Fail_to_Load_depth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 clipboard 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Import_from_Clipboard {
+            get {
+                return ResourceManager.GetString("Tips_Import_from_Clipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The depth image is empty and cannot be exported. 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Null_Depth {
+            get {
+                return ResourceManager.GetString("Tips_Null_Depth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The number of sampling points determines the number of scratch marks; too many dense traces will affect image quality. 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_1 {
+            get {
+                return ResourceManager.GetString("Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Please try adjusting with 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_2 {
+            get {
+                return ResourceManager.GetString("Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Density 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_3 {
+            get {
+                return ResourceManager.GetString("Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 and 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_4 {
+            get {
+                return ResourceManager.GetString("Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Interval 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_5 {
+            get {
+                return ResourceManager.GetString("Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Related factors 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_6 {
+            get {
+                return ResourceManager.GetString("Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_6", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Or, you can adjust the maximum number of sampling points below. 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_7 {
+            get {
+                return ResourceManager.GetString("Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_7", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Oh! 的本地化字符串。
+        /// </summary>
+        internal static string Tips_OH {
+            get {
+                return ResourceManager.GetString("Tips_OH", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 File - Open New Image or &quot;Click to Select Image&quot; 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Open_Image_or_Click_to_Choose_Image {
+            get {
+                return ResourceManager.GetString("Tips_Open_Image_or_Click_to_Choose_Image", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The number of sampling points exceeds the maximum limit ( 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Point_Count_Overflow {
+            get {
+                return ResourceManager.GetString("Tips_Point_Count_Overflow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Start your work 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Start_Your_Work {
+            get {
+                return ResourceManager.GetString("Tips_Start_Your_Work", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 These are usually time-consuming operations, it is recommended to finish the above settings before starting. 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Time_Consuming_Operations {
+            get {
+                return ResourceManager.GetString("Tips_Time_Consuming_Operations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 EZHOLO 的本地化字符串。
         /// </summary>
         internal static string Title_EZHOLO {
             get {
                 return ResourceManager.GetString("Title_EZHOLO", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Open Source Information 的本地化字符串。
+        /// </summary>
+        internal static string Title_Open_Source_Information {
+            get {
+                return ResourceManager.GetString("Title_Open_Source_Information", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Poor translation? Click to help optimize translation 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Bad_Translation_Help_Us {
+            get {
+                return ResourceManager.GetString("Toolbar_Bad_Translation_Help_Us", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Close image 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Close_Image {
+            get {
+                return ResourceManager.GetString("Toolbar_Close_Image", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Depth map 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Depth_Image {
+            get {
+                return ResourceManager.GetString("Toolbar_Depth_Image", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Edit (_E) 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Edit {
+            get {
+                return ResourceManager.GetString("Toolbar_Edit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export depth* 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Export_Depth {
+            get {
+                return ResourceManager.GetString("Toolbar_Export_Depth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export hand-carved scratch trajectory drawing 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Export_Handcraft_Blueprint {
+            get {
+                return ResourceManager.GetString("Toolbar_Export_Handcraft_Blueprint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export PNG point map (merged) 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Export_Point_to_PNG_Combined {
+            get {
+                return ResourceManager.GetString("Toolbar_Export_Point_to_PNG_Combined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export PNG point map (manual only) 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Export_Point_to_PNG_Manual {
+            get {
+                return ResourceManager.GetString("Toolbar_Export_Point_to_PNG_Manual", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export SVG point map (merged) 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Export_Point_to_SVG_Combined {
+            get {
+                return ResourceManager.GetString("Toolbar_Export_Point_to_SVG_Combined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export SVG point map (manual only) 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Export_Point_to_SVG_Manual {
+            get {
+                return ResourceManager.GetString("Toolbar_Export_Point_to_SVG_Manual", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export scratch trajectory 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Export_Scratch_Path {
+            get {
+                return ResourceManager.GetString("Toolbar_Export_Scratch_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 File (_F) 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_File {
+            get {
+                return ResourceManager.GetString("Toolbar_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Generate track preview 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Generate_Preview_Path {
+            get {
+                return ResourceManager.GetString("Toolbar_Generate_Preview_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Import depth 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Import_Depth {
+            get {
+                return ResourceManager.GetString("Toolbar_Import_Depth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Import image from clipboard 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Import_Image_from_Clipboard {
+            get {
+                return ResourceManager.GetString("Toolbar_Import_Image_from_Clipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Import image from file 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Import_Image_from_File {
+            get {
+                return ResourceManager.GetString("Toolbar_Import_Image_from_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Import point map 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Import_Point_Map {
+            get {
+                return ResourceManager.GetString("Toolbar_Import_Point_Map", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Language 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Language {
+            get {
+                return ResourceManager.GetString("Toolbar_Language", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Load configuration 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Load_Config {
+            get {
+                return ResourceManager.GetString("Toolbar_Load_Config", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Open new image 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Open_New_Image {
+            get {
+                return ResourceManager.GetString("Toolbar_Open_New_Image", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Open source information 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Open_Source_Info {
+            get {
+                return ResourceManager.GetString("Toolbar_Open_Source_Info", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Point map 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Point_Map {
+            get {
+                return ResourceManager.GetString("Toolbar_Point_Map", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Re-estimate depth 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Re_estimate {
+            get {
+                return ResourceManager.GetString("Toolbar_Re-estimate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Redo 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Redo {
+            get {
+                return ResourceManager.GetString("Toolbar_Redo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Save configuration 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Save_Config {
+            get {
+                return ResourceManager.GetString("Toolbar_Save_Config", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Shortcut key list 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Shortcut_Key_Reference {
+            get {
+                return ResourceManager.GetString("Toolbar_Shortcut_Key_Reference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Tools (_T) 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Tools {
+            get {
+                return ResourceManager.GetString("Toolbar_Tools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Undo 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Undo {
+            get {
+                return ResourceManager.GetString("Toolbar_Undo", resourceCulture);
             }
         }
     }

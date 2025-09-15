@@ -120,4 +120,607 @@
   <data name="Title_EZHOLO" xml:space="preserve">
     <value>簡單刮擦</value>
   </data>
+  <data name="Tips_Time_Consuming_Operations" xml:space="preserve">
+    <value>通常是一些耗時操作，建議完成上方的設置後再開啟</value>
+  </data>
+  <data name="Tips_Start_Your_Work" xml:space="preserve">
+    <value>開始你的工作</value>
+  </data>
+  <data name="Tips_Point_Count_Overflow" xml:space="preserve">
+    <value>採樣點量超出上限值 (</value>
+  </data>
+  <data name="Tips_Open_Image_or_Click_to_Choose_Image" xml:space="preserve">
+    <value>文件 - 打開圖片 或 “點擊選擇圖片”</value>
+  </data>
+  <data name="Tips_OH" xml:space="preserve">
+    <value>噢！</value>
+  </data>
+  <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_7" xml:space="preserve">
+    <value>或者，你可以在下方修改最大採樣點數</value>
+  </data>
+  <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_6" xml:space="preserve">
+    <value>有關的因子</value>
+  </data>
+  <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_5" xml:space="preserve">
+    <value>“間隔”</value>
+  </data>
+  <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_4" xml:space="preserve">
+    <value>和</value>
+  </data>
+  <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_3" xml:space="preserve">
+    <value>“密度”</value>
+  </data>
+  <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_2" xml:space="preserve">
+    <value>請試著調整與</value>
+  </data>
+  <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_1" xml:space="preserve">
+    <value>採樣點量決定著刮擦痕跡的數量，過多的密集的軌跡將會影響成像質量</value>
+  </data>
+  <data name="Tips_Import_from_Clipboard" xml:space="preserve">
+    <value>剪貼板導入</value>
+  </data>
+  <data name="Tips_Desired_Size_518px" xml:space="preserve">
+    <value>建議尺寸：~518x518 px</value>
+  </data>
+  <data name="Tips_Could_Not_Take_Image_Back_4" xml:space="preserve">
+    <value>這裡</value>
+  </data>
+  <data name="Tips_Could_Not_Take_Image_Back_3" xml:space="preserve">
+    <value>或者點擊</value>
+  </data>
+  <data name="Tips_Could_Not_Take_Image_Back_2" xml:space="preserve">
+    <value>深度與採樣預覽 - 視圖 - 重置視圖</value>
+  </data>
+  <data name="Tips_Could_Not_Take_Image_Back_1" xml:space="preserve">
+    <value>圖移不回來了？</value>
+  </data>
+  <data name="Tips_Click_Here_to" xml:space="preserve">
+    <value>點擊這裡從</value>
+  </data>
+  <data name="Text_Upper_Boundary" xml:space="preserve">
+    <value>上閾值</value>
+  </data>
+  <data name="Text_Tool" xml:space="preserve">
+    <value>工具</value>
+  </data>
+  <data name="Text_Smear_Strength" xml:space="preserve">
+    <value>塗抹強度</value>
+  </data>
+  <data name="Text_Smear_Radius" xml:space="preserve">
+    <value>塗抹半徑</value>
+  </data>
+  <data name="Text_Shallowest_Preserving_Height" xml:space="preserve">
+    <value>最大保留深度</value>
+  </data>
+  <data name="Text_Shallowest" xml:space="preserve">
+    <value>最淺可擦拭點高度</value>
+  </data>
+  <data name="Text_Scale" xml:space="preserve">
+    <value>縮放</value>
+  </data>
+  <data name="Text_Remove_X_Points_for_Each_Block_2" xml:space="preserve">
+    <value>的點</value>
+  </data>
+  <data name="Text_Remove_X_Points_for_Each_Block_1" xml:space="preserve">
+    <value>移除每塊</value>
+  </data>
+  <data name="Text_Ratio_of_Point_and_Depth" xml:space="preserve">
+    <value>採樣點圖/深度圖比例</value>
+  </data>
+  <data name="Text_Position" xml:space="preserve">
+    <value>位置</value>
+  </data>
+  <data name="Text_Optional_Erasing" xml:space="preserve">
+    <value>選擇性擦除</value>
+  </data>
+  <data name="Text_Model" xml:space="preserve">
+    <value>模型</value>
+  </data>
+  <data name="Text_Maximum_Point_Count_for_Single_Block" xml:space="preserve">
+    <value>單塊最大採樣點數</value>
+  </data>
+  <data name="Text_Lower_Boundary" xml:space="preserve">
+    <value>下閾值</value>
+  </data>
+  <data name="Text_Loaded" xml:space="preserve">
+    <value>已加載:</value>
+  </data>
+  <data name="Text_Import_Point_Map" xml:space="preserve">
+    <value>導入點圖</value>
+  </data>
+  <data name="Text_Import_Original_Image" xml:space="preserve">
+    <value>導入原圖</value>
+  </data>
+  <data name="Text_Import_Depth_Map" xml:space="preserve">
+    <value>導入深度圖</value>
+  </data>
+  <data name="Text_Handcraft_Blueprint_Generating_Mode" xml:space="preserve">
+    <value>手刻草圖生成模式</value>
+  </data>
+  <data name="Text_External_Operation" xml:space="preserve">
+    <value>外部操作</value>
+  </data>
+  <data name="Text_Eraser_Radius" xml:space="preserve">
+    <value>橡皮擦半徑</value>
+  </data>
+  <data name="Text_Enable_Excluding" xml:space="preserve">
+    <value>啟用排除</value>
+  </data>
+  <data name="Text_Drafting_Strength" xml:space="preserve">
+    <value>偏移強度</value>
+  </data>
+  <data name="Text_Drafting_Brush_Radius" xml:space="preserve">
+    <value>偏移畫刷半徑</value>
+  </data>
+  <data name="Text_Detail_Factor" xml:space="preserve">
+    <value>細節因數</value>
+  </data>
+  <data name="Text_Density_Factor" xml:space="preserve">
+    <value>密度因數</value>
+  </data>
+  <data name="Text_Deepest_Preserving_Height" xml:space="preserve">
+    <value>最小保留深度</value>
+  </data>
+  <data name="Text_Deepest" xml:space="preserve">
+    <value>最深可擦拭點高度</value>
+  </data>
+  <data name="Text_Deduplication_Strength" xml:space="preserve">
+    <value>去重力度</value>
+  </data>
+  <data name="Text_Deduplication_Block_Size" xml:space="preserve">
+    <value>去重塊大小</value>
+  </data>
+  <data name="Text_Deduplication_Accuracy" xml:space="preserve">
+    <value>去重精度</value>
+  </data>
+  <data name="Text_Contrast" xml:space="preserve">
+    <value>對比度</value>
+  </data>
+  <data name="Text_Contour_Spacing" xml:space="preserve">
+    <value>輪廓採樣間隔</value>
+  </data>
+  <data name="Text_Color_of_Depth_Map" xml:space="preserve">
+    <value>深度圖色彩</value>
+  </data>
+  <data name="Text_Brush_Density" xml:space="preserve">
+    <value>畫筆密度</value>
+  </data>
+  <data name="Text_Brightness" xml:space="preserve">
+    <value>明度採樣</value>
+  </data>
+  <data name="Text_Blur_Factor" xml:space="preserve">
+    <value>模糊因數</value>
+  </data>
+  <data name="Text_Basical_Density" xml:space="preserve">
+    <value>基礎密度</value>
+  </data>
+  <data name="Globe_Or" xml:space="preserve">
+    <value>或者</value>
+  </data>
+  <data name="Toolbar_Undo" xml:space="preserve">
+    <value>撤銷</value>
+  </data>
+  <data name="Toolbar_Tools" xml:space="preserve">
+    <value>工具(_T)</value>
+  </data>
+  <data name="Toolbar_Shortcut_Key_Reference" xml:space="preserve">
+    <value>快捷鍵一覽表</value>
+  </data>
+  <data name="Toolbar_Save_Config" xml:space="preserve">
+    <value>保存配置</value>
+  </data>
+  <data name="Toolbar_Re-estimate" xml:space="preserve">
+    <value>重新估算深度</value>
+  </data>
+  <data name="Toolbar_Redo" xml:space="preserve">
+    <value>重做</value>
+  </data>
+  <data name="Toolbar_Point_Map" xml:space="preserve">
+    <value>點圖</value>
+  </data>
+  <data name="Toolbar_Open_Source_Info" xml:space="preserve">
+    <value>開源信息</value>
+  </data>
+  <data name="Toolbar_Open_New_Image" xml:space="preserve">
+    <value>打開新圖像</value>
+  </data>
+  <data name="Toolbar_Load_Config" xml:space="preserve">
+    <value>加載配置</value>
+  </data>
+  <data name="Toolbar_Language" xml:space="preserve">
+    <value>語言</value>
+  </data>
+  <data name="Toolbar_Import_Point_Map" xml:space="preserve">
+    <value>導入點圖</value>
+  </data>
+  <data name="Toolbar_Import_Image_from_File" xml:space="preserve">
+    <value>從文件導入圖片</value>
+  </data>
+  <data name="Toolbar_Import_Image_from_Clipboard" xml:space="preserve">
+    <value>從剪貼板導入圖片</value>
+  </data>
+  <data name="Toolbar_Import_Depth" xml:space="preserve">
+    <value>導入深度</value>
+  </data>
+  <data name="Toolbar_Generate_Preview_Path" xml:space="preserve">
+    <value>生成軌跡預覽</value>
+  </data>
+  <data name="Toolbar_File" xml:space="preserve">
+    <value>文件(_F)</value>
+  </data>
+  <data name="Toolbar_Export_Scratch_Path" xml:space="preserve">
+    <value>導出刮擦軌跡</value>
+  </data>
+  <data name="Toolbar_Export_Point_to_SVG_Manual" xml:space="preserve">
+    <value>導出SVG點圖(僅手動)</value>
+  </data>
+  <data name="Toolbar_Export_Point_to_SVG_Combined" xml:space="preserve">
+    <value>導出SVG點圖(合一)</value>
+  </data>
+  <data name="Toolbar_Export_Point_to_PNG_Manual" xml:space="preserve">
+    <value>導出PNG點圖(僅手動)</value>
+  </data>
+  <data name="Toolbar_Export_Point_to_PNG_Combined" xml:space="preserve">
+    <value>導出PNG點圖(合一)</value>
+  </data>
+  <data name="Toolbar_Export_Handcraft_Blueprint" xml:space="preserve">
+    <value>導出手刻刮擦軌跡圖紙</value>
+  </data>
+  <data name="Toolbar_Export_Depth" xml:space="preserve">
+    <value>導出深度*</value>
+  </data>
+  <data name="Toolbar_Edit" xml:space="preserve">
+    <value>編輯(_E)</value>
+  </data>
+  <data name="Toolbar_Depth_Image" xml:space="preserve">
+    <value>深度圖</value>
+  </data>
+  <data name="Toolbar_Close_Image" xml:space="preserve">
+    <value>關閉圖像</value>
+  </data>
+  <data name="Text_Zero" xml:space="preserve">
+    <value>零高度</value>
+  </data>
+  <data name="Text_Using_Depth" xml:space="preserve">
+    <value>基於深度</value>
+  </data>
+  <data name="Text_Use_Last_Config" xml:space="preserve">
+    <value>每次啟動使用上次退出時的配置</value>
+  </data>
+  <data name="Text_Uniform_Constraint" xml:space="preserve">
+    <value>均勻約束</value>
+  </data>
+  <data name="Text_Total_Point_Count" xml:space="preserve">
+    <value>採樣點總數</value>
+  </data>
+  <data name="Text_Stretching_Factor" xml:space="preserve">
+    <value>拉伸(b)係數</value>
+  </data>
+  <data name="Text_Start_Point" xml:space="preserve">
+    <value>起點</value>
+  </data>
+  <data name="Text_Smart_Eraser" xml:space="preserve">
+    <value>智能邊緣橡皮</value>
+  </data>
+  <data name="Text_Show_Path_Density" xml:space="preserve">
+    <value>顯示軌跡密度</value>
+  </data>
+  <data name="Text_Show_Contour_Image" xml:space="preserve">
+    <value>展示輪廓圖</value>
+  </data>
+  <data name="Text_Run_Deduplication" xml:space="preserve">
+    <value>運行去重</value>
+  </data>
+  <data name="Text_Restore_View" xml:space="preserve">
+    <value>重置視圖</value>
+  </data>
+  <data name="Text_Re-estimate" xml:space="preserve">
+    <value>重新估算</value>
+  </data>
+  <data name="Text_Radius_Factor" xml:space="preserve">
+    <value>半徑係數</value>
+  </data>
+  <data name="Text_Preview_Density" xml:space="preserve">
+    <value>預覽密度</value>
+  </data>
+  <data name="Text_Post_Process" xml:space="preserve">
+    <value>採樣後處理</value>
+  </data>
+  <data name="Text_Pixel" xml:space="preserve">
+    <value>   像素</value>
+  </data>
+  <data name="Text_Output_Maximum" xml:space="preserve">
+    <value>輸出上限:</value>
+  </data>
+  <data name="Text_Original_Point" xml:space="preserve">
+    <value>原點</value>
+  </data>
+  <data name="Text_Number_of_Layers" xml:space="preserve">
+    <value>圖紙層數</value>
+  </data>
+  <data name="Text_Migrate_to_Manual" xml:space="preserve">
+    <value>轉移到手動採樣</value>
+  </data>
+  <data name="Text_Manual_Sampling_Strategy" xml:space="preserve">
+    <value>手動採樣策略</value>
+  </data>
+  <data name="Text_Import_Depth" xml:space="preserve">
+    <value>導入深度</value>
+  </data>
+  <data name="Text_Ignoring_Range_of_Points_around_Zero_2" xml:space="preserve">
+    <value>單位內的點</value>
+  </data>
+  <data name="Text_Ignoring_Range_of_Points_around_Zero_1" xml:space="preserve">
+    <value>忽略距離零深度</value>
+  </data>
+  <data name="Text_Height" xml:space="preserve">
+    <value>   高度</value>
+  </data>
+  <data name="Text_Gradient" xml:space="preserve">
+    <value>   梯度</value>
+  </data>
+  <data name="Text_Generate_Preview_Path" xml:space="preserve">
+    <value>生成軌跡預覽&gt;&gt;</value>
+  </data>
+  <data name="Text_Export_Scratch_Path" xml:space="preserve">
+    <value>導出刮擦軌跡(.svg)</value>
+  </data>
+  <data name="Text_Export_Point_Map" xml:space="preserve">
+    <value>導出點圖</value>
+  </data>
+  <data name="Text_Export_Handcraft_Blueprint" xml:space="preserve">
+    <value>導出手刻圖紙(.svg)[*嘗鮮]</value>
+  </data>
+  <data name="Text_Export_Depth" xml:space="preserve">
+    <value>導出深度*</value>
+  </data>
+  <data name="Text_End_Point" xml:space="preserve">
+    <value>終點</value>
+  </data>
+  <data name="Text_Dynamic_Preview" xml:space="preserve">
+    <value>動態預覽</value>
+  </data>
+  <data name="Text_Darkness_Mode" xml:space="preserve">
+    <value>暗度模式(取反)</value>
+  </data>
+  <data name="Text_Curvature_Factor" xml:space="preserve">
+    <value>曲率(a)係數</value>
+  </data>
+  <data name="Text_Contour_Sampling_Strategy" xml:space="preserve">
+    <value>輪廓採樣策略</value>
+  </data>
+  <data name="Text_Color_of_Points" xml:space="preserve">
+    <value>點顏色</value>
+  </data>
+  <data name="Text_Click_to_Choose_Image" xml:space="preserve">
+    <value>點擊選擇圖片</value>
+  </data>
+  <data name="Text_Brightness_Sampling_Strategy" xml:space="preserve">
+    <value>明度採樣策略</value>
+  </data>
+  <data name="Text_Binary_Denoise" xml:space="preserve">
+    <value>二值降噪</value>
+  </data>
+  <data name="Text_Auto_Update_Preview" xml:space="preserve">
+    <value>自動更新預覽</value>
+  </data>
+  <data name="Text_Apply_Drafting_to_all_Points" xml:space="preserve">
+    <value>對所有點施加偏移</value>
+  </data>
+  <data name="Text_Angle_Factor" xml:space="preserve">
+    <value>角度係數</value>
+  </data>
+  <data name="Text_3D_View" xml:space="preserve">
+    <value>3D視圖</value>
+  </data>
+  <data name="Globe_Sure" xml:space="preserve">
+    <value>好的</value>
+  </data>
+  <data name="Globe_Step" xml:space="preserve">
+    <value>步</value>
+  </data>
+  <data name="Globe_Point" xml:space="preserve">
+    <value>點</value>
+  </data>
+  <data name="Globe_Path" xml:space="preserve">
+    <value>軌跡</value>
+  </data>
+  <data name="Globe_Original_Image" xml:space="preserve">
+    <value>原圖</value>
+  </data>
+  <data name="Globe_Dedeplication" xml:space="preserve">
+    <value>去重</value>
+  </data>
+  <data name="Tips_Eyes_7" xml:space="preserve">
+    <value>就是鬥雞眼</value>
+  </data>
+  <data name="Tips_Eyes_6" xml:space="preserve">
+    <value>試著控制眼睛，將左點的右像和右點的左像拼合</value>
+  </data>
+  <data name="Tips_Eyes_5" xml:space="preserve">
+    <value>將會是重影狀態。此時螢幕上的兩個紅點會分成四個，</value>
+  </data>
+  <data name="Tips_Eyes_4" xml:space="preserve">
+    <value>維持這種感覺並把頭轉向螢幕，你處於近距離的視野</value>
+  </data>
+  <data name="Tips_Eyes_3" xml:space="preserve">
+    <value>看向某個遠方，你會有一種呆滯的感覺</value>
+  </data>
+  <data name="Tips_Eyes_2" xml:space="preserve">
+    <value>使得螢幕上的紅點間距≤你的瞳距</value>
+  </data>
+  <data name="Tips_Eyes_1" xml:space="preserve">
+    <value>丈量你的雙眼瞳孔間距，縮放窗口</value>
+  </data>
+  <data name="Text_View" xml:space="preserve">
+    <value>視圖</value>
+  </data>
+  <data name="Text_Smear_Settings" xml:space="preserve">
+    <value>塗抹設置</value>
+  </data>
+  <data name="Text_Scratch_Path_Preview" xml:space="preserve">
+    <value>刮擦軌跡預覽</value>
+  </data>
+  <data name="Text_Scratch_Path_Generate" xml:space="preserve">
+    <value>刮擦軌跡生成</value>
+  </data>
+  <data name="Text_Sampling" xml:space="preserve">
+    <value>關鍵點採樣</value>
+  </data>
+  <data name="Text_Pro_Deduplication" xml:space="preserve">
+    <value>高級去重</value>
+  </data>
+  <data name="Text_Preview_Control" xml:space="preserve">
+    <value>預覽控制</value>
+  </data>
+  <data name="Text_Playing_Settings" xml:space="preserve">
+    <value>播放設置</value>
+  </data>
+  <data name="Text_Pencil_Settings" xml:space="preserve">
+    <value>畫筆設置</value>
+  </data>
+  <data name="Text_Path_Arguments" xml:space="preserve">
+    <value>軌跡參數</value>
+  </data>
+  <data name="Text_Parallel_Eyes_Mode" xml:space="preserve">
+    <value>平行眼模式</value>
+  </data>
+  <data name="Text_Parallel_Eyes" xml:space="preserve">
+    <value>平行眼(失焦眼)</value>
+  </data>
+  <data name="Text_Maximum_Frame_Per_Second" xml:space="preserve">
+    <value>最大幀率</value>
+  </data>
+  <data name="Text_Manual" xml:space="preserve">
+    <value>手動採樣</value>
+  </data>
+  <data name="Text_Eyes_Spacing" xml:space="preserve">
+    <value>眼距</value>
+  </data>
+  <data name="Text_Eraser_Settings" xml:space="preserve">
+    <value>橡皮設置</value>
+  </data>
+  <data name="Text_Drafting_Tool" xml:space="preserve">
+    <value>梯度偏移工具</value>
+  </data>
+  <data name="Text_Depth_and_Sampling_Preview" xml:space="preserve">
+    <value>深度與採樣預覽</value>
+  </data>
+  <data name="Text_Dedensing_Tool" xml:space="preserve">
+    <value>密度降低工具</value>
+  </data>
+  <data name="Text_Cross_Eyes" xml:space="preserve">
+    <value>交叉眼(鬥雞眼)</value>
+  </data>
+  <data name="Text_Contour" xml:space="preserve">
+    <value>輪廓採樣</value>
+  </data>
+  <data name="Text_Auto_Play" xml:space="preserve">
+    <value>自動播放</value>
+  </data>
+  <data name="Shortcut_Undo" xml:space="preserve">
+    <value>撤銷手動採樣操作</value>
+  </data>
+  <data name="Shortcut_Switch_to_Smear" xml:space="preserve">
+    <value>切換到塗抹工具</value>
+  </data>
+  <data name="Shortcut_Switch_to_Pencil" xml:space="preserve">
+    <value>切換到鉛筆工具</value>
+  </data>
+  <data name="Shortcut_Switch_to_Line" xml:space="preserve">
+    <value>切換到線條工具</value>
+  </data>
+  <data name="Shortcut_Switch_to_Eraser" xml:space="preserve">
+    <value>切換到橡皮擦工具</value>
+  </data>
+  <data name="Shortcut_Switch_to_Draft" xml:space="preserve">
+    <value>切換到梯度偏移工具</value>
+  </data>
+  <data name="Shortcut_Switch_to_Dedense" xml:space="preserve">
+    <value>切換到密度降低工具</value>
+  </data>
+  <data name="Shortcut_Switch_to_Cursor" xml:space="preserve">
+    <value>切換到滑鼠</value>
+  </data>
+  <data name="Shortcut_Save_Config" xml:space="preserve">
+    <value>保存軟件配置</value>
+  </data>
+  <data name="Shortcut_Re-estimate" xml:space="preserve">
+    <value>重新估算深度圖</value>
+  </data>
+  <data name="Shortcut_Redo" xml:space="preserve">
+    <value>重做手動採樣操作</value>
+  </data>
+  <data name="Shortcut_Load_Config" xml:space="preserve">
+    <value>加載軟件配置</value>
+  </data>
+  <data name="Shortcut_Import_Point_from_File" xml:space="preserve">
+    <value>從文件導入點圖</value>
+  </data>
+  <data name="Shortcut_Import_Depth_From_File" xml:space="preserve">
+    <value>從文件導入深度圖</value>
+  </data>
+  <data name="Shortcut_Generate_Path" xml:space="preserve">
+    <value>生成刮擦軌跡</value>
+  </data>
+  <data name="Shortcut_Export_Point_to_SVG_Manual" xml:space="preserve">
+    <value>以SVG格式無損導出點圖(僅手動)</value>
+  </data>
+  <data name="Shortcut_Export_Point_to_SVG_Combined" xml:space="preserve">
+    <value>以SVG格式無損導出點圖(合一)</value>
+  </data>
+  <data name="Shortcut_Export_Point_to_PNG_Manual" xml:space="preserve">
+    <value>以PNG格式導出點圖(僅手動)</value>
+  </data>
+  <data name="Shortcut_Export_Point_to_PNG_Combined" xml:space="preserve">
+    <value>以PNG格式導出點圖(合一)</value>
+  </data>
+  <data name="Shortcut_Export_Depth_Map" xml:space="preserve">
+    <value>導出深度圖</value>
+  </data>
+  <data name="Shortcut_Depth_Estimate" xml:space="preserve">
+    <value>深度估算</value>
+  </data>
+  <data name="Shortcut_Debug" xml:space="preserve">
+    <value>Debug工具</value>
+  </data>
+  <data name="Shortcut_Close_Image" xml:space="preserve">
+    <value>關閉圖片</value>
+  </data>
+  <data name="Globe_Export" xml:space="preserve">
+    <value>導出</value>
+  </data>
+  <data name="Toolbar_Bad_Translation_Help_Us" xml:space="preserve">
+    <value>翻譯不佳？ 點擊助力翻譯優化</value>
+  </data>
+  <data name="Title_Open_Source_Information" xml:space="preserve">
+    <value>開源信息</value>
+  </data>
+  <data name="Globe_Got_It" xml:space="preserve">
+    <value>了解</value>
+  </data>
+  <data name="Tips_Null_Depth" xml:space="preserve">
+    <value>深度圖像為空，無法導出。</value>
+  </data>
+  <data name="Tips_Depth_Successfully_Exported" xml:space="preserve">
+    <value>深度圖像成功導出。</value>
+  </data>
+  <data name="Tips_Fail_to_Export_Depth" xml:space="preserve">
+    <value>導出深度圖像時出錯:</value>
+  </data>
+  <data name="Globe_File" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Globe_All" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="Tips_Fail_to_Load_depth" xml:space="preserve">
+    <value>無法讀取深度圖像</value>
+  </data>
+  <data name="Tips_Depth_Successfully_Imported" xml:space="preserve">
+    <value>深度圖像成功導入</value>
+  </data>
+  <data name="Tips_Fail_to_Import_Depth" xml:space="preserve">
+    <value>導入深度圖像時出錯:</value>
+  </data>
 </root>

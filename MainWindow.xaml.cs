@@ -110,6 +110,7 @@ namespace EZHolodotNet
             var i = sender as Image;
             var p = e.GetPosition(i);
             ImageProcesser.MousePixelPosition = new((float)(p.X * ImageProcesser.OriginalImage.Cols/i.ActualWidth), (float)(p.Y * ImageProcesser.OriginalImage.Rows / i.ActualHeight));
+            
             if (e.LeftButton == MouseButtonState.Pressed)
                 ImageProcesser.ProcessManual(null);
 
@@ -124,11 +125,20 @@ namespace EZHolodotNet
 
         private void Image_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (ImageProcesser.OriginalImage == null) return; 
+            if (ImageProcesser.OriginalImage == null) return;
             if (e.LeftButton == MouseButtonState.Pressed)
                 ImageProcesser.ProcessManual(true);
             else if (e.MiddleButton == MouseButtonState.Pressed)
                 ImageProcesser.ProcessMovingView();
+            else if (e.RightButton == MouseButtonState.Pressed)
+            {
+                if (Keyboard.IsKeyDown(Key.LeftShift))
+                    ImageProcesser.EraserLower = ImageProcesser.MouseDepth;
+                else
+                    ImageProcesser.EraserUpper = ImageProcesser.MouseDepth;
+
+            }
+
 
         }
 
@@ -162,7 +172,11 @@ namespace EZHolodotNet
 
         private void Image_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            ImageProcesser.PreviewScale += e.Delta/1200f;
+            if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                ImageProcesser.PreviewScaleFactor += e.Delta/1200f;
+            else
+                ImageProcesser.ChangeRadius(e.Delta/12f);
+
         }
 
         private void Window_MouseMove(object sender, MouseEventArgs e)
@@ -266,7 +280,7 @@ namespace EZHolodotNet
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 var files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files.Length > 0 && System.IO.Path.GetExtension(files[0]).ToLower()==".svg")
+                if (files.Length > 0)
                 {
                     ImageProcesser.ImportPoints(files[0]);
                 }
@@ -278,6 +292,12 @@ namespace EZHolodotNet
         {
             ImageProcesser.HandleExit();
 
+        }
+
+        private void Viewbox_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                ImageProcesser.PreviewScaleFactor += e.Delta / 1200f;
         }
     }
 }

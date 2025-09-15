@@ -152,6 +152,7 @@ namespace EZHolodotNet.Core
             return true;
         }
 
+        public RelayCommand ProcessStartCommand => new RelayCommand((p) => Process.Start("explorer.exe", ((string)p)));
         public RelayCommand DebugCommand => new RelayCommand((p) => debug((string)p));
         private void debug(string d)
         {
@@ -169,12 +170,24 @@ namespace EZHolodotNet.Core
         {
             PreviewX = 0;
             PreviewY = 0;
-            PreviewScale = 1;
+            PreviewScaleFactor = 0;
         });
-        public RelayCommand SwitchLanguageCommand => new RelayCommand((p) =>
+        private string _currentCultureInfo = "zh-CN";
+        public string CurrentCultureInfo
         {
-            LanguageManager.Instance.ChangeLanguage(new CultureInfo((string)p));
-        });
+            get => _currentCultureInfo;
+            set
+            {
+                if(!Equals(value, _currentCultureInfo))
+                {
+                    _currentCultureInfo = value;
+                    LanguageManager.Instance.ChangeLanguage(new CultureInfo(value));
+
+                }
+            }
+        }
+        public RelayCommand SwitchLanguageCommand => new RelayCommand((p) =>
+            CurrentCultureInfo = (string)p);
         public RelayCommand OpenFolderCommand => new RelayCommand((p) => Process.Start("explorer.exe", AppDomain.CurrentDomain.BaseDirectory));
         public RelayCommand RefreshModelCommand => new RelayCommand((p) => ReloadModel());
         public RelayCommand ConvertToManualCommand => new RelayCommand((p) => ConvertToManualPoint(p.ToString() ?? "c"));
@@ -282,10 +295,10 @@ namespace EZHolodotNet.Core
         {
             var uiMessageBox = new Wpf.Ui.Controls.MessageBox
             {
-                Title = "开源信息",
+                Title = LanguageManager.Instance["Title_Open_Source_Information"],
                 Content =
                     "Copyright \u00a9 2025 Yigu Wang\r\n\r\nLicensed under the Apache License, Version 2.0 (the \"License\");\r\nyou may not use this file except in compliance with the License.\r\nYou may obtain a copy of the License at\r\n\r\n    http://www.apache.org/licenses/LICENSE-2.0\r\n\r\nUnless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\r\nSee the License for the specific language governing permissions and limitations under the License.\r\nMore information at https://github.com/POPCORNBOOM/EZHolodotNet",
-                CloseButtonText = "了解",
+                CloseButtonText = LanguageManager.Instance["Globe_Got_It"],
             };
 
             uiMessageBox.ShowDialogAsync();
@@ -324,6 +337,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+
         public void ReloadModel()
         {
             DepthEstimation?.CloseSession();
@@ -480,7 +494,9 @@ namespace EZHolodotNet.Core
             }
         }
         private readonly Mat _gradient = CreateGradientMat(2, 256);
-        [XmlIgnore] public WriteableBitmap GradientColor => ApplyColorMap(_gradient).ToWriteableBitmap();
+        private Mat _gradientColored = new();
+        [XmlIgnore] public WriteableBitmap GradientColor => _gradientColored.ToWriteableBitmap();
+        
         [XmlIgnore] public Mat ContoursOverDepthImage { get; set; } = new Mat();
         private WriteableBitmap _displayImageDepth;
         [XmlIgnore] public WriteableBitmap DisplayImageDepth
@@ -655,6 +671,35 @@ namespace EZHolodotNet.Core
             }
         }
         [XmlIgnore]
+        public string MouseDepthColor
+        {
+            get
+            {
+                var color = _gradientColored.Get<Vec3b>(255-(int)MouseDepth, 0);
+                //Cv2.ImShow("te", _gradientCoPreviewScalelored);
+                //Trace.WriteLine(_gradientColored.Type()+" "+color[0] + " " + color[1] + " " + color[2]);
+                return ColorTranslator.ToHtml(System.Drawing.Color.FromArgb(color[2], color[1], color[0]));
+                
+            }
+        }
+        [XmlIgnore]
+        public string MouseDepthColorBW
+        {
+            get
+            {
+                var color = _gradientColored.Get<Vec3b>(255-(int)MouseDepth, 0);
+                //Trace.WriteLine((color[0] + color[1] + color[2]) / 3);
+                float L = (0.299f * color[0] + 0.587f * color[1] + 0.114f * color[2]) / 255f;
+
+                //float contrast_black = (L + 0.05f) / 0.05f;
+                //float contrast_white = 1.05f / (L + 0.05f);
+
+                return L > 0.5  ? "#AA000000" : "#AAFFFFFF";
+                
+            }
+        }
+
+        [XmlIgnore]
         public Point MousePixelPosition
         {
             get => _mousePixelPosition;
@@ -664,6 +709,8 @@ namespace EZHolodotNet.Core
                 _mousePixelPosition = new(Math.Clamp(value.X, 0, OriginImageWidth), Math.Clamp(value.Y, 0, OriginImageHeight));
                 OnPropertyChanged(nameof(MousePixelPosition));
                 OnPropertyChanged(nameof(MouseDepth));
+                OnPropertyChanged(nameof(MouseDepthColor));
+                OnPropertyChanged(nameof(MouseDepthColorBW));
                 OnPropertyChanged(nameof(MouseGradient));
                 OnPropertyChanged(nameof(MouseGradientX));
                 OnPropertyChanged(nameof(MouseGradientY));
@@ -675,9 +722,15 @@ namespace EZHolodotNet.Core
                 OnPropertyChanged(nameof(DraftCenterX));
                 OnPropertyChanged(nameof(MousePointX));
                 OnPropertyChanged(nameof(MousePointY));
+                OnPropertyChanged(nameof(IsMouseMoving));
 
             }
         }        
+        [XmlIgnore]
+        public bool IsMouseMoving
+        {
+            get => !Equals(_mousePixelPosition,new Point(0,0));
+        }
         [XmlIgnore]
         public Point MouseWindowPosition
         {
@@ -755,7 +808,12 @@ namespace EZHolodotNet.Core
                 {
                     _depthColor = value;
                     OnPropertyChanged(nameof(DepthColor));
+
+                    _gradientColored = ApplyColorMap(_gradient);
                     OnPropertyChanged(nameof(GradientColor));
+                    OnPropertyChanged(nameof(MouseDepthColor));
+                    OnPropertyChanged(nameof(MouseDepthColorBW));
+
                     if (DepthImage.Cols != 0)
                         DisplayImageDepth = ApplyColorMap(DepthImage).ToWriteableBitmap();
 
@@ -849,23 +907,28 @@ namespace EZHolodotNet.Core
         }
 
 
-        private float _previewScale = 1;
+        private float _previewScaleFactor = 0;
 
+        public float RePreviewScale
+        {
+            get => 1 / MathF.Pow(10, _previewScaleFactor);
+        }
         public float PreviewScale
         {
-            get => _previewScale;
+            get => MathF.Pow(10, _previewScaleFactor);
+        }
+        public float PreviewScaleFactor
+        {
+            get => _previewScaleFactor;
             set
             {
-                if (!Equals(_previewScale, value))
+                if (!Equals(_previewScaleFactor, value))
                 {
-                    _previewScale = value;
+                    _previewScaleFactor = Math.Clamp(value, -0.5f, 0.5f);
 
-                    if (_previewScale > 4)
-                        _previewScale = 4;
-                    if (_previewScale < 0.25)
-                        _previewScale = 0.25f;
-
+                    OnPropertyChanged(nameof(PreviewScaleFactor));
                     OnPropertyChanged(nameof(PreviewScale));
+                    OnPropertyChanged(nameof(RePreviewScale));
                 }
             }
         }
@@ -1145,6 +1208,24 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        public void ChangeRadius(float delta)
+        {
+            switch (ManualTool)
+            {
+                case 2:
+                    EraserRadius += delta;
+                    break;
+                case 4:
+                    SmearRadius += delta;
+                    break;
+                case 5:
+                    DraftRadius += delta;
+                    break;
+                default:
+                    PreviewScaleFactor += delta / 120f;
+                    break;
+            }
+        }
         public float RadiusMax
         {
             get => Math.Clamp(OriginImageWidth/2,30,500);
@@ -1158,9 +1239,11 @@ namespace EZHolodotNet.Core
             {
                 if (!Equals(_eraserRadius, value))
                 {
-                    _eraserRadius = value;
+                    _eraserRadius = Math.Clamp(value, 0, RadiusMax);
                     OnPropertyChanged(nameof(EraserRadius));
                     OnPropertyChanged(nameof(EraserDiameter));
+                    OnPropertyChanged(nameof(EraserCenterX));
+                    OnPropertyChanged(nameof(EraserCenterY));
                 }
             }
         }
@@ -1198,9 +1281,11 @@ namespace EZHolodotNet.Core
             {
                 if (!Equals(_smearRadius, value))
                 {
-                    _smearRadius = value;
+                    _smearRadius = Math.Clamp(value, 0, RadiusMax);
                     OnPropertyChanged(nameof(SmearRadius));
                     OnPropertyChanged(nameof(SmearDiameter));
+                    OnPropertyChanged(nameof(SmearCenterX));
+                    OnPropertyChanged(nameof(SmearCenterY));
                 }
             }
         }
@@ -1212,9 +1297,11 @@ namespace EZHolodotNet.Core
             {
                 if (!Equals(_draftRadius, value))
                 {
-                    _draftRadius = value;
+                    _draftRadius = Math.Clamp(value, 0, RadiusMax);
                     OnPropertyChanged(nameof(DraftRadius));
                     OnPropertyChanged(nameof(DraftDiameter));
+                    OnPropertyChanged(nameof(DraftCenterX));
+                    OnPropertyChanged(nameof(DraftCenterY));
                 }
             }
         }
@@ -1231,7 +1318,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private float _draftStrength = 0.1f;
+        private float _draftStrength = 0.01f;
         public float DraftStrength
         {
             get => _draftStrength;
@@ -1295,6 +1382,7 @@ namespace EZHolodotNet.Core
             }
         }
         private bool _isTipsPanelVisible = false;
+        [XmlIgnore]
         public bool IsTipsPanelVisible
         {
             get => _isTipsPanelVisible;
@@ -1484,6 +1572,7 @@ namespace EZHolodotNet.Core
             }
         }
         private string _tipsString = "";
+        [XmlIgnore]
         public string TipsString
         {
             get => _tipsString;
@@ -1990,7 +2079,7 @@ namespace EZHolodotNet.Core
                 if (_isBinaryDeNoise) 
                     Cv2.Threshold(_enhanced, _enhanced, 128, 255, ThresholdTypes.Binary);
                 if (_isShowEnhancedMat) 
-                    Cv2.ImShow("enhanced", _enhanced);
+                    Cv2.ImShow("Preview", _enhanced);
                 //Trace.WriteLine(_enhanced.Type().ToString());
                 byte[] pixelData = new byte[_enhanced.Total()];
                 _enhanced.GetArray(out pixelData);
@@ -2214,7 +2303,7 @@ namespace EZHolodotNet.Core
                     if (DepthImage == null)
                     {
                         //MessageBox.Show("深度图像为空，无法导出。");
-                        ShowTipsTemporarilyAsync("深度图像为空，无法导出。");
+                        ShowTipsTemporarilyAsync(LanguageManager.Instance["Tips_Null_Depth"]);
                         return;
                     }
 
@@ -2231,21 +2320,22 @@ namespace EZHolodotNet.Core
                     Cv2.ImWrite(saveFileDialog.FileName, normalizedDepth);
 
                     //MessageBox.Show("深度图像成功导出。");
-                    ShowTipsTemporarilyAsync("深度图像成功导出。");
+                    ShowTipsTemporarilyAsync(LanguageManager.Instance["Tips_Depth_Successfully_Exported"]);
 
                 }
                 catch (Exception e)
                 {
-                    ShowTipsTemporarilyAsync($"导出深度图像时出错: {e.Message}");
+                    ShowTipsTemporarilyAsync($"{LanguageManager.Instance["Tips_Fail_to_Export_Depth"]}{e.Message}");
                     //MessageBox.Show($"导出深度图像时出错: {e.Message}");
                 }
             }
         }
         private void ImportDepth()
         {
+            string localized_FILE = LanguageManager.Instance["Globe_File"];
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
-                Filter = "PNG 文件 (*.png)|*.png|JPEG 文件 (*.jpg;*.jpeg)|*.jpg;*.jpeg|BMP 文件 (*.bmp)|*.bmp|TIFF 文件 (*.tiff;*.tif)|*.tiff;*.tif|所有文件 (*.*)|*.*",
+                Filter = $"PNG {localized_FILE} (*.png)|*.png|JPEG {localized_FILE} (*.jpg;*.jpeg)|*.jpg;*.jpeg|BMP {localized_FILE} (*.bmp)|*.bmp|TIFF {localized_FILE} (*.tiff;*.tif)|*.tiff;*.tif|{LanguageManager.Instance["Globe_All"]}{localized_FILE} (*.*)|*.*",
                 DefaultExt = "png"
             };
 
@@ -2262,7 +2352,7 @@ namespace EZHolodotNet.Core
                 if (loadedDepth.Empty())
                 {
                     //MessageBox.Show();
-                    ShowTipsTemporarilyAsync("无法读取深度图像");
+                    ShowTipsTemporarilyAsync(LanguageManager.Instance["Tips_Fail_to_Load_depth"]);
 
                     return;
                 }
@@ -2278,12 +2368,12 @@ namespace EZHolodotNet.Core
 
                 DepthImage = loadedDepth;
 
-                ShowTipsTemporarilyAsync("深度图像成功导入");
+                ShowTipsTemporarilyAsync(LanguageManager.Instance["Tips_Depth_Successfully_Imported"]);
 
             }
             catch (Exception e)
             {
-                ShowTipsTemporarilyAsync($"导入深度图像时出错: {e.Message}");
+                ShowTipsTemporarilyAsync($"{LanguageManager.Instance["Tips_Fail_to_Import_Depth"]}{e.Message}");
 
             }
         }
@@ -2630,7 +2720,7 @@ namespace EZHolodotNet.Core
             {
                 if (_movingLastPoint == null) return;
                 Vec2f delta = MouseWindowPosition - _movingLastPoint.Value;
-                Vec2f newLocation = _startMovingPosition + delta/_previewScale;
+                Vec2f newLocation = _startMovingPosition + delta/PreviewScale;
                 PreviewX = newLocation.Item0;
                 PreviewY = newLocation.Item1;
                 //Trace.WriteLine($"move to {_previewX},{_previewY}");

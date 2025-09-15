@@ -1,10 +1,11 @@
-﻿<Window x:Class="EZHolodotNet.Views.ThreeDPreviewWindow"
+<Window x:Class="EZHolodotNet.Views.ThreeDPreviewWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EZHolodotNet.Views"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:core="clr-namespace:EZHolodotNet.Core"
         mc:Ignorable="d"
         Title="3D动态预览" Height="650" Width="800">
     <Grid>
@@ -95,23 +96,23 @@
                     <StackPanel>
                         <Image Margin="0" Stretch="Uniform" Source="/Images/instruction.png"/>
                         <TextBlock FontSize="10">
-                            <Run Text="平行眼(失焦眼)" FontWeight="Bold"/>
+                            <Run Text="{Binding [Text_Parallel_Eyes], Source={x:Static core:LanguageManager.Instance}}" FontWeight="Bold"/>
                             <LineBreak/>
-                            <Run Text="丈量你的双眼瞳孔间距，缩放窗口"/>
+                            <Run Text="{Binding [Tips_Eyes_1], Source={x:Static core:LanguageManager.Instance}}"/>
                             <LineBreak/>
-                            <Run Text="使得屏幕上的红点间距≤你的瞳距"/>
+                            <Run Text="{Binding [Tips_Eyes_2], Source={x:Static core:LanguageManager.Instance}}"/>
                             <LineBreak/>
-                            <Run Text="看向某个远方，你会有一种呆滞的感觉"/>
+                            <Run Text="{Binding [Tips_Eyes_3], Source={x:Static core:LanguageManager.Instance}}"/>
                             <LineBreak/>
-                            <Run Text="维持这种感觉并把头转向屏幕，你处于近距离的视野"/>
+                            <Run Text="{Binding [Tips_Eyes_4], Source={x:Static core:LanguageManager.Instance}}"/>
                             <LineBreak/>
-                            <Run Text="将会是重影状态。此时屏幕上的两个红点会分成四个，"/>
+                            <Run Text="{Binding [Tips_Eyes_5], Source={x:Static core:LanguageManager.Instance}}"/>
                             <LineBreak/>
-                            <Run Text="试着控制眼睛，将左点的右像和右点的左像拼合"/>
+                            <Run Text="{Binding [Tips_Eyes_6], Source={x:Static core:LanguageManager.Instance}}"/>
                             <LineBreak/>
-                            <Run Text="交叉眼(斗鸡眼)" FontWeight="Bold"/>
+                            <Run Text="{Binding [Text_Cross_Eyes], Source={x:Static core:LanguageManager.Instance}}" FontWeight="Bold"/>
                             <LineBreak/>
-                            <Run Text="就是斗鸡眼"/>
+                            <Run Text="{Binding [Tips_Eyes_7], Source={x:Static core:LanguageManager.Instance}}"/>
 
                         </TextBlock>
                     </StackPanel>
@@ -126,14 +127,14 @@
 
         <Expander Grid.Row="1" IsExpanded="True" Header="预览控制">
             <StackPanel>
-                <ui:ToggleSwitch Margin="0,0,0,8" Content="自动播放" IsChecked="{Binding IsAutoPlay3D}"/>
-                <ui:ToggleSwitch Margin="0,0,0,8" Content="平行眼模式"  IsChecked="{Binding IsParallelEye3DMode}">
+                <ui:ToggleSwitch Margin="0,0,0,8" Content="{Binding [Text_Auto_Play], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding IsAutoPlay3D}"/>
+                <ui:ToggleSwitch Margin="0,0,0,8" Content="{Binding [Text_Parallel_Eyes_Mode], Source={x:Static core:LanguageManager.Instance}}"  IsChecked="{Binding IsParallelEye3DMode}">
 
                 </ui:ToggleSwitch>
                 <Expander Header="预览控制" IsExpanded="{Binding IsAutoPlay3D,Mode=OneWay,Converter={StaticResource BooleanInverseConverter}}" Visibility="{Binding IsAutoPlay3D,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=i}">
                     <StackPanel>
                         <ui:TextBlock>
-                            <Run Text="步"/>
+                            <Run Text="{Binding [Globe_Step], Source={x:Static core:LanguageManager.Instance}}"/>
                             <Run Text="{Binding PreviewStep,StringFormat={}{0:0.00}}"/>
                         </ui:TextBlock>
                         <Slider Minimum="0"
@@ -144,7 +145,7 @@
                         TickPlacement="BottomRight"
                         IsSnapToTickEnabled="True"/>
                         <ui:TextBlock>
-                            <Run Text="眼距"/>
+                            <Run Text="{Binding [Text_Eyes_Spacing], Source={x:Static core:LanguageManager.Instance}}"/>
                             <Run Text="{Binding PreviewStepDistance,StringFormat={}{0:0.00}}"/>
                         </ui:TextBlock>
                         <Slider Minimum="0"
@@ -174,7 +175,7 @@
                                 <ColumnDefinition Width="auto"/>
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock VerticalAlignment="Center" Text="点颜色"/>
+                            <TextBlock VerticalAlignment="Center" Text="{Binding [Text_Color_of_Points], Source={x:Static core:LanguageManager.Instance}}"/>
                             <ui:Button Margin="4,0" Icon="{ui:SymbolIcon Symbol=Question24}" Appearance="Transparent" Grid.Column="1" Padding="0" ToolTip="单色HEX：#色号 原色：c 深度：d"/>
                             <ui:TextBox PlaceholderText="# / c / d" Grid.Column="2" Visibility="{Binding IsPreviewingStep,Converter={StaticResource BooleanToVisibilityConverter}}"
                                             Text="{Binding PreviewColorful,UpdateSourceTrigger=LostFocus}"/>
@@ -184,7 +185,7 @@
                 <Expander Header="播放设置" IsExpanded="{Binding IsAutoPlay3D,Mode=OneWay}" Visibility="{Binding IsAutoPlay3D,Converter={StaticResource BooleanToVisibilityConverter}}">
                     <StackPanel>
                         <ui:TextBlock>
-                            <Run Text="最大帧率"/>
+                            <Run Text="{Binding [Text_Maximum_Frame_Per_Second], Source={x:Static core:LanguageManager.Instance}}"/>
                             <Run Text="{Binding AutoPlayMaxFps,StringFormat={}{0:0.00}}"/>
                         </ui:TextBlock>
                         <Slider Minimum="1"
