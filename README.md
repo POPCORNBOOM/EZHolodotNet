@@ -214,4 +214,8 @@ $$
 
 [![Stargazers over time](https://starchart.cc/POPCORNBOOM/EZHolodotNet.svg?variant=adaptive)](https://starchart.cc/POPCORNBOOM/EZHolodotNet)
 
+## 捐赠
+<p align="center">
+  <img src='https://github.com/user-attachments/assets/ffb9ac18-5248-4dc0-9e78-7feaba247eb0' width='360' align='center'/>
+</p>
 <p align="right">© 2025 Yigu Wang</p>
