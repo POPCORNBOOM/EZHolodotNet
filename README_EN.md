@@ -1,3 +1,4 @@
+[![zread](https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff)](https://zread.ai/POPCORNBOOM/EZHolodotNet)
 # EZHolo — Quick Overview
 
 **EZHolodotNet** is a .NET-based tool that quickly generates holographic scratch (etch) strokes from 2D images/depth maps and provides 3D previews. It supports automatic sampling, manual refinement, multiple post-processing options, and export functions. It includes tools for sampling adjustment, de-duplication, density visualization, and cubic Bézier-based SVG export.
@@ -171,7 +172,7 @@ Paths are defined by cubic Bézier curves composed of a start point, end point, 
   \mathbf{C} = \begin{bmatrix} x \\ y \end{bmatrix} + \begin{bmatrix} 0 \\ offset \end{bmatrix}
   $$
 
-- Start and end points
+- **Start and end points**
 
   $$
   \mathbf{P_0} = C + curvature \times \begin{bmatrix}  - 1 \\  - 1 \end{bmatrix}
@@ -181,7 +182,7 @@ Paths are defined by cubic Bézier curves composed of a start point, end point, 
   \mathbf{P_3} = C + curvature \times \begin{bmatrix}  1 \\ - 1 \end{bmatrix}
   $$
 
-- Control points
+- **Control points**
 
   $$
   \mathbf{P_1} = C + curvature \times \begin{bmatrix} - 1 \\ - 1 \end{bmatrix}  \times aFactor
@@ -212,12 +213,12 @@ $$
 
 Each sample point generates one cubic Bézier segment appended to the SVG path:
 
-```
-<path d="M P0.x,P0.y C P1.x,P1.y P2.x,P2.y P3.x,P3.y" />
-```
+$$
+\text{<path d="M P0.x,P0.y C P1.x,P1.y P2.x,P2.y P3.x,P3.y" />}
+$$
 
-- M (Move To): move to the start point \( P_0 \)  
-- C (Cubic Bézier Curve): define control points and end point \( P_1, P_2, P_3 \)
+- **M (Move To)**: Move to the curve's start point \( P_0 \)
+- **C (Cubic Bézier Curve)**: Define control points and end point \( P_1 \), \( P_2 \), \( P_3 \)
 
 ---
 
