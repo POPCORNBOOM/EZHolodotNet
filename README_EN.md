@@ -3,6 +3,8 @@
 
 **EZHolodotNet** is a .NET-based tool that quickly generates holographic scratch (etch) strokes from 2D images/depth maps and provides 3D previews. It supports automatic sampling, manual refinement, multiple post-processing options, and export functions. It includes tools for sampling adjustment, de-duplication, density visualization, and cubic Bézier-based SVG export.
 
+> Good News! 7 Languages is supported for v1.6.1!
+
 ---
 
 ## 1. Configuration & Sampling
