@@ -2125,12 +2125,10 @@ namespace EZHolodotNet.Core
         }
         public Mat AdjustContrastBrightness(Mat input, float a, float b)
         {
-            // 1) 参数校验
             if (input.Empty())
                 throw new ArgumentException("输入图像为空");
             a = Math.Clamp(a, 0, 255f);
             //Trace.WriteLine(a+"b:"+b);
-            // 2) 只处理 8bit 图像：若不是 8U，先转成 8U（按动态范围拉伸）
             Mat src8u = input;
             if (input.Depth() != MatType.CV_8U)
             {
@@ -2146,7 +2144,7 @@ namespace EZHolodotNet.Core
             float epsA = Math.Max(a, float.Epsilon);
             float epsU = Math.Max(255f - a, float.Epsilon);
 
-            //Mat debug_curve = Mat.Zeros(MatType.CV_8UC1, 512, 256);
+            Mat debug_curve = Mat.Zeros(MatType.CV_8UC1, 512, 256);
             byte[] lutArr = new byte[256];
             for (int x = 0; x <= 255; x++)
             {
@@ -2166,7 +2164,7 @@ namespace EZHolodotNet.Core
                 //Trace.WriteLine(x+":"+y);
                 // 数值安全与量化
                 lutArr[x] = (byte)Math.Clamp(y, 0, 255);
-                //debug_curve.Set<byte>(255-y+x, x, 255);
+                debug_curve.Set<byte>(255-y+x, x, 255);
             }
             lutArr[0] = lutArr[1];
             lutArr[255] = lutArr[254];
@@ -2176,7 +2174,7 @@ namespace EZHolodotNet.Core
             lut.SetArray(lutArr);
             Mat output = new Mat();
             Cv2.LUT(src8u, lut, output);
-            //Cv2.ImShow("lut_delta", debug_curve);
+            Cv2.ImShow("lut_delta", debug_curve);
 
             if (!ReferenceEquals(src8u, input))
                 src8u.Dispose();
@@ -3495,7 +3493,7 @@ namespace EZHolodotNet.Core
             try
             {
                 IsNotProcessingSvg = false;
-                string mysvg = await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, IsGeneratingHandCraftSketchMode);
+                string mysvg = await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense);
                 SaveSvgToFile(mysvg);
             }
             catch (Exception e)

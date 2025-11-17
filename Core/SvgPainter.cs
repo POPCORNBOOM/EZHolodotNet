@@ -46,8 +46,8 @@ namespace EZHolodotNet.Core
             float ignoreHeightDistance = 0,
             float aFactor = 0.16f,
             float bFactor = 1000,
-            int previewDense = 10,
-            bool isPositiveDepthPointOnly = false)
+            int previewDense = 10
+            )
         {
             if (depthImage == null)
             {
@@ -105,7 +105,7 @@ namespace EZHolodotNet.Core
                 Parallel.ForEach(points, point =>
                 {
                     float depth = depthImage.Get<float>(point.Y, point.X);
-                    if (isPositiveDepthPointOnly && depth < zeroHeight) return;
+                    //if (isPositiveDepthPointOnly && depth < zeroHeight) return;
                     if (MathF.Abs(depth - zeroHeight) < ignoreHeightDistance) return;
 
                     float curvature = (depth - zeroHeight) * imageWidth / bFactor;
@@ -614,6 +614,7 @@ namespace EZHolodotNet.Core
                 }
             });
         }
+        /*
         public static async Task PreviewPathParallel(List<Point> points, Mat? depthImage, Mat? originalImage, Mat? outImageLeft, Mat? outImageRight, float step, float stepSpan, int zeroHeight = 128, int ignoreHeightDistance = 0, float aFactor = 0.16f, float bFactor = 1000f, int previewDense = 10, bool isPositiveDepthPointOnly = false, string color = "c")
         {
             await Task.Run(() =>
@@ -716,6 +717,7 @@ namespace EZHolodotNet.Core
             });
 
         }
+        */
         public static async Task PreviewPath(List<Point> points, Mat? depthImage, Mat? originalImage, Mat? outImage, float step, float zeroHeight = 128, float ignoreHeightDistance = 0, float aFactor = 0.16f, float bFactor = 1000, int previewDense = 10, string color = "c")
         {
             await Task.Run(() =>

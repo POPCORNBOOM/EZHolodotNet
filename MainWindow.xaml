@@ -1311,7 +1311,7 @@
                                 ToolTip="在 Bilibili 上查看教学视频"
                                 NavigateUri="https://www.bilibili.com/video/BV1moCHYxEPk"/>
             <TextBlock Foreground="LightGray" FontSize="8" VerticalAlignment="Center">
-                <Run Text="EZHolo @ v1.6"/>
+                <Run Text="EZHolo @ v1.6.1"/>
                 <LineBreak/>
                 <Run Text="Copyright © 2025 Yigu Wang"/>
             </TextBlock>
