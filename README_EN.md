@@ -112,7 +112,6 @@ Convert etched-stroke preview into parallel-view stereo images with autoplay sup
 
 ---
 
-
 # Download
 
 Get the latest Windows AnyCPU release:
@@ -128,34 +127,38 @@ Because SVG does not natively support hyperbolic-shaped segments, we generate sc
 
 ## 1. Mapping Height to Curves
 
-- **Height calculation**  
+- Height calculation  
   Each point's height is determined by the pixel value of the depthImage minus a reference base height zeroHeight.
 
   $$
   depth = depthImage(y, x) - zeroHeight
   $$
 
-- **Curvature**  
+- Curvature  
   Curvature maps the height onto the image width. Points with positive heights curve upward; negative heights curve downward:
 
   $$
   curvature = \frac{depth \times imageWidth}{bFactor}
   $$
 
-- **Offset**  
+- Offset  
   Cubic Bézier curves don't pass through the origin at their midpoint; substituting \( t = 0.5 \) into equation [1] below yields an offset:
 
   $$
   offset = \frac{(1 + 3 \times aFactor) \times curvature}{4}
   $$
 
-- **Original function illustration**
+- Original function illustration
 
-  ![Original function](https://github.com/user-attachments/assets/644e49ac-1081-4be3-a704-3025e4440fca)
+  <p align="center">
+    <img src="https://github.com/user-attachments/assets/644e49ac-1081-4be3-a704-3025e4440fca" />
+  </p>
 
-- **After applying compensation**
+- After applying compensation
 
-  ![After compensation](https://github.com/user-attachments/assets/218fd7d7-90b7-4e14-8cd3-3115389c5088)
+  <p align="center">
+    <img src="https://github.com/user-attachments/assets/218fd7d7-90b7-4e14-8cd3-3115389c5088" />
+  </p>
 
 ---
 
@@ -163,7 +166,7 @@ Because SVG does not natively support hyperbolic-shaped segments, we generate sc
 
 Paths are defined by cubic Bézier curves composed of a start point, end point, and two control points.
 
-- **Compensated center point**
+- Compensated center point
 
   $$
   \mathbf{C} = \begin{bmatrix} x \\ y \end{bmatrix} + \begin{bmatrix} 0 \\ offset \end{bmatrix}
