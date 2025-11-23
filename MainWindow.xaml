@@ -1,14 +1,14 @@
-<Window x:Class="EZHolodotNet.MainWindow"
+<ui:FluentWindow x:Class="EZHolodotNet.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:local="clr-namespace:EZHolodotNet"
-        xmlns:core="clr-namespace:EZHolodotNet.Core"
+        xmlns:core="clr-namespace:EZHolodotNet.Core" ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica" WindowCornerPreference="Default"
         mc:Ignorable="d" AllowDrop="True" DragEnter="Window_DragEnter" DragLeave="Window_DragLeave" Closing="Window_Closing"
         Title="EZHolo" Height="720" Width="800" MinHeight="450" MinWidth="850" MouseMove="Window_MouseMove" MouseUp="Window_MouseUp" MouseLeave="Window_MouseLeave">
-    <Window.InputBindings>
+    <ui:FluentWindow.InputBindings>
         <!-- 文件操作 -->
         <KeyBinding Gesture="Ctrl+V" Command="{Binding ChooseImageCommand}" CommandParameter="FROMCLIPBOARD"/>
         <KeyBinding Gesture="Ctrl+R" Command="{Binding ChooseImageCommand}"/>
@@ -50,8 +50,8 @@
         <KeyBinding Key="Z" Command="{Binding SetManualToolCommand}" CommandParameter="6"/>
         
         
-    </Window.InputBindings>
-    <Window.Resources>
+    </ui:FluentWindow.InputBindings>
+    <ui:FluentWindow.Resources>
         <Storyboard x:Key="FadeInAnimation">
             <DoubleAnimation Storyboard.TargetProperty="Opacity"
                              From="0" To="1" Duration="0:0:0.3"/>
@@ -60,9 +60,10 @@
             <DoubleAnimation Storyboard.TargetProperty="Opacity"
                              From="1" To="0" Duration="0:0:0.3"/>
         </Storyboard>
-    </Window.Resources>
+    </ui:FluentWindow.Resources>
 
     <Grid>
+        
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
             <RowDefinition Height="1*" />
@@ -75,7 +76,7 @@
             <ColumnDefinition Width="5" />
             <ColumnDefinition MinWidth="200" Width="*" />
         </Grid.ColumnDefinitions>
-        <Border Grid.ColumnSpan="5">
+        <Border IsHitTestVisible="False" Grid.ColumnSpan="5">
             <Border.Style>
                 <Style TargetType="Border">
                     <Setter Property="Opacity" Value="0"/>
@@ -102,9 +103,10 @@
                     <GradientStop Offset="1" Color="#FF559CE4"/>
                 </LinearGradientBrush>
             </Border.Background>
-            <TextBlock Foreground="White" Text="{Binding TipsString}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8"/>
+            <TextBlock IsHitTestVisible="False" Foreground="White" Text="{Binding TipsString}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8"/>
         </Border>
 
+        <ui:TitleBar Grid.Column="1" Grid.ColumnSpan="4" Title="EZHolo"/>
         <Menu Grid.ColumnSpan="5">
             <ui:MenuItem Header="{Binding [Toolbar_File], Source={x:Static core:LanguageManager.Instance}}" Icon="{ui:SymbolIcon Symbol=Document24}">
                 <ui:MenuItem Header="{Binding [Toolbar_Open_New_Image], Source={x:Static core:LanguageManager.Instance}}" InputGestureText="Ctrl+R" Icon="{ui:SymbolIcon Symbol=ImageAdd24}" Command="{Binding ChooseImageCommand}"/>
@@ -303,7 +305,7 @@
                     <Run Text="{Binding OriginImageHeight,Mode=OneWay}"/>
                     <Run Text=""/>
                 </TextBlock>
-                <GridSplitter ResizeBehavior="PreviousAndNext" Grid.Row="1" ResizeDirection="Rows" Height="6" HorizontalAlignment="Stretch"/>
+                <GridSplitter Background="{DynamicResource ControlFillColorSecondaryBrush}" ResizeBehavior="PreviousAndNext" Grid.Row="1" ResizeDirection="Rows" Height="6" HorizontalAlignment="Stretch"/>
                 <StackPanel Grid.ColumnSpan="1" Grid.Row="2" Margin="8,0">
                     <ui:Button Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Click_to_Choose_Image], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ChooseImageCommand}"/>
                     <TextBlock Text="{Binding [Tips_Desired_Size_518px], Source={x:Static core:LanguageManager.Instance}}" Foreground="#D3D3D3" Margin="4,4,0,0" FontSize="12"/>
@@ -747,7 +749,7 @@
 
             </Grid>
         </Border>
-        <GridSplitter Grid.Row="1" Grid.Column="1" Grid.RowSpan="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
+        <GridSplitter Background="{DynamicResource ControlFillColorSecondaryBrush}" Grid.Row="1" Grid.Column="1" Grid.RowSpan="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
         <Border Grid.Row="1" Grid.Column="2">
             <Grid ClipToBounds="True">
                 <Grid.RowDefinitions>
@@ -877,7 +879,9 @@
                         <Run Text="{Binding [Tips_Could_Not_Take_Image_Back_4], Source={x:Static core:LanguageManager.Instance}}" />
                     </Hyperlink>
                 </TextBlock>
-
+                <TextBlock Visibility="{Binding IsDepthImageLoaded,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}" VerticalAlignment="Bottom" Foreground="#B3B3B3" Margin="0" FontSize="7">
+                    <Run Text="暂无深度图"/>
+                </TextBlock>
 
                 <Grid Margin="4,0"  Cursor="Cross" ClipToBounds="True">
 
@@ -946,7 +950,7 @@
                     </Border>
                 </Grid>
 
-                <GridSplitter ResizeBehavior="PreviousAndNext" Grid.Row="1" ResizeDirection="Rows" Height="5" HorizontalAlignment="Stretch"/>
+                <GridSplitter Background="{DynamicResource ControlFillColorSecondaryBrush}" ResizeBehavior="PreviousAndNext" Grid.Row="1" ResizeDirection="Rows" Height="5" HorizontalAlignment="Stretch"/>
 
                 <TextBlock Grid.Row="2" Foreground="#FFD3D3D3" Text="┑(￣Д ￣)┍" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}"/>
                 <ScrollViewer Grid.Row="2">
@@ -1029,14 +1033,26 @@
                         </Expander>
                         <Expander Header="{Binding [Text_Scratch_Path_Generate], Source={x:Static core:LanguageManager.Instance}}" IsExpanded="True" Margin="8" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter}}">
 
-                            <StackPanel IsEnabled="{Binding IsNotProcessingSvg}" Grid.Row="1" Margin="8,0">
-                                <ui:Flyout Margin="0"
-                                    x:Name="WarningFlyout"
-                                    Placement="Top">
-                                    <StackPanel>
+                            <StackPanel IsEnabled="{Binding IsNotProcessingSvg}">
+                                
+                                <ui:TextBlock>
+                                    <Run Text="{Binding [Path_Generating_Mode], Source={x:Static core:LanguageManager.Instance}}"/>
+                                </ui:TextBlock>
 
-                                        <TextBlock Text="{Binding [Tips_OH], Source={x:Static core:LanguageManager.Instance}}" FontWeight="Bold" FontSize="24" Margin="0,0,0,4"/>
-                                        <TextBlock LineHeight="20"
+                                <ComboBox SelectedIndex="{Binding PathGeneratingMode}">
+                                    <ComboBoxItem Content="Default"></ComboBoxItem>
+                                    <ComboBoxItem Content="Handcraft"></ComboBoxItem>
+                                    <ComboBoxItem Content="Occulsion"></ComboBoxItem>
+                                </ComboBox>
+                                <CheckBox Grid.Column="1" Content="{Binding [Text_Auto_Update_Preview], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding IsAutoGeneratePreview}"/>
+
+                                <Grid>
+                                    <ui:Flyout x:Name="WarningFlyout"
+                                            Placement="Top">
+                                        <StackPanel>
+
+                                            <TextBlock Text="{Binding [Tips_OH], Source={x:Static core:LanguageManager.Instance}}" FontWeight="Bold" FontSize="24" Margin="0,0,0,4"/>
+                                            <TextBlock LineHeight="20"
                                             Width="280"
                                             HorizontalAlignment="Left"
                                             TextWrapping="WrapWithOverflow">
@@ -1056,25 +1072,14 @@
                                             <Run Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_6], Source={x:Static core:LanguageManager.Instance}}"/>
                                             <LineBreak/>
                                             <Run Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_7], Source={x:Static core:LanguageManager.Instance}}"/>
-                                        </TextBlock>
-                                        <ui:NumberBox Value="{Binding MaximumPointCount,UpdateSourceTrigger=PropertyChanged}" Minimum="1"/>
-                                        <ui:Button Appearance="Primary" Margin="0,8,0,0" Content="{Binding [Globe_Sure], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding CloseWarningCommand}"/>
-                                    </StackPanel>
-                                </ui:Flyout>
-                                <CheckBox Margin="0,-20,0,0" Grid.Column="1" Content="{Binding [Text_Auto_Update_Preview], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding IsAutoGeneratePreview}"/>
-
-                                <ui:Button HorizontalAlignment="Stretch" Content="{Binding [Text_Generate_Preview_Path], Source={x:Static core:LanguageManager.Instance}}" Appearance="Primary" Command="{Binding CreateScratchCommand}"/>
-                                <Rectangle HorizontalAlignment="Stretch" Fill="#DFDFDF" Height="1" Margin="-8,8"/>
-
-                                <ui:TextBlock>
-                                    <Run Text="{Binding [Path_Generating_Mode], Source={x:Static core:LanguageManager.Instance}}"/>
-                                </ui:TextBlock>
-
-                                <ComboBox SelectedIndex="{Binding PathGeneratingMode}">
-                                    <ComboBoxItem Content="Default"></ComboBoxItem>
-                                    <ComboBoxItem Content="Handcraft"></ComboBoxItem>
-                                    <ComboBoxItem Content="Occulsion"></ComboBoxItem>
-                                </ComboBox>
+                                            </TextBlock>
+                                            <ui:NumberBox Value="{Binding MaximumPointCount,UpdateSourceTrigger=PropertyChanged}" Minimum="1"/>
+                                            <ui:Button Appearance="Primary" Margin="0,8,0,0" Content="{Binding [Globe_Sure], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding CloseWarningCommand}"/>
+                                        </StackPanel>
+                                    </ui:Flyout>
+                                    <ui:Button HorizontalAlignment="Stretch" Content="{Binding [Text_Generate_Preview_Path], Source={x:Static core:LanguageManager.Instance}}" Appearance="Primary" Command="{Binding CreateScratchCommand}"/>
+                                </Grid>
+                                <Separator Margin="0,4"/>
 
                                 <ui:TextBlock>
                                     <Run Text="{Binding [Text_Ignoring_Range_of_Points_around_Zero_1], Source={x:Static core:LanguageManager.Instance}}"/>
@@ -1139,7 +1144,7 @@
                 </ScrollViewer>
             </Grid>
         </Border>
-        <GridSplitter Grid.Row="1" Grid.Column="3" Grid.RowSpan="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
+        <GridSplitter Background="{DynamicResource ControlFillColorSecondaryBrush}" Grid.Row="1" Grid.Column="3" Grid.RowSpan="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Width="5" />
         <Border Grid.Row="1" Grid.Column="4">
             <Grid>
                 <Grid.RowDefinitions>
@@ -1192,7 +1197,7 @@
                        Stretch="Uniform"/>
                     </Grid>
                 </Grid>
-                <GridSplitter ResizeBehavior="PreviousAndNext" Grid.Row="1" ResizeDirection="Rows" Height="5" HorizontalAlignment="Stretch"/>
+                <GridSplitter Background="{DynamicResource ControlFillColorSecondaryBrush}" ResizeBehavior="PreviousAndNext" Grid.Row="1" ResizeDirection="Rows" Height="5" HorizontalAlignment="Stretch"/>
 
                 <TextBlock Grid.Row="2" Foreground="#FFD3D3D3" Text="（ ゜- ゜）つロ" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}"/>
 
@@ -1200,7 +1205,7 @@
                     <StackPanel Margin="8">
                         <Expander Header="{Binding [Text_Scratch_Path_Preview], Source={x:Static core:LanguageManager.Instance}}" IsExpanded="True" Margin="8" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter}}">
 
-                            <StackPanel IsEnabled="{Binding IsNotProcessingSvg}" Grid.Row="1" Margin="8">
+                            <StackPanel IsEnabled="{Binding IsNotProcessingSvg}" Grid.Row="1">
                                 <CheckBox Content="{Binding [Globe_Original_Image], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding IsPreviewingOriginImage}"/>
                                 <CheckBox Content="{Binding [Text_Start_Point], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding IsPreviewingLeft}"/>
                                 <CheckBox Content="{Binding [Text_End_Point], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding IsPreviewingRight}"/>
@@ -1284,19 +1289,20 @@
                         </Expander>
                         <Expander Header="{Binding [Globe_Export], Source={x:Static core:LanguageManager.Instance}}" IsExpanded="True" Margin="8" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter}}">
                             <StackPanel>
-                                <ui:Button IsEnabled="{Binding IsNotProcessingSvg}" Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}" Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Export_Scratch_Path], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ExportPathCommand}">
+                                <ui:Button IsEnabled="{Binding IsNotProcessingSvg}" Visibility="{Binding PathGeneratingMode,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=0}" Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Export_Scratch_Path], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ExportPathCommand}">
 
                                 </ui:Button>
-                                <ui:Button IsEnabled="{Binding IsNotProcessingSvg}" Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}" Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Export_Shaded_Scratch_Path], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ExportPathCommand}">
+                                
+                                <ui:Button IsEnabled="{Binding IsNotProcessingSvg}" Visibility="{Binding PathGeneratingMode,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=2}" Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Export_Shaded_Scratch_Path], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ExportPathCommand}">
 
                                 </ui:Button>
-                                <ui:TextBlock Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter}}" ToolTip="">
+                                
+                                <ui:TextBlock Visibility="{Binding PathGeneratingMode,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=1}" ToolTip="">
                                     <Run Text="{Binding [Text_Number_of_Layers], Source={x:Static core:LanguageManager.Instance}}"/>
                                     <ui:SymbolIcon Symbol="Question24" Margin="-2" ToolTip="输出草图的层数，理论上越大精度越高，但是你的工作量也会线性增长"/>
-
                                 </ui:TextBlock>
-                                <ui:NumberBox Margin="0,4" Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter}}" Value="{Binding LayerCount}"/>
-                                <ui:Button IsEnabled="{Binding IsNotProcessingSvg}" Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter}}" Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Export_Handcraft_Blueprint], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ExportPathCommand}">
+                                <ui:NumberBox Margin="0,4" Visibility="{Binding PathGeneratingMode,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=1}" Value="{Binding LayerCount}"/>
+                                <ui:Button IsEnabled="{Binding IsNotProcessingSvg}" Visibility="{Binding PathGeneratingMode,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=1}" Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Export_Handcraft_Blueprint], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ExportPathCommand}">
 
                                 </ui:Button>
 
@@ -1342,7 +1348,7 @@
             </Grid.ColumnDefinitions>
             <ui:TextBlock Foreground="Gray" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Run Text="{Binding [Text_Total_Point_Count], Source={x:Static core:LanguageManager.Instance}}"/>
-                <Run Foreground="#FF559CE4" FontWeight="Bold" FontSize="12" Text="{Binding PointCount,Mode=OneWay}"/>
+                <Run Foreground="{DynamicResource HyperlinkButtonForeground}" FontWeight="Bold" FontSize="12" Text="{Binding PointCount,Mode=OneWay}"/>
                 <Run Text="("/>
                 <Run Text="{Binding ContourPointCount,Mode=OneWay}"/>
                 <Run Text="轮廓点 +"/>
@@ -1355,9 +1361,9 @@
             </ui:TextBlock>
             <ui:TextBlock Foreground="Gray" FontSize="8" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Run Text="{Binding [Text_Pixel], Source={x:Static core:LanguageManager.Instance}}"/>
-                <Run Foreground="#FF559CE4" FontWeight="Bold" FontSize="12" Text="{Binding MousePointX,Mode=OneWay}"/>
+                <Run Foreground="{DynamicResource HyperlinkButtonForeground}" FontWeight="Bold" FontSize="12" Text="{Binding MousePointX,Mode=OneWay}"/>
                 <Run Text=","/>
-                <Run Foreground="#FF559CE4" FontWeight="Bold" FontSize="12" Text="{Binding MousePointY,Mode=OneWay}"/>
+                <Run Foreground="{DynamicResource HyperlinkButtonForeground}" FontWeight="Bold" FontSize="12" Text="{Binding MousePointY,Mode=OneWay}"/>
             </ui:TextBlock>
             <ui:TextBlock Visibility="Collapsed" Grid.Column="2" VerticalAlignment="Center">
                 <Run Text="   手动采样 P1"/>
@@ -1370,7 +1376,7 @@
             </ui:TextBlock>
             <ui:TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" Grid.Column="3" HorizontalAlignment="Center">
                 <Run Text="{Binding [Text_Height], Source={x:Static core:LanguageManager.Instance}}"/>
-                <Run Foreground="#FF559CE4" FontWeight="Bold" FontSize="12" Text="{Binding MouseDepth,StringFormat={}{0:0.00},Mode=OneWay}"/>
+                <Run Foreground="{DynamicResource HyperlinkButtonForeground}" FontWeight="Bold" FontSize="12" Text="{Binding MouseDepth,StringFormat={}{0:0.00},Mode=OneWay}"/>
             </ui:TextBlock>
 
             <Viewbox Grid.Column="4" Height="12">
@@ -1385,7 +1391,7 @@
             </Viewbox>
             <ui:TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" Grid.Column="5" HorizontalAlignment="Center">
                 <Run Text="{Binding [Text_Gradient], Source={x:Static core:LanguageManager.Instance}}"/>
-                <Run Foreground="#FF559CE4" FontWeight="Bold" FontSize="12" Text="{Binding MouseGradient,StringFormat={}{0:0.00},Mode=OneWay}"/>
+                <Run Foreground="{DynamicResource HyperlinkButtonForeground}" FontWeight="Bold" FontSize="12" Text="{Binding MouseGradient,StringFormat={}{0:0.00},Mode=OneWay}"/>
             </ui:TextBlock>
 
             <Viewbox Margin="2,0,0,0" Grid.Column="6" Height="12">
@@ -1461,4 +1467,4 @@
         </Grid>
 
     </Grid>
-</Window>
+</ui:FluentWindow>

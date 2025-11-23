@@ -18,7 +18,7 @@ namespace EZHolodotNet.Views
     /// <summary>
     /// _3DPreviewWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class ThreeDPreviewWindow : Window
+    public partial class ThreeDPreviewWindow
     {
         public ImageProcesser Processer;
         public ThreeDPreviewWindow(ImageProcesser mainProcesser)

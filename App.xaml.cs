@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Data;
 using System.Windows;
+using Wpf.Ui.Appearance;
 
 namespace EZHolodotNet
 {
@@ -24,10 +25,10 @@ namespace EZHolodotNet
 
             // 可以选择记录到文件，或者显示给用户
             LogError(errorMessage);  // 自定义的日志记录方法
-            //MessageBox.Show(e.Exception.Message);
-
+            MessageBox.Show(e.Exception.Message+e.Exception.StackTrace);
+            
             // 设置为 true 表示异常已经被处理，应用程序不会崩溃
-            //e.Handled = true;
+            e.Handled = true;
 
             // 如果需要崩溃应用程序，设置为 false
             // e.Handled = false;
@@ -38,7 +39,7 @@ namespace EZHolodotNet
         {
             // 在应用程序启动时执行初始化操作
             // 例如，加载配置、初始化服务等
-
+            //ApplicationThemeManager.Apply(ApplicationTheme.Dark);
         }
 
         private void LogError(string message)
