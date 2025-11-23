@@ -234,8 +234,9 @@
   <data name="Text_Import_Depth_Map" xml:space="preserve">
     <value>Импортировать карту глубины</value>
   </data>
-  <data name="Text_Handcraft_Blueprint_Generating_Mode" xml:space="preserve">
-    <value>Режим генерации эскизов ручной работы</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Path_Generating_Mode" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
   </data>
   <data name="Text_External_Operation" xml:space="preserve">
     <value>Внешнее управление</value>
@@ -429,6 +430,9 @@
   <data name="Text_Pixel" xml:space="preserve">
     <value>   Пиксели</value>
   </data>
+  <data name="Text_Output_Maximum" xml:space="preserve">
+    <value>Верхний предел экспорта:</value>
+  </data>
   <data name="Text_Original_Point" xml:space="preserve">
     <value>источник</value>
   </data>
@@ -591,9 +595,6 @@
   <data name="Text_Manual" xml:space="preserve">
     <value>Ручная выборка</value>
   </data>
-  <data name="Text_Output_Maximum" xml:space="preserve">
-    <value>Верхний предел экспорта:</value>
-  </data>
   <data name="Text_Eyes_Spacing" xml:space="preserve">
     <value>Расстояние глаз</value>
   </data>
@@ -722,5 +723,8 @@
   </data>
   <data name="Tips_Fail_to_Import_Depth" xml:space="preserve">
     <value>Произошла ошибка при импорте изображения глубины:</value>
+  </data>
+  <data name="Text_Export_Shaded_Scratch_Path" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
   </data>
 </root>

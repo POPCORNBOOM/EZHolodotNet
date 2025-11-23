@@ -234,8 +234,8 @@
   <data name="Text_Import_Depth_Map" xml:space="preserve">
     <value>导入深度图</value>
   </data>
-  <data name="Text_Handcraft_Blueprint_Generating_Mode" xml:space="preserve">
-    <value>手刻草图生成模式</value>
+  <data name="Path_Generating_Mode" xml:space="preserve">
+    <value>轨迹生成模式</value>
   </data>
   <data name="Text_External_Operation" xml:space="preserve">
     <value>外部操作</value>
@@ -722,5 +722,8 @@
   </data>
   <data name="Tips_Fail_to_Import_Depth" xml:space="preserve">
     <value>导入深度图像时出错: </value>
+  </data>
+  <data name="Text_Export_Shaded_Scratch_Path" xml:space="preserve">
+    <value>渲染遮挡后的轨迹(.svg)</value>
   </data>
 </root>

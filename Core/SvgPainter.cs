@@ -25,6 +25,7 @@ namespace EZHolodotNet.Core
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
+    using System.Security.Cryptography;
     using System.Text.Encodings.Web;
     using System.Text.Json;
     using System.Text.RegularExpressions;
@@ -32,12 +33,89 @@ namespace EZHolodotNet.Core
     using System.Windows.Media;
     using System.Windows.Shapes;
 
+    public struct BezierCurve
+    {
+        public Point P0 { get; set; }
+        public Point P1 { get; set; }
+        public Point P2 { get; set; }
+        public Point P3 { get; set; }
+
+        public BezierCurve(Point p0, Point p1, Point p2, Point p3) {
+            P0 = p0;
+            P1 = p1;
+            P2 = p2;
+            P3 = p3;
+        }
+        public Point GetPoint(float t)
+        {
+            float x = MathF.Pow(1 - t, 3) * P0.Xf +
+                      3 * MathF.Pow(1 - t, 2) * t * P1.Xf +
+                      3 * (1 - t) * MathF.Pow(t, 2) * P2.Xf +
+                      MathF.Pow(t, 3) * P3.Xf;
+            float y = MathF.Pow(1 - t, 3) * P0.Yf +
+                      3 * MathF.Pow(1 - t, 2) * t * P1.Yf +
+                      3 * (1 - t) * MathF.Pow(t, 2) * P2.Yf +
+                      MathF.Pow(t, 3) * P3.Y;
+            return new Point(x, y);
+        }
+
+        public BezierCurve GetSubCurve(float t0,bool another = false)
+        {
+            t0=Math.Clamp(t0, 0f, 1f);
+
+            Point A = Point.Lerp(P0, P1, t0);
+            Point B = Point.Lerp(P1, P2, t0);
+            Point C = Point.Lerp(P2, P3, t0);
+
+            Point D = Point.Lerp(A, B, t0);
+            Point E = Point.Lerp(B, C, t0);
+
+            Point F = Point.Lerp(D, E, t0);
+
+            return another ? new BezierCurve(F,E,C,P3) : new BezierCurve(P0, A, D, F);
+
+
+        }
+        public BezierCurve GetSubCurve(float t0,float t1)
+        {
+            t0=Math.Clamp(t0, 0f, 1f);
+            t1=Math.Clamp(t1, 0f, 1f);
+
+            if (t0 > t1)
+            {
+                float temp = t0;
+                t0 = t1;
+                t1 = temp;
+            }
+
+            BezierCurve firstPart = GetSubCurve(t1);
+            return firstPart.GetSubCurve(t0 / t1, true);
+
+        }
+
+        public List<BezierCurve> GetBezierCurves(List<(float, float)> segments)
+        {
+            List<BezierCurve> curves = new List<BezierCurve>();
+            for (int i = 0; i < segments.Count; i++)
+            {
+                var (t0, t1) = segments[i];
+                curves.Add(GetSubCurve(t0, t1));
+            }
+            return curves;
+        }
+        public string GetSvgPath()
+        {
+            return string.Format(
+                "M {0:0.00},{1:0.00} C {2:0.00},{3:0.00} {4:0.00},{5:0.00} {6:0.00},{7:0.00}",
+                P0.Xf, P0.Yf, P1.Xf, P1.Yf, P2.Xf, P2.Yf, P3.Xf, P3.Yf);
+        }
+    }
     public class SvgPainter
     {
         // width="%wpx" height="%hpx"
         //private const string SvgHeader = "<svg width=\"%wpx\" height=\"%hpx\" viewBox=\"%v\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n";
-        private const string SvgHeader = "<svg width=\"%wpx\" height=\"%hpx\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n";
-        private const string SvgFooter = "</svg>";
+        public const string SvgHeader = "<svg width=\"%wpx\" height=\"%hpx\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n";
+        public const string SvgFooter = "</svg>";
 
         public static async Task<string> BuildSvgPath(
             List<Point> points,
@@ -45,8 +123,7 @@ namespace EZHolodotNet.Core
             float zeroHeight = 128,
             float ignoreHeightDistance = 0,
             float aFactor = 0.16f,
-            float bFactor = 1000,
-            int previewDense = 10
+            float bFactor = 1000
             )
         {
             if (depthImage == null)
@@ -320,12 +397,12 @@ namespace EZHolodotNet.Core
 
                 }
             });
-            GenerateHtmlSummary(
+            await Task.Run(() => GenerateHtmlSummary(
                 outputDirectory: outputDirectory,
                 title: $"{title}",
                 pageTitle: $"{title}",
                 layerRange
-            );
+            ));
 
             return true;
         }
@@ -412,6 +489,25 @@ namespace EZHolodotNet.Core
             if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
             return $"{bytes / (1024.0 * 1024.0):F1} MB";
         }
+
+        public static BezierCurve GenerateCurve(Point point,float depth,float zeroHeight,float aFactor,float bFactor)
+        {
+            float curvature = (depth - zeroHeight) * bFactor;
+
+            float offset = (1 + 3 * aFactor) * curvature / 4;
+            float x0 = point.X - curvature;
+            float x1 = point.X + curvature;
+            float y0 = point.Y - curvature + offset;
+            float h_x0 = point.X - curvature * aFactor;
+            float h_x1 = point.X + curvature * aFactor;
+            float h_y = point.Y - curvature * aFactor + offset;
+            return new(
+                new Point(x0, y0),
+                new Point(h_x0, h_y),
+                new Point(h_x1, h_y),
+                new Point(x1, y0)
+                );
+        }
         public static async Task PreviewPath(List<Point> points, Mat? depthImage, float zeroHeight = 128, float ignoreHeightDistance = 0, float aFactor = 0.16f, float bFactor = 1000, int previewDense = 10, Mat? originalImageL = null, Mat? originalImageR = null, Mat? originalImageO = null, Mat? originalImageLine = null,bool drawLineDensity = false)
         {
             await Task.Run(() =>
@@ -432,16 +528,7 @@ namespace EZHolodotNet.Core
                     //if (isPositiveDepthPointOnly && depth < zeroHeight) continue;
                     if (MathF.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
 
-                    float curvature = (depth - zeroHeight) * imageWidth / bFactor;
-
-                    float offset = (1 + 3 * aFactor) * curvature / 4;
-                    float x0 = point.X - curvature;
-                    float x1 = point.X + curvature;
-                    float y0 = point.Y - curvature + offset;
-                    float h_x0 = point.X - curvature * aFactor;
-                    float h_x1 = point.X + curvature * aFactor;
-                    float h_y = point.Y - curvature * aFactor + offset;
-
+                    BezierCurve bezierCurve = GenerateCurve(point, depth, zeroHeight, aFactor,imageWidth/bFactor);
                     if (drawPreview)
                     {
                         // 创建一个集合来存储已经绘制的点，避免重复
@@ -449,12 +536,10 @@ namespace EZHolodotNet.Core
 
                         for (float i = 0; i < previewDense; i++)
                         {
-                            float t = i / previewDense;
-                            float x = MathF.Pow((1 - t), 3) * x0 + 3 * MathF.Pow((1 - t), 2) * t * h_x0 + 3 * (1 - t) * MathF.Pow(t, 2) * h_x1 + MathF.Pow(t, 3) * x1;
-                            float y = MathF.Pow((1 - t), 3) * y0 + 3 * MathF.Pow((1 - t), 2) * t * h_y + 3 * (1 - t) * MathF.Pow(t, 2) * h_y + MathF.Pow(t, 3) * y0;
-
-                            int roundedX = (int)(x + 0.5);  // 使用四舍五入的方式来减少重复
-                            int roundedY = (int)(y + 0.5);
+                            float t = i / (previewDense - 1);
+                            Point r = bezierCurve.GetPoint(t);
+                            int roundedX = (int)(r.Xf + 0.5);  // 使用四舍五入的方式来减少重复
+                            int roundedY = (int)(r.Yf + 0.5);
 
                             // 保证坐标在图像范围内
                             if (roundedX >= 0 && roundedX < originalImageLine.Width && roundedY >= 0 && roundedY < originalImageLine.Height)
@@ -471,10 +556,6 @@ namespace EZHolodotNet.Core
                                         int count = singleChannelMat.At<byte>(roundedY, roundedX) += 1;
                                         if (count > MaximumOverlap)
                                             MaximumOverlap = count;
-                                        /*singleChannelMat.At<byte>(roundedY + 1, roundedX) += 1;
-                                        singleChannelMat.At<byte>(roundedY, roundedX + 1) += 1;
-                                        singleChannelMat.At<byte>(roundedY - 1, roundedX) += 1;
-                                        singleChannelMat.At<byte>(roundedY, roundedX - 1) += 1;*/
                                     }
 
                                     // 记录该点已绘制
@@ -483,8 +564,8 @@ namespace EZHolodotNet.Core
                             }
                         }
 
-                        Cv2.Circle(originalImageL, (int)x0, (int)y0, 1, new Scalar(255, 255, 0, 255));
-                        Cv2.Circle(originalImageR, (int)x1, (int)y0, 1, new Scalar(255, 0, 255, 255));
+                        Cv2.Circle(originalImageL, bezierCurve.P0.X, bezierCurve.P0.Y, 1, new Scalar(255, 255, 0, 255));
+                        Cv2.Circle(originalImageR, bezierCurve.P3.X, bezierCurve.P3.Y, 1, new Scalar(0, 0, 255, 0));
 
                         Cv2.Circle(originalImageO, point.X, point.Y, 1, new Scalar(255, 0, 0, 255));
                         //Cv2.Circle(originalImageO, new (h_x0,h_y), 1, new Scalar(255, 255, 128, 255));
@@ -552,7 +633,7 @@ namespace EZHolodotNet.Core
 
                         for (float i = 0; i < previewDense; i++)
                         {
-                            float t = i / previewDense;
+                            float t = i / (previewDense - 1);
                             // 贝塞尔曲线计算
                             float stepAngle = (t * 2 - 1) * angleFactor * MathF.PI / 180;
                             int roundedX = (int)(point.Xf + MathF.Sin(stepAngle) * radius);
@@ -615,11 +696,11 @@ namespace EZHolodotNet.Core
             });
         }
         /*
-        public static async Task PreviewPathParallel(List<Point> points, Mat? depthImage, Mat? originalImage, Mat? outImageLeft, Mat? outImageRight, float step, float stepSpan, int zeroHeight = 128, int ignoreHeightDistance = 0, float aFactor = 0.16f, float bFactor = 1000f, int previewDense = 10, bool isPositiveDepthPointOnly = false, string color = "c")
+        public static async Task PreviewPathParallel(List<Point> points, Mat? depthImage, Mat? originalImage, Mat? outImageLeft, Mat? outImageRight, float tick, float stepSpan, int zeroHeight = 128, int ignoreHeightDistance = 0, float aFactor = 0.16f, float bFactor = 1000f, int previewDense = 10, bool isPositiveDepthPointOnly = false, string color = "c")
         {
             await Task.Run(() =>
             {
-                step *= (1 - stepSpan);
+                tick *= (1 - stepSpan);
                 if (depthImage == null)
                 {
                     throw new ArgumentNullException(nameof(depthImage));
@@ -645,15 +726,15 @@ namespace EZHolodotNet.Core
                         float h_x1 = point.X + curvature * aFactor;
                         float h_y = point.Y - curvature * aFactor + offset;
 
-                        float Cal(float t,bool forX = true)
+                        float Cal(float tick,bool forX = true)
                         {
-                            return forX? MathF.Pow((1 - t), 3) * x0 + 3 * MathF.Pow((1 - t), 2) * t * h_x0 +
-                                       3 * (1 - t) * MathF.Pow(t, 2) * h_x1 + MathF.Pow(t, 3) * x1:
-                                       MathF.Pow((1 - t), 3) * y0 + 3 * MathF.Pow((1 - t), 2) * t * h_y +
-                                       3 * (1 - t) * MathF.Pow(t, 2) * h_y + MathF.Pow(t, 3) * y0;
+                            return forX? MathF.Pow((1 - tick), 3) * x0 + 3 * MathF.Pow((1 - tick), 2) * tick * h_x0 +
+                                       3 * (1 - tick) * MathF.Pow(tick, 2) * h_x1 + MathF.Pow(tick, 3) * x1:
+                                       MathF.Pow((1 - tick), 3) * y0 + 3 * MathF.Pow((1 - tick), 2) * tick * h_y +
+                                       3 * (1 - tick) * MathF.Pow(tick, 2) * h_y + MathF.Pow(tick, 3) * y0;
                         }
-                        Cv2.Circle(outImageLeft, (int)Cal(step), (int)Cal(step,false), 1, new Scalar(mcolor[0], mcolor[1], mcolor[2], 255));
-                        Cv2.Circle(outImageRight, (int)Cal(step + stepSpan), (int)Cal(step + stepSpan,false), 1, new Scalar(mcolor[0], mcolor[1], mcolor[2], 255));
+                        Cv2.Circle(outImageLeft, (int)Cal(tick), (int)Cal(tick,false), 1, new Scalar(mcolor[0], mcolor[1], mcolor[2], 255));
+                        Cv2.Circle(outImageRight, (int)Cal(tick + stepSpan), (int)Cal(tick + stepSpan,false), 1, new Scalar(mcolor[0], mcolor[1], mcolor[2], 255));
                     }
                 }
                 else if (color.StartsWith("d"))
@@ -673,15 +754,15 @@ namespace EZHolodotNet.Core
                         float h_x1 = point.X + curvature * aFactor;
                         float h_y = point.Y - curvature * aFactor + offset;
 
-                        float Cal(float t, bool forX = true)
+                        float Cal(float tick, bool forX = true)
                         {
-                            return forX ? MathF.Pow((1 - t), 3) * x0 + 3 * MathF.Pow((1 - t), 2) * t * h_x0 +
-                                          3 * (1 - t) * MathF.Pow(t, 2) * h_x1 + MathF.Pow(t, 3) * x1 :
-                                MathF.Pow((1 - t), 3) * y0 + 3 * MathF.Pow((1 - t), 2) * t * h_y +
-                                3 * (1 - t) * MathF.Pow(t, 2) * h_y + MathF.Pow(t, 3) * y0;
+                            return forX ? MathF.Pow((1 - tick), 3) * x0 + 3 * MathF.Pow((1 - tick), 2) * tick * h_x0 +
+                                          3 * (1 - tick) * MathF.Pow(tick, 2) * h_x1 + MathF.Pow(tick, 3) * x1 :
+                                MathF.Pow((1 - tick), 3) * y0 + 3 * MathF.Pow((1 - tick), 2) * tick * h_y +
+                                3 * (1 - tick) * MathF.Pow(tick, 2) * h_y + MathF.Pow(tick, 3) * y0;
                         }
-                        Cv2.Circle(outImageLeft, (int)Cal(step), (int)Cal(step, false), 1, new Scalar(depth, depth, depth, 255)); 
-                        Cv2.Circle(outImageRight, (int)Cal(step + stepSpan), (int)Cal(step + stepSpan, false), 1, new Scalar(depth, depth, depth, 255)); 
+                        Cv2.Circle(outImageLeft, (int)Cal(tick), (int)Cal(tick, false), 1, new Scalar(depth, depth, depth, 255)); 
+                        Cv2.Circle(outImageRight, (int)Cal(tick + stepSpan), (int)Cal(tick + stepSpan, false), 1, new Scalar(depth, depth, depth, 255)); 
 
                     }
                 }
@@ -703,22 +784,32 @@ namespace EZHolodotNet.Core
                         float h_x1 = point.X + curvature * aFactor;
                         float h_y = point.Y - curvature * aFactor + offset;
 
-                        float Cal(float t, bool forX = true)
+                        float Cal(float tick, bool forX = true)
                         {
-                            return forX ? MathF.Pow((1 - t), 3) * x0 + 3 * MathF.Pow((1 - t), 2) * t * h_x0 +
-                                          3 * (1 - t) * MathF.Pow(t, 2) * h_x1 + MathF.Pow(t, 3) * x1 :
-                                MathF.Pow((1 - t), 3) * y0 + 3 * MathF.Pow((1 - t), 2) * t * h_y +
-                                3 * (1 - t) * MathF.Pow(t, 2) * h_y + MathF.Pow(t, 3) * y0;
+                            return forX ? MathF.Pow((1 - tick), 3) * x0 + 3 * MathF.Pow((1 - tick), 2) * tick * h_x0 +
+                                          3 * (1 - tick) * MathF.Pow(tick, 2) * h_x1 + MathF.Pow(tick, 3) * x1 :
+                                MathF.Pow((1 - tick), 3) * y0 + 3 * MathF.Pow((1 - tick), 2) * tick * h_y +
+                                3 * (1 - tick) * MathF.Pow(tick, 2) * h_y + MathF.Pow(tick, 3) * y0;
                         }
-                        Cv2.Circle(outImageLeft, (int)Cal(step), (int)Cal(step, false), 1, mcolor);
-                        Cv2.Circle(outImageRight, (int)Cal(step + stepSpan), (int)Cal(step + stepSpan, false), 1, mcolor);
+                        Cv2.Circle(outImageLeft, (int)Cal(tick), (int)Cal(tick, false), 1, mcolor);
+                        Cv2.Circle(outImageRight, (int)Cal(tick + stepSpan), (int)Cal(tick + stepSpan, false), 1, mcolor);
                     }
                 }
             });
 
         }
         */
-        public static async Task PreviewPath(List<Point> points, Mat? depthImage, Mat? originalImage, Mat? outImage, float step, float zeroHeight = 128, float ignoreHeightDistance = 0, float aFactor = 0.16f, float bFactor = 1000, int previewDense = 10, string color = "c")
+        public static async Task PreviewPath(List<Point> points,
+            Mat? depthImage,
+            Mat? originalImage, 
+            Mat? outImage, 
+            float tick,
+            float zeroHeight = 128, 
+            float ignoreHeightDistance = 0, 
+            float aFactor = 0.16f, 
+            float bFactor = 1000, 
+            int previewDense = 10, 
+            string color = "c")
         {
             await Task.Run(() =>
             {
@@ -740,25 +831,8 @@ namespace EZHolodotNet.Core
                     if (MathF.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
 
                     // 公共计算部分
-                    float curvature = (depth - zeroHeight) * imageWidth / bFactor;
-                    float offset = (1 + 3 * aFactor) * curvature / 4;
-                    float x0 = point.X - curvature;
-                    float x1 = point.X + curvature;
-                    float y0 = point.Y - curvature + offset;
-                    float h_x0 = point.X - curvature * aFactor;
-                    float h_x1 = point.X + curvature * aFactor;
-                    float h_y = point.Y - curvature * aFactor + offset;
-
-                    // 贝塞尔曲线计算
-                    float t = step;
-                    float x = MathF.Pow(1 - t, 3) * x0 +
-                              3 * MathF.Pow(1 - t, 2) * t * h_x0 +
-                              3 * (1 - t) * MathF.Pow(t, 2) * h_x1 +
-                              MathF.Pow(t, 3) * x1;
-                    float y = MathF.Pow(1 - t, 3) * y0 +
-                              3 * MathF.Pow(1 - t, 2) * t * h_y +
-                              3 * (1 - t) * MathF.Pow(t, 2) * h_y +
-                              MathF.Pow(t, 3) * y0;
+                    BezierCurve bezierCurve = GenerateCurve(point, depth, zeroHeight, aFactor, imageWidth / bFactor);
+                    Point r = bezierCurve.GetPoint(tick);
 
                     // 动态选择颜色模式
                     Scalar drawColor;
@@ -776,7 +850,7 @@ namespace EZHolodotNet.Core
                         drawColor = fixedColor.Value;
                     }
 
-                    Cv2.Circle(outImage, (int)x, (int)y, 1, drawColor);
+                    Cv2.Circle(outImage, r.X, r.Y, 1, drawColor);
                 }
             });
         }
@@ -784,7 +858,7 @@ namespace EZHolodotNet.Core
             Mat? depthImage,
             Mat? originalImage,
             Mat? outImage,
-            float step,
+            float tick,
             float zeroHeight = 128,
             float ignoreHeightDistance = 0,
             float radiusFactor = 1f,
@@ -813,7 +887,7 @@ namespace EZHolodotNet.Core
                     if (MathF.Abs(depth - zeroHeight) < ignoreHeightDistance) continue;
 
                     // 贝塞尔曲线计算
-                    float stepAngle = (step * 2 - 1) * angleFactor * MathF.PI / 180;
+                    float stepAngle = (tick * 2 - 1) * angleFactor * MathF.PI / 180;
                     float x = point.Xf + MathF.Sin(stepAngle) * radius;
                     float y = point.Yf + (MathF.Cos(stepAngle) - 1) * radius;
 

@@ -13,8 +13,8 @@
         <KeyBinding Gesture="Ctrl+V" Command="{Binding ChooseImageCommand}" CommandParameter="FROMCLIPBOARD"/>
         <KeyBinding Gesture="Ctrl+R" Command="{Binding ChooseImageCommand}"/>
         <KeyBinding Gesture="Ctrl+U" Command="{Binding UnloadImageCommand}"/>
-        <KeyBinding Gesture="Ctrl+E" Command="{Binding ExportScratchCommand}"/>
-        <KeyBinding Gesture="Ctrl+Alt+E" Command="{Binding ExportSketchCommand}"/>
+        <KeyBinding Gesture="Ctrl+E" Command="{Binding ExportPathCommand}"/>
+        <KeyBinding Gesture="Ctrl+Alt+E" Command="{Binding ExportPathCommand}"/>
 
         <!-- 深度图操作 -->
         <KeyBinding Gesture="Ctrl+Shift+E" Command="{Binding ExportDepthCommand}"/>
@@ -143,7 +143,7 @@
                  Icon="{ui:SymbolIcon Symbol=DocumentChevronDouble24}" Command="{Binding ImportConfigCommand}"/>
                 <Separator/>
                 <ui:MenuItem Header="{Binding [Toolbar_Export_Scratch_Path], Source={x:Static core:LanguageManager.Instance}}" InputGestureText="Ctrl+E" Icon="{ui:SymbolIcon Symbol=InkStroke24}" Command="{Binding ExportScratchCommand}"/>
-                <ui:MenuItem Header="{Binding [Toolbar_Export_Handcraft_Blueprint], Source={x:Static core:LanguageManager.Instance}}" InputGestureText="Ctrl+Alt+E" Icon="{ui:SymbolIcon Symbol=BubbleMultiple20}" Command="{Binding ExportSketchCommand}"/>
+                <ui:MenuItem Header="{Binding [Toolbar_Export_Handcraft_Blueprint], Source={x:Static core:LanguageManager.Instance}}" InputGestureText="Ctrl+Alt+E" Icon="{ui:SymbolIcon Symbol=BubbleMultiple20}" Command="{Binding ExportPathCommand}"/>
             </ui:MenuItem>
 
             <ui:MenuItem Header="{Binding [Toolbar_Edit], Source={x:Static core:LanguageManager.Instance}}" Icon="{ui:SymbolIcon Symbol=Edit24}">
@@ -945,7 +945,7 @@
                         </TextBlock>
                     </Border>
                 </Grid>
-                
+
                 <GridSplitter ResizeBehavior="PreviousAndNext" Grid.Row="1" ResizeDirection="Rows" Height="5" HorizontalAlignment="Stretch"/>
 
                 <TextBlock Grid.Row="2" Foreground="#FFD3D3D3" Text="┑(￣Д ￣)┍" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}"/>
@@ -1067,9 +1067,14 @@
                                 <Rectangle HorizontalAlignment="Stretch" Fill="#DFDFDF" Height="1" Margin="-8,8"/>
 
                                 <ui:TextBlock>
-                                    <Run Text="{Binding [Text_Handcraft_Blueprint_Generating_Mode], Source={x:Static core:LanguageManager.Instance}}"/>
+                                    <Run Text="{Binding [Path_Generating_Mode], Source={x:Static core:LanguageManager.Instance}}"/>
                                 </ui:TextBlock>
-                                <ui:ToggleSwitch IsChecked="{Binding IsGeneratingHandCraftSketchMode}"/>
+
+                                <ComboBox SelectedIndex="{Binding PathGeneratingMode}">
+                                    <ComboBoxItem Content="Default"></ComboBoxItem>
+                                    <ComboBoxItem Content="Handcraft"></ComboBoxItem>
+                                    <ComboBoxItem Content="Occulsion"></ComboBoxItem>
+                                </ComboBox>
 
                                 <ui:TextBlock>
                                     <Run Text="{Binding [Text_Ignoring_Range_of_Points_around_Zero_1], Source={x:Static core:LanguageManager.Instance}}"/>
@@ -1279,7 +1284,10 @@
                         </Expander>
                         <Expander Header="{Binding [Globe_Export], Source={x:Static core:LanguageManager.Instance}}" IsExpanded="True" Margin="8" Visibility="{Binding IsOriginalImageLoaded,Converter={StaticResource BoolToVisibilityConverter}}">
                             <StackPanel>
-                                <ui:Button Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}" Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Export_Scratch_Path], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ExportScratchCommand}">
+                                <ui:Button IsEnabled="{Binding IsNotProcessingSvg}" Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}" Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Export_Scratch_Path], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ExportPathCommand}">
+
+                                </ui:Button>
+                                <ui:Button IsEnabled="{Binding IsNotProcessingSvg}" Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter},ConverterParameter=I}" Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Export_Shaded_Scratch_Path], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ExportPathCommand}">
 
                                 </ui:Button>
                                 <ui:TextBlock Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter}}" ToolTip="">
@@ -1288,7 +1296,7 @@
 
                                 </ui:TextBlock>
                                 <ui:NumberBox Margin="0,4" Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter}}" Value="{Binding LayerCount}"/>
-                                <ui:Button Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter}}" Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Export_Handcraft_Blueprint], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ExportSketchCommand}">
+                                <ui:Button IsEnabled="{Binding IsNotProcessingSvg}" Visibility="{Binding IsGeneratingHandCraftSketchMode,Converter={StaticResource BoolToVisibilityConverter}}" Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Export_Handcraft_Blueprint], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ExportPathCommand}">
 
                                 </ui:Button>
 
@@ -1329,6 +1337,7 @@
                 <ColumnDefinition Width="1*" />
                 <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
             <ui:TextBlock Foreground="Gray" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -1387,7 +1396,69 @@
                     </Line>
                 </Grid>
             </Viewbox>
+            <ui:Flyout Grid.Column="7"
+                IsOpen="{Binding IsShowMissionFlyout,Mode=TwoWay}"
+                Placement="Top">
+                <StackPanel Width="300">
+                    <TextBlock
+        HorizontalAlignment="Left"
+        Text="任务"/>
+                    <Separator Margin="0,4"/>
+                    <Grid>
+                        <!-- 实际任务列表 -->
 
+                        <ui:ListView ItemsSource="{Binding ProgressedMissions}">
+                            <ui:ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="60" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Grid.Column="0">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="1*" />
+                                                <RowDefinition Height="1*" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Text="{Binding Title}"/>
+                                            <TextBlock FontSize="8" Grid.Row="1" Text="{Binding Detail}"/>
+                                        </Grid>
+
+                                        <ProgressBar Grid.Column="1" Maximum="1" Value="{Binding ProgressValue}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ui:ListView.ItemTemplate>
+                        </ui:ListView>
+
+                        <!-- 无任务占位（当 ProgressedMissionsCount == 0 时显示） -->
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ProgressedMissionsCount}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="无任务"/>
+                            <ui:SymbolIcon
+                        Symbol="Snooze24" />
+                        </StackPanel>
+
+                    </Grid>
+                </StackPanel>
+            </ui:Flyout>
+            <ui:Button Margin="2,0,0,0" Padding="0" Appearance="Primary" Icon="{ui:SymbolIcon Symbol=PersonRunning20 }"
+                    Grid.Column="7" Height="20" Width="30"
+                    Command="{Binding ShowMissionFlyoutCommand}">
+                <TextBlock Margin="-6,0,0,0" FontSize="8" Text="{Binding ProgressedMissionsCount}">
+
+                </TextBlock>
+
+            </ui:Button>
         </Grid>
+
     </Grid>
 </Window>

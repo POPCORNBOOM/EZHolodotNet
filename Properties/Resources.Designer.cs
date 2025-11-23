@@ -19,7 +19,7 @@ namespace EZHolodotNet.Properties {
     // 类通过类似于 ResGen 或 Visual Studio 的工具自动生成的。
     // 若要添加或移除成员，请编辑 .ResX 文件，然后重新运行 ResGen
     // (以 /str 作为命令选项)，或重新生成 VS 项目。
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -156,6 +156,15 @@ namespace EZHolodotNet.Properties {
         internal static string Globe_Sure {
             get {
                 return ResourceManager.GetString("Globe_Sure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Path Generating Mode 的本地化字符串。
+        /// </summary>
+        internal static string Path_Generating_Mode {
+            get {
+                return ResourceManager.GetString("Path_Generating_Mode", resourceCulture);
             }
         }
         
@@ -745,6 +754,15 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Render Occlusion Culled trajectory (.svg) 的本地化字符串。
+        /// </summary>
+        internal static string Text_Export_Shaded_Scratch_Path {
+            get {
+                return ResourceManager.GetString("Text_Export_Shaded_Scratch_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 External operations 的本地化字符串。
         /// </summary>
         internal static string Text_External_Operation {
@@ -777,15 +795,6 @@ namespace EZHolodotNet.Properties {
         internal static string Text_Gradient {
             get {
                 return ResourceManager.GetString("Text_Gradient", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Hand-carved sketch generation mode 的本地化字符串。
-        /// </summary>
-        internal static string Text_Handcraft_Blueprint_Generating_Mode {
-            get {
-                return ResourceManager.GetString("Text_Handcraft_Blueprint_Generating_Mode", resourceCulture);
             }
         }
         

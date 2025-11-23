@@ -234,8 +234,9 @@
   <data name="Text_Import_Depth_Map" xml:space="preserve">
     <value>導入深度圖</value>
   </data>
-  <data name="Text_Handcraft_Blueprint_Generating_Mode" xml:space="preserve">
-    <value>手刻草圖生成模式</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Path_Generating_Mode" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
   </data>
   <data name="Text_External_Operation" xml:space="preserve">
     <value>外部操作</value>
@@ -722,5 +723,8 @@
   </data>
   <data name="Tips_Fail_to_Import_Depth" xml:space="preserve">
     <value>導入深度圖像時出錯:</value>
+  </data>
+  <data name="Text_Export_Shaded_Scratch_Path" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
   </data>
 </root>

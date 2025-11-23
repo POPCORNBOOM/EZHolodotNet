@@ -1,5 +1,12 @@
-﻿using System;
+﻿using EZHolodotNet.Views;
+using Microsoft.ML.Trainers;
+using Microsoft.Win32;
+using Newtonsoft.Json.Linq;
+using OpenCvSharp;
+using OpenCvSharp.WpfExtensions;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -16,11 +23,6 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml.Serialization;
-using EZHolodotNet.Views;
-using Microsoft.Win32;
-using Newtonsoft.Json.Linq;
-using OpenCvSharp;
-using OpenCvSharp.WpfExtensions;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
@@ -61,8 +63,119 @@ namespace EZHolodotNet.Core
         }
         public static Point operator *(Point pt, double scale) => new((float)(pt.Xf*scale), (float)(pt.Yf*scale));
         public static Vec2f operator -(Point pt1, Point pt2) => new Vec2f(pt1.Xf - pt2.Xf, pt1.Yf - pt2.Yf);
+        public static Point operator +(Point pt, Vec2f vec) => new Point(pt.Xf - vec.Item0, pt.Yf - vec.Item1);
+        public static Point Lerp(Point pt1, Point pt2, float t = 0.5f) => new Point(pt1.Xf + (pt2.Xf - pt1.Xf) * t, pt1.Yf + (pt2.Yf - pt1.Yf) * t);
 
 
+    }
+    public class MissionWithProgress: INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            // Always raise on UI thread to be safe for bindings
+            if (Application.Current != null && !Application.Current.Dispatcher.CheckAccess())
+            {
+                Application.Current.Dispatcher.Invoke(() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)));
+            }
+            else
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        public MissionWithProgress(string name)
+        {
+            _title = name;
+            _detail = name;
+            // Ensure Progress.Report callbacks marshal updates to UI thread
+            Progress = new Progress<double>(value =>
+            {
+                if (Application.Current != null)
+                {
+                    Application.Current.Dispatcher.Invoke(() => ProgressValue = value);
+                }
+                else
+                {
+                    ProgressValue = value;
+                }
+            });
+        }
+
+        public IProgress<double> Progress { get; }
+
+        private double _progressValue = 0;
+        public double ProgressValue
+        {
+            get => _progressValue;
+            set
+            {
+                if (!Equals(_progressValue, value))
+                {
+                    if (Application.Current != null && !Application.Current.Dispatcher.CheckAccess())
+                    {
+                        Application.Current.Dispatcher.Invoke(() => {
+                            _progressValue = value;
+                            OnPropertyChanged(nameof(ProgressValue));
+                        });
+                    }
+                    else
+                    {
+                        _progressValue = value;
+                        OnPropertyChanged(nameof(ProgressValue));
+                    }
+                }
+            }
+        }
+
+        private string _detail;
+        public string Detail
+        {
+            get => _detail;
+            set
+            {
+                if (!Equals(_detail, value))
+                {
+                    if (Application.Current != null && !Application.Current.Dispatcher.CheckAccess())
+                    {
+                        Application.Current.Dispatcher.Invoke(() => {
+                            _detail = value;
+                            OnPropertyChanged(nameof(Detail));
+                        });
+                    }
+                    else
+                    {
+                        _detail = value;
+                        OnPropertyChanged(nameof(Detail));
+                    }
+                }
+            }
+        }
+
+        private string _title;
+        public string Title
+        {
+            get => _title;
+            set
+            {
+                if (!Equals(_title, value))
+                {
+                    if (Application.Current != null && !Application.Current.Dispatcher.CheckAccess())
+                    {
+                        Application.Current.Dispatcher.Invoke(() => {
+                            _title = value;
+                            OnPropertyChanged(nameof(Title));
+                        });
+                    }
+                    else
+                    {
+                        _title = value;
+                        OnPropertyChanged(nameof(Title));
+                    }
+                }
+            }
+        }
     }
     public class PointDistance
     {
@@ -197,6 +310,7 @@ namespace EZHolodotNet.Core
         public RelayCommand UndoStepCommand => new RelayCommand((p) => Undo());
         public RelayCommand RedoStepCommand => new RelayCommand((p) => Redo());
         public RelayCommand SetManualToolCommand => new RelayCommand((p) => ManualTool = int.Parse(p.ToString() ?? "0"));
+        public RelayCommand ShowMissionFlyoutCommand => new RelayCommand((p) => IsShowMissionFlyout=true);
         public RelayCommand ImportConfigCommand => new RelayCommand((p) => {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -228,10 +342,24 @@ namespace EZHolodotNet.Core
             ExportConfig(saveFileDialog.FileName);
         });
         public RelayCommand ExportDepthCommand => new RelayCommand((p) => ExportDepth());
-        public RelayCommand ImportDepthCommand => new RelayCommand((p) => ImportDepth());
+        public RelayCommand ImportDepthCommand => new RelayCommand(async (p) =>
+        {
+            string localized_FILE = LanguageManager.Instance["Globe_File"];
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = $"PNG {localized_FILE} (*.png)|*.png|JPEG {localized_FILE} (*.jpg;*.jpeg)|*.jpg;*.jpeg|BMP {localized_FILE} (*.bmp)|*.bmp|TIFF {localized_FILE} (*.tiff;*.tif)|*.tiff;*.tif|{LanguageManager.Instance["Globe_All"]}{localized_FILE} (*.*)|*.*",
+                DefaultExt = "png"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                await LoadDepthAsync(openFileDialog.FileName);
+            }
+        });
         public RelayCommand ExportPointsCommand => new RelayCommand((p) => ExportPoints((string)p));
         public RelayCommand ExportSvgPointsCommand => new RelayCommand((p) => ExportPoints((string)p,"svg"));
-        public RelayCommand ImportPointsCommand => new RelayCommand((p) => {
+        public RelayCommand ImportPointsCommand => new RelayCommand(async (p) =>
+        {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
                 Filter = "便携式网络图形 PNG 文件 (*.png)|*.png|JPEG 文件 (*.jpg;*.jpeg)|*.jpg;*.jpeg|可缩放矢量图形 SVG 文件 (*.svg)|*.svg|所有文件 (*.*)|*.*",
@@ -240,14 +368,14 @@ namespace EZHolodotNet.Core
 
             if (openFileDialog.ShowDialog() == true)
             {
-                ImportPoints(openFileDialog.FileName);
+                await ImportPointsAsync(openFileDialog.FileName);
 
             }
         });
         public RelayCommand Open3DPreviewCommand => new RelayCommand((p) => new ThreeDPreviewWindow(this).Show());
         public RelayCommand ChangePreviewCommand => new RelayCommand((p) => ChangePreviewExecute((string)p));
         public RelayCommand CloseWarningCommand => new RelayCommand((p) => mainWindow.WarningFlyout.Hide());
-        public RelayCommand ChooseImageCommand => new RelayCommand((p) =>
+        public RelayCommand ChooseImageCommand => new RelayCommand(async (p) =>
         {
             Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
             if(p == null)
@@ -256,7 +384,7 @@ namespace EZHolodotNet.Core
                     "图像文件 (*.bmp, *.jpg, *.jpeg, *.png, *.tiff, *.webp) | *.bmp; *.jpg; *.jpeg; *.png; *.tiff; *.webp";
                 if (openFileDialog.ShowDialog() == true)
                 {
-                    LoadImage(openFileDialog.FileName);
+                    await LoadImageAsync(openFileDialog.FileName);
 
                 }
             }
@@ -264,7 +392,7 @@ namespace EZHolodotNet.Core
             {
                 string path = SaveClipboardImage();
                 if (path != "")
-                    LoadImage(path);
+                    await LoadImageAsync(path);
                 else
                     ShowTipsTemporarilyAsync("剪贴板中没有图像");
 
@@ -286,10 +414,9 @@ namespace EZHolodotNet.Core
         {
             get => DepthEstimation != null;
         }
-        public RelayCommand ProcessDepthCommand => new RelayCommand((p) => ProcessDepth());
+        public RelayCommand ProcessDepthCommand => new RelayCommand(async (p) => await ProcessDepthAsync());
         public RelayCommand CreateScratchCommand => new RelayCommand((p) => ProcessScratch());
-        public RelayCommand ExportScratchCommand => new RelayCommand((p) => ProcessExportScratch((string)p));
-        public RelayCommand ExportSketchCommand => new RelayCommand((p) => ProcessExportSketch());
+        public RelayCommand ExportPathCommand => new RelayCommand((p) => ExportPath());
         public RelayCommand OpenCustomMessageBoxCommand => new RelayCommand((p) => OpenCustomMessageBox());
         private void OpenCustomMessageBox()
         {
@@ -494,8 +621,8 @@ namespace EZHolodotNet.Core
             }
         }
         private readonly Mat _gradient = CreateGradientMat(2, 256);
-        private Mat _gradientColored = new();
-        [XmlIgnore] public WriteableBitmap GradientColor => _gradientColored.ToWriteableBitmap();
+        private Mat? _gradientColored = null;
+        [XmlIgnore] public WriteableBitmap? GradientColor => ApplyColorMap(_gradient).ToWriteableBitmap();
         
         [XmlIgnore] public Mat ContoursOverDepthImage { get; set; } = new Mat();
         private WriteableBitmap _displayImageDepth;
@@ -639,6 +766,7 @@ namespace EZHolodotNet.Core
         public List<Point2d> Points { get; set; } = new List<Point2d>();
         [XmlIgnore]
         public DepthEstimation? DepthEstimation;
+        public OccusionPathHelper OccusionPathHelper = new OccusionPathHelper();
         private Point _mousePixelPosition = new(0, 0);
         private Point _mouseWindowPosition = new(0, 0);
         public int MousePointX
@@ -687,6 +815,7 @@ namespace EZHolodotNet.Core
         {
             get
             {
+                if (_gradientColored == null) _gradientColored = ApplyColorMap(_gradient);
                 var color = _gradientColored.Get<Vec3b>(255-(int)MouseDepth, 0);
                 //Trace.WriteLine((color[0] + color[1] + color[2]) / 3);
                 float L = (0.299f * color[0] + 0.587f * color[1] + 0.114f * color[2]) / 255f;
@@ -799,6 +928,19 @@ namespace EZHolodotNet.Core
         public int ContourPointCount => _contourPoints.Count;
         public int BrightnessPointCount => _brightnessPoints.Count;
         public int ManualPointCount => _manualPointsStored.Count;
+        private bool _isShowMissionFlyout = false;
+        public bool IsShowMissionFlyout
+        {
+            get => _isShowMissionFlyout;
+            set
+            {
+                if (!Equals(_isShowMissionFlyout, value))
+                {
+                    _isShowMissionFlyout = value;
+                    OnPropertyChanged(nameof(IsShowMissionFlyout));
+                }
+            }
+        }
         public int DepthColor
         {
             get => _depthColor;
@@ -1449,6 +1591,19 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        /*private double _svgExportProgress;
+        public double SvgExportProgress
+        {
+            get => _svgExportProgress;
+            set
+            {
+                if (!Equals(_svgExportProgress, value))
+                {
+                    _svgExportProgress = value;
+                    OnPropertyChanged(nameof(SvgExportProgress));
+                }
+            }
+        }*/
         private bool _isWarningPointsOverflow = false;
         public bool IsWarningPointsOverflow
         {
@@ -1600,20 +1755,36 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        private bool _isGeneratingHandCraftSketchMode = false;
-        public bool IsGeneratingHandCraftSketchMode
+        public enum GeneratingMode
         {
-            get => _isGeneratingHandCraftSketchMode;
+            Default,
+            Handcraft,
+            Occulsion
+        }
+        private int _pathGeneratingMode = 0;
+        public int PathGeneratingMode
+        {
+            get => _pathGeneratingMode;
             set
             {
-                if (!Equals(_isGeneratingHandCraftSketchMode, value))
+                if (!Equals(_pathGeneratingMode, value))
                 {
-                    _isGeneratingHandCraftSketchMode = value;
+                    _pathGeneratingMode = value;
+                    OnPropertyChanged(nameof(PathGeneratingMode));
+                    OnPropertyChanged(nameof(IsUsingOccusion));
                     OnPropertyChanged(nameof(IsGeneratingHandCraftSketchMode));
                     if (IsAutoGeneratePreview)
                         ProcessScratch();
                 }
             }
+        }
+        public bool IsUsingOccusion
+        {
+            get => _pathGeneratingMode == (int)GeneratingMode.Occulsion;
+        }
+        public bool IsGeneratingHandCraftSketchMode
+        {
+            get => _pathGeneratingMode == (int)GeneratingMode.Handcraft;
         }
         private bool _isAutoGeneratePreview = true;
         public bool IsAutoGeneratePreview
@@ -1946,6 +2117,30 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        public ObservableCollection<MissionWithProgress> ProgressedMissions { get; set; } = new();
+        public int ProgressedMissionsCount
+        {
+            get => ProgressedMissions.Count;
+        }
+        public MissionWithProgress StartMission(string name)
+        {
+            MissionWithProgress mission = new MissionWithProgress(name);
+            Application.Current.Dispatcher.Invoke((Action)(() =>
+            {
+                ProgressedMissions.Add(mission);    
+            }));
+            OnPropertyChanged(nameof(ProgressedMissionsCount));
+            return mission;
+        }
+
+        public void EndMission(MissionWithProgress mission)
+        {
+            System.Windows.Application.Current.Dispatcher.Invoke((Action)(() =>
+            {
+                ProgressedMissions.Remove(mission);
+            }));
+            OnPropertyChanged(nameof(ProgressedMissionsCount));
+        }
         private float _autoPlayMaxFps = 30;
         public float AutoPlayMaxFps
         {
@@ -2017,6 +2212,9 @@ namespace EZHolodotNet.Core
         }
         public void LoadImage(string filepath)
         {
+            IsNotImporting = false;
+
+
             FilePath = filepath;
             OriginalImage = new Mat(filepath);
             OnPropertyChanged(nameof(OriginImageHeight));
@@ -2031,6 +2229,8 @@ namespace EZHolodotNet.Core
             RefreshDisplay();
             if (IsAutoGeneratePreview)
                 ProcessScratch();
+
+            IsNotImporting = true;
         }
         public void UnloadImage()
         {
@@ -2050,6 +2250,55 @@ namespace EZHolodotNet.Core
             _manualPointsStored = new();
             RefreshDisplay();
             ProcessScratch();
+        }
+
+        // 异步版本：载入图片并保持 UI 可响应
+        public async Task LoadImageAsync(string filepath)
+        {
+            if (string.IsNullOrWhiteSpace(filepath)) return;
+
+            IsNotImporting = false;
+            try
+            {
+                FilePath = filepath;
+
+                Mat loaded = null;
+                await Task.Run(() => { loaded = new Mat(filepath); });
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    OriginalImage = loaded;
+                    OnPropertyChanged(nameof(OriginImageHeight));
+                    OnPropertyChanged(nameof(OriginImageWidth));
+                    OnPropertyChanged(nameof(RadiusMax));
+                });
+
+                if (IsModelLoaded)
+                {
+                    Mat depth = null;
+                    await Task.Run(() => { depth = DepthEstimation.ProcessImage(loaded); });
+                    Application.Current.Dispatcher.Invoke(() => DepthImage = depth);
+                }
+                else
+                {
+                    Application.Current.Dispatcher.Invoke(() => DepthImage = new Mat(loaded.Size(), MatType.CV_32FC1));
+                }
+
+                await UpdateGradientAsync();
+
+                _manualPointsStored = new();
+                RefreshDisplay();
+                if (IsAutoGeneratePreview)
+                    ProcessScratch();
+            }
+            catch (Exception ex)
+            {
+                ShowTipsTemporarilyAsync($"载入图片失败: {ex.Message}");
+            }
+            finally
+            {
+                IsNotImporting = true;
+            }
         }
 
         private bool _isDepthContourMode = false;
@@ -2174,7 +2423,7 @@ namespace EZHolodotNet.Core
             lut.SetArray(lutArr);
             Mat output = new Mat();
             Cv2.LUT(src8u, lut, output);
-            Cv2.ImShow("lut_delta", debug_curve);
+            //Cv2.ImShow("lut_delta", debug_curve);
 
             if (!ReferenceEquals(src8u, input))
                 src8u.Dispose();
@@ -2328,8 +2577,22 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        private bool _isNotImporting = true;
+        public bool IsNotImporting
+        {
+            get => _isNotImporting;
+            set
+            {
+                if (!Equals(_isNotImporting, value))
+                {
+                    _isNotImporting = value;
+                    OnPropertyChanged(nameof(IsNotImporting));
+                }
+            }
+        }
         private void ImportDepth()
         {
+            
             string localized_FILE = LanguageManager.Instance["Globe_File"];
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -2341,11 +2604,14 @@ namespace EZHolodotNet.Core
             {
                 LoadDepth(openFileDialog.FileName);
             }
+            
         }
         public void LoadDepth(string path)
         {
+            IsNotImporting = false;
             try
             {
+
                 Mat loadedDepth = Cv2.ImRead(path, ImreadModes.Grayscale);
                 if (loadedDepth.Empty())
                 {
@@ -2365,14 +2631,56 @@ namespace EZHolodotNet.Core
                 }
 
                 DepthImage = loadedDepth;
-
                 ShowTipsTemporarilyAsync(LanguageManager.Instance["Tips_Depth_Successfully_Imported"]);
 
             }
             catch (Exception e)
             {
                 ShowTipsTemporarilyAsync($"{LanguageManager.Instance["Tips_Fail_to_Import_Depth"]}{e.Message}");
+            }
+            IsNotImporting = true;
+        }
 
+        // 异步加载深度图
+        public async Task LoadDepthAsync(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return;
+
+            IsNotImporting = false;
+            try
+            {
+                Mat loadedDepth = null;
+                await Task.Run(() => { loadedDepth = Cv2.ImRead(path, ImreadModes.Grayscale); });
+
+                if (loadedDepth == null || loadedDepth.Empty())
+                {
+                    ShowTipsTemporarilyAsync(LanguageManager.Instance["Tips_Fail_to_Load_depth"]);
+                    return;
+                }
+
+                await Task.Run(() => { loadedDepth.ConvertTo(loadedDepth, MatType.CV_32FC1); });
+
+                if (OriginalImage != null && (loadedDepth.Rows != OriginalImage.Rows || loadedDepth.Cols != OriginalImage.Cols))
+                {
+                    Mat resized = null;
+                    await Task.Run(() =>
+                    {
+                        resized = new Mat();
+                        Cv2.Resize(loadedDepth, resized, OriginalImage.Size());
+                        loadedDepth = resized;
+                    });
+                }
+
+                Application.Current.Dispatcher.Invoke(() => DepthImage = loadedDepth);
+                ShowTipsTemporarilyAsync(LanguageManager.Instance["Tips_Depth_Successfully_Imported"]);
+            }
+            catch (Exception e)
+            {
+                ShowTipsTemporarilyAsync($"{LanguageManager.Instance["Tips_Fail_to_Import_Depth"]}{e.Message}");
+            }
+            finally
+            {
+                IsNotImporting = true;
             }
         }
 
@@ -2540,6 +2848,90 @@ namespace EZHolodotNet.Core
             }
 
         }
+        // 异步导入点图或SVG
+        public async Task ImportPointsAsync(string filename)
+        {
+            if (string.IsNullOrWhiteSpace(filename)) return;
+
+            IsNotImporting = false;
+            try
+            {
+                List<Point> result = new List<Point>();
+                string extension = System.IO.Path.GetExtension(filename).ToLower();
+
+                if (extension == ".svg")
+                {
+                    string svgContent = await Task.Run(() => File.ReadAllText(filename));
+                    Regex circleRegex = new Regex(@"<circle[^>]*cx=""([\d\.]+)""[^>]*cy=""([\d\.]+)""[^>]*>",
+                                                  RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                    var matches = circleRegex.Matches(svgContent);
+                    if (matches.Count == 0)
+                    {
+                        ShowTipsTemporarilyAsync("未找到SVG中的点数据");
+                        return;
+                    }
+
+                    foreach (Match match in matches)
+                    {
+                        if (match.Groups.Count >= 3)
+                        {
+                            float cx = float.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                            float cy = float.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
+                            if (OriginalImage != null && cx >= 0 && cx < OriginalImage.Cols && cy >= 0 && cy < OriginalImage.Rows)
+                                result.Add(new Point(cx, cy));
+                        }
+                    }
+
+                    ShowTipsTemporarilyAsync($"成功从SVG导入 {result.Count} 个点");
+                }
+                else
+                {
+                    Mat pointMap = null;
+                    await Task.Run(() => { pointMap = Cv2.ImRead(filename, ImreadModes.Grayscale); });
+                    if (pointMap == null || pointMap.Empty())
+                    {
+                        ShowTipsTemporarilyAsync("无法读取点图");
+                        return;
+                    }
+
+                    await Task.Run(() => { pointMap.ConvertTo(pointMap, MatType.CV_8UC1); });
+
+                    if (OriginalImage != null && (pointMap.Rows != OriginalImage.Rows || pointMap.Cols != OriginalImage.Cols))
+                    {
+                        Mat resized = null;
+                        await Task.Run(() => { resized = new Mat(); Cv2.Resize(pointMap, resized, OriginalImage.Size()); pointMap = resized; });
+                    }
+
+                    await Task.Run(() =>
+                    {
+                        for (int y = 0; y < pointMap.Rows; y++)
+                        {
+                            for (int x = 0; x < pointMap.Cols; x++)
+                            {
+                                byte pixelValue = pointMap.At<byte>(y, x);
+                                if (pixelValue < 200)
+                                {
+                                    result.Add(new Point(x, y));
+                                }
+                            }
+                        }
+                    });
+
+                    ShowTipsTemporarilyAsync($"成功从点图导入 {result.Count} 个点");
+                }
+
+                NewOperation(result);
+            }
+            catch (Exception e)
+            {
+                ShowTipsTemporarilyAsync($"导入点图时出错: {e.Message}");
+            }
+            finally
+            {
+                IsNotImporting = true;
+            }
+        }
         public void HandleExit()
         {
             if(IsUsingLastConfigEveryTime)
@@ -2574,6 +2966,9 @@ namespace EZHolodotNet.Core
                     ipp.mainWindow = mainWindow;
                     mainWindow.ImageProcesser = ipp;
                     ipp.DepthEstimation = DepthEstimation;
+                    DepthEstimation = null;
+                    ipp.OccusionPathHelper = OccusionPathHelper;
+                    OccusionPathHelper = null;
                     //ipp.RefreshBinding();
                 }
 
@@ -2642,6 +3037,31 @@ namespace EZHolodotNet.Core
             UpdateGradient();
 
             //Cv2.ImShow("r", DepthImage);
+        }
+
+        // 异步版本：使用模型处理并更新深度图与梯度
+        public async Task ProcessDepthAsync()
+        {
+            if (OriginalImage == null) return;
+            if (OriginalImage.Width == 0) return;
+            if (!IsModelLoaded) return;
+
+            IsNotImporting = false;
+            try
+            {
+                Mat depth = null;
+                await Task.Run(() => { depth = DepthEstimation.ProcessImage(OriginalImage); });
+                Application.Current.Dispatcher.Invoke(() => DepthImage = depth);
+                await UpdateGradientAsync();
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e.Message);
+            }
+            finally
+            {
+                IsNotImporting = true;
+            }
         }
         private bool CheckOverflow()
         {
@@ -2895,7 +3315,7 @@ namespace EZHolodotNet.Core
                                             new System.Collections.Concurrent.ConcurrentBag<Point>();
                                         Parallel.ForEach(pointsWithDepth, item =>
                                         {
-                                            if (_eraserLower < item.Depth && item.Depth < _eraserUpper)
+                                            if (_eraserLower <= item.Depth && item.Depth <= _eraserUpper)
                                                 filteredPoints.Add(item.Point);
                                         });
                                         _erasingPoints = [.. filteredPoints];
@@ -3112,6 +3532,41 @@ namespace EZHolodotNet.Core
 
         }
 
+        // 异步版梯度计算：在后台线程计算然后在 UI 线程设置属性
+        private async Task UpdateGradientAsync()
+        {
+            if (DepthImage == null) return;
+
+            Mat gradMerged = null;
+            Mat gradMagnitude = null;
+
+            await Task.Run(() =>
+            {
+                Mat depthCopy = DepthImage.Clone();
+                Mat gradX = new Mat();
+                Mat gradY = new Mat();
+                Cv2.Sobel(depthCopy, gradX, MatType.CV_32F, 1, 0, ksize: 3);
+                Cv2.Sobel(depthCopy, gradY, MatType.CV_32F, 0, 1, ksize: 3);
+                gradMerged = new Mat();
+                Cv2.Merge(new[] { gradX, gradY }, gradMerged);
+
+                gradMagnitude = new Mat();
+                Cv2.Magnitude(gradX, gradY, gradMagnitude);
+                Cv2.ConvertScaleAbs(gradMagnitude, gradMagnitude);
+
+                gradX.Dispose();
+                gradY.Dispose();
+                depthCopy.Dispose();
+            });
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                GradientImage = gradMerged;
+                GradientModuleImage = gradMagnitude;
+                Trace.WriteLine(gradMagnitude.Type().ToString());
+            });
+        }
+
         private Vec2f GetGradientDirection(Point pos)
         {
             if (GradientImage == null || GradientImage.Empty())
@@ -3314,14 +3769,29 @@ namespace EZHolodotNet.Core
             Mat scratchImageR = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));//终点
             Mat scratchImageO = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));//原点
             Mat scratchImageLine = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));//轨迹
+            var mission = StartMission("构建预览");
             try
             {
                 IsNotProcessingSvg = false;
+                /*
                 if (IsGeneratingHandCraftSketchMode) 
                     await SvgPainter.PreviewPathArc(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, RadiusFactor, AngleFactor, LayerCount, PreviewDense, scratchImageL, scratchImageR, scratchImageO, scratchImageLine, IsPreviewingLineDensity);
                 else
                     await SvgPainter.PreviewPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, scratchImageL, scratchImageR, scratchImageO, scratchImageLine, IsPreviewingLineDensity);
+                */
                 
+                switch (PathGeneratingMode)
+                {
+                    case (int)GeneratingMode.Handcraft:
+                        await SvgPainter.PreviewPathArc(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, RadiusFactor, AngleFactor, LayerCount, PreviewDense, scratchImageL, scratchImageR, scratchImageO, scratchImageLine, IsPreviewingLineDensity);
+                        break;
+                    case (int)GeneratingMode.Occulsion:
+                        await OccusionPathHelper.BuildPathPreview(mission, SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, 20 ,scratchImageL, scratchImageR, scratchImageO, scratchImageLine, IsPreviewingLineDensity);
+                        break;
+                    default:
+                        await SvgPainter.PreviewPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense, scratchImageL, scratchImageR, scratchImageO, scratchImageLine, IsPreviewingLineDensity);
+                        break;
+                }
                 DisplayImageScratchL = scratchImageL.ToWriteableBitmap();
                 DisplayImageScratchR = scratchImageR.ToWriteableBitmap();
                 DisplayImageScratchO = scratchImageO.ToWriteableBitmap();
@@ -3335,6 +3805,7 @@ namespace EZHolodotNet.Core
             finally
             {
                 IsNotProcessingSvg = true;
+                EndMission(mission);
             }
         }
         public void ClearAllCache()
@@ -3353,21 +3824,27 @@ namespace EZHolodotNet.Core
             if (OriginalImage == null || OriginalImage.Width == 0 || !CheckOverflow())
                 return null;
 
+            //if(PathGeneratingMode==(int)GeneratingMode.Occulsion)
+            //    OccusionPathHelper.debug(tick);
             // 直接从缓存获取WriteableBitmap（如果存在）
             if (ScratchImageStepCache.TryGetValue(tick.ToString("0.000"), out BitmapSource cachedBitmap))
             {
                 //Trace.WriteLine($"CacheGot{tick:0.000}");
                 return cachedBitmap;
             }
-
+            
             using (Mat scratchImageStep = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0)))
             {
                 try
                 {
+                    
                     //Trace.WriteLine($"new{tick:0.000}");
                     IsNotProcessingSvg = false;
-                    if(IsGeneratingHandCraftSketchMode)
-                        await SvgPainter.PreviewPathArc(
+
+                    switch (PathGeneratingMode)
+                    {
+                        case (int)GeneratingMode.Handcraft:
+                            await SvgPainter.PreviewPathArc(
                             SampledPoints,
                             DepthImage,
                             OriginalImage,
@@ -3380,20 +3857,36 @@ namespace EZHolodotNet.Core
                             LayerCount,
                             PreviewDense,
                             PreviewColorful);
-                    else
-                        await SvgPainter.PreviewPath(
-                            SampledPoints,
-                            DepthImage,
-                            OriginalImage,
-                            scratchImageStep,
-                            tick,
-                            ZeroDepth,
-                            IgnoreZeroDepthDistance,
-                            AFactor,
-                            BFactor,
-                            PreviewDense,
-                            PreviewColorful);
-
+                            break;
+                        case (int)GeneratingMode.Occulsion:
+                            await OccusionPathHelper.PreviewPath(
+                                SampledPoints,
+                                DepthImage,
+                                OriginalImage,
+                                scratchImageStep,
+                                tick,
+                                ZeroDepth,
+                                IgnoreZeroDepthDistance,
+                                AFactor,
+                                BFactor,
+                                20,
+                                PreviewColorful);
+                            break;
+                        default:
+                            await SvgPainter.PreviewPath(
+                             SampledPoints,
+                             DepthImage,
+                             OriginalImage,
+                             scratchImageStep,
+                             tick,
+                             ZeroDepth,
+                             IgnoreZeroDepthDistance,
+                             AFactor,
+                             BFactor,
+                             PreviewDense,
+                             PreviewColorful); 
+                            break;
+                    }
                     // 创建新的WriteableBitmap并缓存
                     var newBitmap = scratchImageStep.ToBitmapSource();
                     newBitmap.Freeze();
@@ -3483,18 +3976,47 @@ namespace EZHolodotNet.Core
                     PreviewStep += 0.01f * inverse;
             }
         }
-        public async void ProcessExportScratch(string p)
+        public async void ExportPath()
         {
             if (OriginalImage == null) return;
             if (OriginalImage.Width == 0) return;
             if (!CheckOverflow()) return;
 
-            Mat scratchImage = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
+            IsNotProcessingSvg = false;
             try
             {
-                IsNotProcessingSvg = false;
-                string mysvg = await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor, PreviewDense);
-                SaveSvgToFile(mysvg);
+                switch (_pathGeneratingMode)
+                {
+                    case 2:
+                        var missionA = StartMission("Occulsion SVG Export");
+
+                        SaveSvgToFile(await OccusionPathHelper.BuildSvgPath(missionA, SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor));
+
+                        EndMission(missionA);
+                        break;
+                    case 1:
+                        var missionB = StartMission("Sketch SVG Export");
+                        OpenFolderDialog openFolderDialog = new OpenFolderDialog();
+
+                        if (openFolderDialog.ShowDialog() == true)
+                        {
+                            string outputPath = $"{openFolderDialog.FolderName}\\{Path.GetFileNameWithoutExtension(FilePath)}草图集";
+                            if (!Directory.Exists(outputPath))
+                                Directory.CreateDirectory(outputPath);
+
+                            await SvgPainter.BuildSketch(SampledPoints, DepthImage, outputPath, ZeroDepth, IgnoreZeroDepthDistance, RadiusFactor, AngleFactor, LayerCount, 10, 1.3f, System.IO.Path.GetFileNameWithoutExtension(FilePath) + " 草图集");
+                        }
+
+                        EndMission(missionB);
+                        break;
+                    default:
+                        var missionC = StartMission("SVG Export");
+
+                        SaveSvgToFile(await SvgPainter.BuildSvgPath(SampledPoints, DepthImage, ZeroDepth, IgnoreZeroDepthDistance, AFactor, BFactor));
+
+                        EndMission(missionC);
+                        break;
+                }
             }
             catch (Exception e)
             {
@@ -3505,7 +4027,7 @@ namespace EZHolodotNet.Core
                 IsNotProcessingSvg = true;
             }
         }
-        public void ProcessExportSketch()
+        /*public void ProcessExportSketch()
         {
             if (OriginalImage == null) return;
             if (OriginalImage.Width == 0) return;
@@ -3536,7 +4058,7 @@ namespace EZHolodotNet.Core
                     IsNotProcessingSvg = true;
                 }
             }
-        }
+        }*/
         private Mat ApplyColorMap(Mat originMat)
         {
             Mat colorMat = new Mat();
