@@ -369,7 +369,7 @@ namespace EZHolodotNet.Core
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
-                Filter = "便携式网络图形 PNG 文件 (*.png)|*.png|JPEG 文件 (*.jpg;*.jpeg)|*.jpg;*.jpeg|可缩放矢量图形 SVG 文件 (*.svg)|*.svg|所有文件 (*.*)|*.*",
+                Filter = "所有支持的点图文件|*.png;*.jpg;*.jpeg;*PointMap.svg|图像文件|*.png;*.jpg;*.jpeg|SVG文件|*PointMap.svg|全部文件|*.*",
                 DefaultExt = "png"
             };
 
@@ -809,16 +809,8 @@ namespace EZHolodotNet.Core
         [XmlIgnore]
         public DepthEstimation? DepthEstimation;
         public OccusionPathHelper OccusionPathHelper = new OccusionPathHelper();
-        private Point _mousePixelPosition = new(0, 0);
-        private Point _mouseWindowPosition = new(0, 0);
-        public int MousePointX
-        {
-            get => MousePixelPosition.X;
-        }
-        public int MousePointY
-        {
-            get => MousePixelPosition.Y;
-        }
+
+
         public int OriginImageWidth
         {
             get => OriginalImage?.Width ?? 1;
@@ -840,68 +832,114 @@ namespace EZHolodotNet.Core
                 }
             }
         }
-        [XmlIgnore]
-        public string MouseDepthColor
-        {
-            get
-            {
-                var color = _gradientColored.Get<Vec3b>(255 - (int)MouseDepth, 0);
-                //Cv2.ImShow("te", _gradientCoPreviewScalelored);
-                //Trace.WriteLine(_gradientColored.Type()+" "+color[0] + " " + color[1] + " " + color[2]);
-                return ColorTranslator.ToHtml(System.Drawing.Color.FromArgb(color[2], color[1], color[0]));
 
+        private Point _mousePixelPosition = new(0, 0);
+        private Point _mouseWindowPosition = new(0, 0);
+
+        private int _mousePointX;
+        private int _mousePointY;
+        private bool _isMouseMoving;
+        private float _mouseDepth;
+        private string _mouseDepthColor = "#000000";
+        private string _mouseDepthColorBW = "#AAFFFFFF";
+        private float _mouseGradient;
+        private float _mouseGradientX;
+        private float _mouseGradientY;
+        private float _eraserCenterX;
+        private float _eraserCenterY;
+        private float _smearCenterX;
+        private float _smearCenterY;
+        private float _draftCenterX;
+        private float _draftCenterY;
+        private int _mouseOnLMR;
+        [XmlIgnore]
+        public int MouseOnLMR
+        {
+            get => _mouseOnLMR;
+            set
+            {
+                if (!Equals(_mouseOnLMR, value))
+                {
+                    _mouseOnLMR = value;
+                    OnPropertyChanged(nameof(MouseOnLMR));
+                }
             }
         }
-        [XmlIgnore]
-        public string MouseDepthColorBW
-        {
-            get
-            {
-                if (_gradientColored == null) _gradientColored = ApplyColorMap(_gradient);
-                var color = _gradientColored.Get<Vec3b>(255 - (int)MouseDepth, 0);
-                //Trace.WriteLine((color[0] + color[1] + color[2]) / 3);
-                float L = (0.299f * color[0] + 0.587f * color[1] + 0.114f * color[2]) / 255f;
-
-                //float contrast_black = (L + 0.05f) / 0.05f;
-                //float contrast_white = 1.05f / (L + 0.05f);
-
-                return L > 0.5 ? "#AA000000" : "#AAFFFFFF";
-
-            }
-        }
-
         [XmlIgnore]
         public Point MousePixelPosition
         {
             get => _mousePixelPosition;
             set
             {
+                var clamped = new Point(
+                    Math.Clamp(value.X, 0, Math.Max(0, OriginImageWidth - 1)),
+                    Math.Clamp(value.Y, 0, Math.Max(0, OriginImageHeight - 1))
+                );
 
-                _mousePixelPosition = new(Math.Clamp(value.X, 0, OriginImageWidth-1), Math.Clamp(value.Y, 0, OriginImageHeight-1));
-                OnPropertyChanged(nameof(MousePixelPosition));
-                OnPropertyChanged(nameof(MouseDepth));
-                OnPropertyChanged(nameof(MouseDepthColor));
-                OnPropertyChanged(nameof(MouseDepthColorBW));
-                OnPropertyChanged(nameof(MouseGradient));
-                OnPropertyChanged(nameof(MouseGradientX));
-                OnPropertyChanged(nameof(MouseGradientY));
-                OnPropertyChanged(nameof(EraserCenterY));
-                OnPropertyChanged(nameof(EraserCenterX));
-                OnPropertyChanged(nameof(SmearCenterY));
-                OnPropertyChanged(nameof(SmearCenterX));
-                OnPropertyChanged(nameof(DraftCenterY));
-                OnPropertyChanged(nameof(DraftCenterX));
-                OnPropertyChanged(nameof(MousePointX));
-                OnPropertyChanged(nameof(MousePointY));
-                OnPropertyChanged(nameof(IsMouseMoving));
+                if (!Equals(_mousePixelPosition, clamped))
+                {
+                    _mousePixelPosition = clamped;
+                    OnPropertyChanged(nameof(MousePixelPosition));
 
+                    // 同步更新依赖属性（尽量保持 UI 绑定最小延迟）
+                    MousePointX = clamped.X;
+                    MousePointY = clamped.Y;
+                    IsMouseMoving = !Equals(clamped, new Point(0, 0));
+
+                    // 更新深度与梯度相关（容错）
+                    float depthVal = 0f;
+                    try
+                    {
+                        if (DepthImage != null && DepthImage.Cols > 0 && DepthImage.Rows > 0)
+                            depthVal = DepthImage.Get<float>(_mousePixelPosition.Y, _mousePixelPosition.X);
+                    }
+                    catch { depthVal = 0f; }
+                    MouseDepth = depthVal;
+
+                    if (GradientImage != null && !GradientImage.Empty())
+                    {
+                        int gy = Math.Clamp(_mousePixelPosition.Y, 0, GradientImage.Rows - 1);
+                        int gx = Math.Clamp(_mousePixelPosition.X, 0, GradientImage.Cols - 1);
+                        try
+                        {
+                            Vec2f grad = GradientImage.Get<Vec2f>(gy, gx);
+                            float norm = MathF.Sqrt(grad.Item0 * grad.Item0 + grad.Item1 * grad.Item1);
+                            MouseGradient = norm;
+                            MouseGradientX = (norm == 0 ? 0f : grad.Item0 * 255f / Math.Max(norm, float.Epsilon)) + 256f;
+                            MouseGradientY = (norm == 0 ? 0f : grad.Item1 * 255f / Math.Max(norm, float.Epsilon)) + 256f;
+                        }
+                        catch
+                        {
+                            MouseGradient = 0f;
+                            MouseGradientX = 256f;
+                            MouseGradientY = 256f;
+                        }
+                    }
+                    else
+                    {
+                        MouseGradient = 0f;
+                        MouseGradientX = 256f;
+                        MouseGradientY = 256f;
+                    }
+
+                    // 更新显示颜色（容错）
+                    try
+                    {
+                        if (_gradientColored == null) _gradientColored = ApplyColorMap(_gradient);
+                        var color = _gradientColored.Get<Vec3b>(255 - (int)MouseDepth, 0);
+                        MouseDepthColor = ColorTranslator.ToHtml(System.Drawing.Color.FromArgb(color[2], color[1], color[0]));
+                        float L = (0.299f * color[0] + 0.587f * color[1] + 0.114f * color[2]) / 255f;
+                        MouseDepthColorBW = L > 0.5f ? "#AA000000" : "#AAFFFFFF";
+                    }
+                    catch
+                    {
+                        MouseDepthColor = "#000000";
+                        MouseDepthColorBW = "#AAFFFFFF";
+                    }
+                }
             }
         }
-        [XmlIgnore]
-        public bool IsMouseMoving
-        {
-            get => !Equals(_mousePixelPosition, new Point(0, 0));
-        }
+
         [XmlIgnore]
         public Point MouseWindowPosition
         {
@@ -916,58 +954,134 @@ namespace EZHolodotNet.Core
             }
         }
         [XmlIgnore]
-        public float MouseDepth
+        public int MousePointX
         {
-            get
+            get => _mousePointX;
+            private set
             {
-                if (DepthImage == null) return 0;
-                if (DepthImage.Cols == 0) return 0;
-                if (!IsNotImporting) return 0;
-                try { 
-                    float normalizedValue = DepthImage.Get<float>(MousePixelPosition.Y, MousePixelPosition.X); 
-                    return normalizedValue;
-                }
-                catch
+                if (_mousePointX != value)
                 {
-                    return 0;
+                    _mousePointX = value;
+                    OnPropertyChanged(nameof(MousePointX));
                 }
-
-                //Trace.WriteLine(normalizedValue[0]);
-
             }
         }
+        [XmlIgnore]
+        public int MousePointY
+        {
+            get => _mousePointY;
+            private set
+            {
+                if (_mousePointY != value)
+                {
+                    _mousePointY = value;
+                    OnPropertyChanged(nameof(MousePointY));
+                }
+            }
+        }
+
+        [XmlIgnore]
+        public bool IsMouseMoving
+        {
+            get => _isMouseMoving;
+            private set
+            {
+                if (_isMouseMoving != value)
+                {
+                    _isMouseMoving = value;
+                    OnPropertyChanged(nameof(IsMouseMoving));
+                }
+            }
+        }
+
+        [XmlIgnore]
+        public float MouseDepth
+        {
+            get => _mouseDepth;
+            private set
+            {
+                if (Math.Abs(_mouseDepth - value) > float.Epsilon)
+                {
+                    _mouseDepth = value;
+                    OnPropertyChanged(nameof(MouseDepth));
+                }
+            }
+        }
+
+        [XmlIgnore]
+        public string MouseDepthColor
+        {
+            get => _mouseDepthColor;
+            private set
+            {
+                if (_mouseDepthColor != value)
+                {
+                    _mouseDepthColor = value;
+                    OnPropertyChanged(nameof(MouseDepthColor));
+                }
+            }
+        }
+
+        [XmlIgnore]
+        public string MouseDepthColorBW
+        {
+            get => _mouseDepthColorBW;
+            private set
+            {
+                if (_mouseDepthColorBW != value)
+                {
+                    _mouseDepthColorBW = value;
+                    OnPropertyChanged(nameof(MouseDepthColorBW));
+                }
+            }
+        }
+
         [XmlIgnore]
         public float MouseGradient
         {
-            get
+            get => _mouseGradient;
+            private set
             {
-                if (GradientImage == null) return 0;
-                if (GradientImage.Cols == 0) return 0;
-                Vec2f gradientVector = GradientImage.Get<Vec2f>(MousePixelPosition.Y, MousePixelPosition.X);
-                float norm = MathF.Pow(MathF.Pow(gradientVector.Item0, 2) + MathF.Pow(gradientVector.Item1, 2), 0.5f);
-                MouseGradientVectorNormal = norm == 0 ? new(0, 0) : gradientVector * 255 / norm;
-                return norm;
+                if (Math.Abs(_mouseGradient - value) > float.Epsilon)
+                {
+                    _mouseGradient = value;
+                    OnPropertyChanged(nameof(MouseGradient));
+                }
             }
         }
-        [XmlIgnore]
-        public Vec2f MouseGradientVectorNormal = new();
 
         [XmlIgnore]
         public float MouseGradientX
         {
-            get
+            get => _mouseGradientX;
+            private set
             {
-                return MouseGradientVectorNormal.Item0 + 256;
+                if (Math.Abs(_mouseGradientX - value) > float.Epsilon)
+                {
+                    _mouseGradientX = value;
+                    OnPropertyChanged(nameof(MouseGradientX));
+                }
             }
         }
+
         [XmlIgnore]
         public float MouseGradientY
         {
-            get
+            get => _mouseGradientY;
+            private set
             {
-                return MouseGradientVectorNormal.Item1 + 256;
+                if (Math.Abs(_mouseGradientY - value) > float.Epsilon)
+                {
+                    _mouseGradientY = value;
+                    OnPropertyChanged(nameof(MouseGradientY));
+                }
             }
         }
+
+        [XmlIgnore]
+        public Vec2f MouseGradientVectorNormal = new();
+
+
         [XmlIgnore]
         public int PointCount
         {
@@ -1023,7 +1137,7 @@ namespace EZHolodotNet.Core
                 {
                     _manualTool = value;
                     OnPropertyChanged(nameof(ManualTool));
-
+                    OnToolDisplayUpdated();
                 }
             }
         }
@@ -1038,7 +1152,7 @@ namespace EZHolodotNet.Core
             {
                 if (!Equals(_overlayOpacity, value))
                 {
-                    _overlayOpacity = value;
+                    _overlayOpacity =Math.Clamp(value,0,1);
                     OnPropertyChanged(nameof(OverlayOpacity));
                 }
             }
@@ -1435,8 +1549,7 @@ namespace EZHolodotNet.Core
                     _eraserRadius = Math.Clamp(value, 0, RadiusMax);
                     OnPropertyChanged(nameof(EraserRadius));
                     OnPropertyChanged(nameof(EraserDiameter));
-                    OnPropertyChanged(nameof(EraserCenterX));
-                    OnPropertyChanged(nameof(EraserCenterY));
+                    OnToolDisplayUpdated();
                 }
             }
         }
@@ -1476,9 +1589,8 @@ namespace EZHolodotNet.Core
                 {
                     _smearRadius = Math.Clamp(value, 0, RadiusMax);
                     OnPropertyChanged(nameof(SmearRadius));
-                    OnPropertyChanged(nameof(SmearDiameter));
-                    OnPropertyChanged(nameof(SmearCenterX));
-                    OnPropertyChanged(nameof(SmearCenterY));
+                    OnPropertyChanged(nameof(SmearDiameter)); 
+                    OnToolDisplayUpdated();
                 }
             }
         }
@@ -1493,10 +1605,40 @@ namespace EZHolodotNet.Core
                     _draftRadius = Math.Clamp(value, 0, RadiusMax);
                     OnPropertyChanged(nameof(DraftRadius));
                     OnPropertyChanged(nameof(DraftDiameter));
-                    OnPropertyChanged(nameof(DraftCenterX));
-                    OnPropertyChanged(nameof(DraftCenterY));
+                    OnToolDisplayUpdated();
                 }
             }
+        }
+        private void OnToolDisplayUpdated()
+        {
+            OnPropertyChanged(nameof(ToolRadius));
+            OnPropertyChanged(nameof(ToolDiameter));
+            OnPropertyChanged(nameof(MToolRadius));
+        }
+        public float ToolRadius
+        {
+            get
+            {
+                switch (ManualTool)
+                {
+                    case 2:
+                        return EraserRadius;
+                    case 4:
+                        return SmearRadius;
+                    case 5:
+                        return DraftRadius;
+                    default:
+                        return 0;
+                }
+            }
+        }
+        public float ToolDiameter
+        {
+            get => ToolRadius * 2;
+        }
+        public float MToolRadius
+        {
+            get => - ToolRadius;
         }
         private float _smearStrength = 0.5f;
         public float SmearStrenth
@@ -1523,30 +1665,6 @@ namespace EZHolodotNet.Core
                     OnPropertyChanged(nameof(DraftStrength));
                 }
             }
-        }
-        public float EraserCenterX
-        {
-            get => _mousePixelPosition.X - EraserRadius;
-        }
-        public float EraserCenterY
-        {
-            get => _mousePixelPosition.Y - EraserRadius;
-        }
-        public float SmearCenterX
-        {
-            get => _mousePixelPosition.X - SmearRadius;
-        }
-        public float SmearCenterY
-        {
-            get => _mousePixelPosition.Y - SmearRadius;
-        }
-        public float DraftCenterX
-        {
-            get => _mousePixelPosition.X - DraftRadius;
-        }
-        public float DraftCenterY
-        {
-            get => _mousePixelPosition.Y - DraftRadius;
         }
         private bool _isDragEntered = false;
         public bool IsDragEntered
@@ -2319,7 +2437,6 @@ namespace EZHolodotNet.Core
             DisplayImageScratchStep = null;
             _manualPointsStored = new();
             RefreshDisplay();
-            ProcessScratch();
         }
 
         // 异步载入原图
@@ -2356,6 +2473,7 @@ namespace EZHolodotNet.Core
 
 
                 _manualPointsStored = new();
+                RefreshDisplay();
                 if (IsAutoGeneratePreview)
                     await ProcessScratch();
             }

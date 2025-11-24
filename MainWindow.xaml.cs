@@ -79,11 +79,9 @@ namespace EZHolodotNet
         {
             try
             {
-                SystemThemeWatcher.Watch(this);
-                
+                SystemThemeWatcher.Watch(this);            
                 InitializeComponent();
                 CoreProcesser = new(this);
-                DataContext = CoreProcesser;
                 if (Properties.Settings.Default.IsUsingLastConfigEveryTime)
                 {
                     //检查软件目录下是否有 last_config.json 文件
@@ -112,126 +110,134 @@ namespace EZHolodotNet
 
         private void Image_MouseMove(object sender, MouseEventArgs e)
         {
-            if (CoreProcesser != null)
-            {
-                if (!CoreProcesser.IsOriginalImageLoaded) return;
-                var i = sender as Image;
-                var p = e.GetPosition(i);
-                CoreProcesser.MousePixelPosition = new((float)(p.X * CoreProcesser.OriginalImage.Cols / i.ActualWidth), (float)(p.Y * CoreProcesser.OriginalImage.Rows / i.ActualHeight));
 
-                if (e.LeftButton == MouseButtonState.Pressed)
-                    CoreProcesser.ProcessManual(null);
+            if (!CoreProcesser.IsOriginalImageLoaded) return;
+            var i = sender as Image;
+            var p = e.GetPosition(i);
+            CoreProcesser.MousePixelPosition = new((float)(p.X * CoreProcesser.OriginalImage.Cols / i.ActualWidth), (float)(p.Y * CoreProcesser.OriginalImage.Rows / i.ActualHeight));
+
+            if(Keyboard.IsKeyDown(Key.LeftCtrl))
+                CoreProcesser.MouseOnLMR = 3;
+            else
+            {
+                switch (i.Name)
+                {
+                    case "LIMAGE":
+                        CoreProcesser.MouseOnLMR = 0;
+                        break;
+                    case "MIMAGE":
+                        CoreProcesser.MouseOnLMR = 1;
+                        break;
+                    case "RIMAGE":
+                        CoreProcesser.MouseOnLMR = 2;
+                        break;
+                    default:
+                        CoreProcesser.MouseOnLMR = -1;
+                        break;
+                }
             }
+            if (e.LeftButton == MouseButtonState.Pressed)
+                CoreProcesser.ProcessManual(null);
+
         }
 
         private void Slider_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (CoreProcesser != null)
-            {
-                if (CoreProcesser.IsAutoGeneratePreview)
-                    CoreProcesser.ProcessScratch();
-            }
+            if (CoreProcesser.IsAutoGeneratePreview)
+                CoreProcesser.ProcessScratch();
         }
+        
 
         private void Image_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (CoreProcesser != null)
+            if (!CoreProcesser.IsOriginalImageLoaded) return;
+            if (e.LeftButton == MouseButtonState.Pressed)
+                CoreProcesser.ProcessManual(true);
+            else if (e.MiddleButton == MouseButtonState.Pressed)
+                CoreProcesser.ProcessMovingView();
+            else if (e.RightButton == MouseButtonState.Pressed)
             {
-                if (!CoreProcesser.IsOriginalImageLoaded) return;
-                if (e.LeftButton == MouseButtonState.Pressed)
-                    CoreProcesser.ProcessManual(true);
-                else if (e.MiddleButton == MouseButtonState.Pressed)
-                    CoreProcesser.ProcessMovingView();
-                else if (e.RightButton == MouseButtonState.Pressed)
-                {
-                    if (Keyboard.IsKeyDown(Key.LeftShift))
-                        CoreProcesser.EraserLower = CoreProcesser.MouseDepth;
-                    else
-                        CoreProcesser.EraserUpper = CoreProcesser.MouseDepth;
+                if (Keyboard.IsKeyDown(Key.LeftShift))
+                    CoreProcesser.EraserLower = CoreProcesser.MouseDepth;
+                else
+                    CoreProcesser.EraserUpper = CoreProcesser.MouseDepth;
 
-                }
             }
-
         }
 
         private void Image_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (CoreProcesser != null)
-            {
-                if (!CoreProcesser.IsOriginalImageLoaded) return;
-                CoreProcesser.ProcessManual(false);
-            }
+
+            if (!CoreProcesser.IsOriginalImageLoaded) return;
+            CoreProcesser.ProcessManual(false);
+
         }
 
         private void Image_MouseLeave(object sender, MouseEventArgs e)
         {
-            if (CoreProcesser != null)
-            {
                 if (!CoreProcesser.IsOriginalImageLoaded) return;
                 CoreProcesser.ProcessManual(false);
                 CoreProcesser.MousePixelPosition = new(0, 0);
-            }
         }
      
         private void TimeConsumingSlider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
-            CoreProcesser?.RefreshDisplay();
+            CoreProcesser.RefreshDisplay();
 
         }
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            CoreProcesser?.ReloadModel();
+            CoreProcesser.ReloadModel();
 
         }
 
         private void Image_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (CoreProcesser != null)
+            if (Keyboard.IsKeyDown(Key.LeftCtrl))
             {
-                if (Keyboard.IsKeyDown(Key.LeftCtrl))
-                    CoreProcesser.PreviewScaleFactor += e.Delta / 1200f;
-                else
-                    CoreProcesser.ChangeRadius(e.Delta / 12f);
+                CoreProcesser.MouseOnLMR = 3;
+                CoreProcesser.ChangeRadius(e.Delta / 12f);
             }
+            else if (Keyboard.IsKeyDown(Key.LeftShift))
+                CoreProcesser.OverlayOpacity += e.Delta / 1200f;
+            else
+                CoreProcesser.PreviewScaleFactor += e.Delta / 1200f;
+
         }
 
         private void Window_MouseMove(object sender, MouseEventArgs e)
         {
-            //Trace.WriteLine($"window moving{DateTime.Now},{e.GetPosition(App.Current.MainWindow)}");
-            if (CoreProcesser != null)
-            {
+
                 CoreProcesser.MouseWindowPosition = new(e.GetPosition(App.Current.MainWindow));
                 if (e.MiddleButton == MouseButtonState.Pressed)
                     CoreProcesser.ProcessMovingView(null);
-            }
         }
 
         private void Window_MouseUp(object sender, MouseButtonEventArgs e)
         {
             if (e.MiddleButton == MouseButtonState.Released)
-                CoreProcesser?.ProcessMovingView(false);
+                CoreProcesser.ProcessMovingView(false);
         }
 
         private void Window_MouseLeave(object sender, MouseEventArgs e)
         {
-            CoreProcesser?.ProcessMovingView(false);
+            CoreProcesser.ProcessMovingView(false);
 
         }
 
         private void Grid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if(CoreProcesser!=null)
-            {
+
                 CoreProcesser.IndicatorX = (float)e.NewSize.Width / 2;
                 CoreProcesser.IndicatorY = (float)e.NewSize.Height / 2;
-            }
+            
         }
 
         private void Viewbox_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.MiddleButton == MouseButtonState.Pressed)
-                CoreProcesser?.ProcessMovingView();
+                CoreProcesser.ProcessMovingView();
 
         }
 

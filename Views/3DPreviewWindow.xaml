@@ -184,7 +184,7 @@
                         </Grid>
                     </StackPanel>
                 </Expander>
-                <Expander Header="播放设置" IsExpanded="{Binding IsAutoPlay3D,Mode=OneWay}" Visibility="{Binding IsAutoPlay3D,Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Expander Header="播放设置" IsExpanded="{Binding IsAutoPlay3D,Mode=OneWay}">
                     <StackPanel>
                         <ui:TextBlock>
                             <Run Text="{Binding [Text_Maximum_Frame_Per_Second], Source={x:Static core:LanguageManager.Instance}}"/>
