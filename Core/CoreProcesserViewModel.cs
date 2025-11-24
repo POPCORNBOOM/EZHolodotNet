@@ -192,9 +192,9 @@ namespace EZHolodotNet.Core
             Distance = distance;
         }
     }
-    public class ImageProcesser : INotifyPropertyChanged
+    public class CoreProcesserViewModel : INotifyPropertyChanged
     {
-        public ImageProcesser()
+        public CoreProcesserViewModel()
         {
 
         }
@@ -234,7 +234,7 @@ namespace EZHolodotNet.Core
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-        public ImageProcesser(MainWindow mainWindow)
+        public CoreProcesserViewModel(MainWindow mainWindow)
         {
             if (RefreshModel())
                 DepthEstimation = new DepthEstimation(ModelFilePath);
@@ -578,19 +578,25 @@ namespace EZHolodotNet.Core
                 {
                     _originalImage?.Dispose();
                     _originalImage = value;
-                    float ratio = _originalImage.Width / _originalImage.Height;
-
-                    if ((ratio < 0.75f || ratio > 1.33f) && !DonotShowOriginalImageWarning)
-                        IsShowBadOriginalImageWarning = true;
+                    if (IsOriginalImageLoaded)
+                    {
+                        float ratio = _originalImage!.Width / _originalImage!.Height;
+                        if ((ratio < 0.75f || ratio > 1.33f) && !DonotShowOriginalImageWarning)
+                            IsShowBadOriginalImageWarning = true;
+                    }
                     OnPropertyChanged(nameof(OriginalImage));
-                    OnPropertyChanged(nameof(IsOriginalImageLoaded));
+                    OnPropertyChanged(nameof(IsOriginalImageLoaded)); 
+
+                    OnPropertyChanged(nameof(OriginImageHeight));
+                    OnPropertyChanged(nameof(OriginImageWidth));
+                    OnPropertyChanged(nameof(RadiusMax));
                 }
             }
         }
 
         public bool IsOriginalImageLoaded
         {
-            get => _originalImage != null && _originalImage.Cols != 0;
+            get => _originalImage != null && !_originalImage.Empty();
         }
         [XmlIgnore] private Mat? _depthImage = new Mat(); //32FC1
         [XmlIgnore]
@@ -604,6 +610,7 @@ namespace EZHolodotNet.Core
 
                     //_depthImage?.Dispose(); TODO: 检查异步操作DepthImage的所有位置
                     _depthImage = value;
+                    UpdateGradientAsync();
                     OnPropertyChanged(nameof(DepthImage));
                     OnPropertyChanged(nameof(IsDepthImageLoaded));
                     if (_depthImage != null)
@@ -814,11 +821,11 @@ namespace EZHolodotNet.Core
         }
         public int OriginImageWidth
         {
-            get => OriginalImage?.Cols ?? 0;
+            get => OriginalImage?.Width ?? 1;
         }
         public int OriginImageHeight
         {
-            get => OriginalImage?.Rows ?? 0;
+            get => OriginalImage?.Height ?? 1;
         }
         private int _maximumPointCount = 50000;
         public int MaximumPointCount
@@ -2268,6 +2275,7 @@ namespace EZHolodotNet.Core
 
             return path;
         }
+        [Obsolete]
         public void LoadImage(string filepath)
         {
             IsNotImporting = false;
@@ -2296,7 +2304,8 @@ namespace EZHolodotNet.Core
         public void UnloadImage()
         {
             FilePath = "";
-            OriginalImage = new Mat();
+            OriginalImage?.Dispose();
+            OriginalImage = null;
             OnPropertyChanged(nameof(OriginImageHeight));
             OnPropertyChanged(nameof(OriginImageWidth));
             OnPropertyChanged(nameof(RadiusMax));
@@ -2313,53 +2322,53 @@ namespace EZHolodotNet.Core
             ProcessScratch();
         }
 
-        // 异步版本：载入图片并保持 UI 可响应
+        // 异步载入原图
         public async Task LoadImageAsync(string filepath)
         {
+            
             if (string.IsNullOrWhiteSpace(filepath)) return;
 
             IsNotImporting = false;
+            var mission = StartMission("载入原图");
             try
             {
+                
                 FilePath = filepath;
 
-                Mat loaded = null;
+                Mat? loaded = null;
                 await Task.Run(() => { loaded = new Mat(filepath); });
-
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    OriginalImage = loaded;
-                    OnPropertyChanged(nameof(OriginImageHeight));
-                    OnPropertyChanged(nameof(OriginImageWidth));
-                    OnPropertyChanged(nameof(RadiusMax));
-                });
-
+                Application.Current.Dispatcher.Invoke(() => OriginalImage = loaded);
+                
+                // 如果深度估算模型已加载
                 if (IsModelLoaded)
                 {
-                    Mat depth = null;
-                    await Task.Run(() => { depth = DepthEstimation.ProcessImage(loaded); });
+                    mission.Progress.Report(0.5);
+                    mission.Detail = "进行深度估算";
+                    Mat? depth = null;
+                    await Task.Run(() => { depth = DepthEstimation!.ProcessImage(loaded!); });
                     Application.Current.Dispatcher.Invoke(() => DepthImage = depth);
                 }
                 else
                 {
-                    Application.Current.Dispatcher.Invoke(() => DepthImage = new Mat(loaded.Size(), MatType.CV_32FC1));
+                    Application.Current.Dispatcher.Invoke(() => DepthImage = new Mat(loaded!.Size(), MatType.CV_32FC1));
                 }
+                mission.Progress.Report(0.5);
 
-                await UpdateGradientAsync();
 
                 _manualPointsStored = new();
-                RefreshDisplay();
                 if (IsAutoGeneratePreview)
-                    ProcessScratch();
+                    await ProcessScratch();
             }
             catch (Exception ex)
             {
                 ShowTipsTemporarilyAsync($"载入图片失败: {ex.Message}");
+                UnloadImage();
             }
             finally
             {
                 IsNotImporting = true;
             }
+            EndMission(mission);
         }
 
         private bool _isDepthContourMode = false;
@@ -2410,10 +2419,10 @@ namespace EZHolodotNet.Core
             }
             else
             {
-                if (OriginalImage == null) return new();
+                if (!IsOriginalImageLoaded) return new();
 
                 Mat blurred = new Mat();
-                Cv2.GaussianBlur(OriginalImage, blurred, new OpenCvSharp.Size(_blurFactor * 2 - 1, _blurFactor * 2 - 1),
+                Cv2.GaussianBlur(OriginalImage!, blurred, new OpenCvSharp.Size(_blurFactor * 2 - 1, _blurFactor * 2 - 1),
                     0);
 
                 Mat edges = new Mat();
@@ -2494,7 +2503,7 @@ namespace EZHolodotNet.Core
         }
         public void RefreshDisplay()
         {
-            if (OriginalImage == null || OriginalImage.Cols == 0) return;
+            if (!IsOriginalImageLoaded) return;
             _postProcessedPointsCache = new();
             // 应用采样策略逻辑
             _contourPoints = IsContourMethodEnabled ? ExtractContours() : new();
@@ -2504,7 +2513,7 @@ namespace EZHolodotNet.Core
             OnPropertyChanged(nameof(BrightnessPointCount));
             OnPropertyChanged(nameof(ManualPointCount));
 
-            ContoursOverDepthImage = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 255));
+            ContoursOverDepthImage = new Mat(OriginalImage!.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 255));
 
 
 
@@ -2535,7 +2544,7 @@ namespace EZHolodotNet.Core
         public List<Point> GetPointsByLuminance()
         {
 
-            if (OriginalImage == null || OriginalImage.Empty()) return new();
+            if (!IsOriginalImageLoaded) return new();
 
             // 转换为灰度图像
             Mat grayImage = new Mat();
@@ -2749,9 +2758,9 @@ namespace EZHolodotNet.Core
 
                 await Task.Run(() => { loadedDepth.ConvertTo(loadedDepth, MatType.CV_32FC1); });
 
-                if (OriginalImage != null && (loadedDepth.Rows != OriginalImage.Rows || loadedDepth.Cols != OriginalImage.Cols))
+                if (IsOriginalImageLoaded && (loadedDepth.Rows != OriginalImage!.Rows || loadedDepth.Cols != OriginalImage!.Cols))
                 {
-                    Mat resized = null;
+                    Mat? resized = null;
                     await Task.Run(() =>
                     {
                         resized = new Mat();
@@ -2776,7 +2785,7 @@ namespace EZHolodotNet.Core
 
         private async Task ExportPointsAsync(string type, string ext = "png")
         {
-            if (OriginalImage == null || OriginalImage.Cols == 0)
+            if (!IsOriginalImageLoaded)
             {
                 ShowTipsTemporarilyAsync("请先选择一张处理图片");
                 return;
@@ -2966,7 +2975,7 @@ namespace EZHolodotNet.Core
                         {
                             float cx = float.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
                             float cy = float.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
-                            if (OriginalImage != null && cx >= 0 && cx < OriginalImage.Cols && cy >= 0 && cy < OriginalImage.Rows)
+                            if (IsOriginalImageLoaded && cx >= 0 && cx < OriginalImage!.Cols && cy >= 0 && cy < OriginalImage.Rows)
                                 result.Add(new Point(cx, cy));
                         }
                     }
@@ -2985,7 +2994,7 @@ namespace EZHolodotNet.Core
 
                     await Task.Run(() => { pointMap.ConvertTo(pointMap, MatType.CV_8UC1); });
 
-                    if (OriginalImage != null && (pointMap.Rows != OriginalImage.Rows || pointMap.Cols != OriginalImage.Cols))
+                    if (IsOriginalImageLoaded && (pointMap.Rows != OriginalImage!.Rows || pointMap.Cols != OriginalImage!.Cols))
                     {
                         Mat resized = null;
                         await Task.Run(() => { resized = new Mat(); Cv2.Resize(pointMap, resized, OriginalImage.Size()); pointMap = resized; });
@@ -3030,7 +3039,7 @@ namespace EZHolodotNet.Core
         {
             try
             {
-                XmlSerializer serializer = new XmlSerializer(typeof(ImageProcesser));
+                XmlSerializer serializer = new XmlSerializer(typeof(CoreProcesserViewModel));
                 using (StreamWriter fileWriter = new StreamWriter(path))
                 {
                     serializer.Serialize(fileWriter, this);
@@ -3047,12 +3056,12 @@ namespace EZHolodotNet.Core
         {
             try
             {
-                XmlSerializer serializer = new XmlSerializer(typeof(ImageProcesser));
+                XmlSerializer serializer = new XmlSerializer(typeof(CoreProcesserViewModel));
                 using (FileStream fs = new FileStream(path, FileMode.Open))
                 {
-                    ImageProcesser ipp = (ImageProcesser)serializer.Deserialize(fs);
+                    CoreProcesserViewModel ipp = (CoreProcesserViewModel)serializer.Deserialize(fs);
                     ipp.mainWindow = mainWindow;
-                    mainWindow.ImageProcesser = ipp;
+                    mainWindow.CoreProcesser = ipp;
                     ipp.DepthEstimation = DepthEstimation;
                     DepthEstimation = null;
                     ipp.OccusionPathHelper = OccusionPathHelper;
@@ -3118,8 +3127,7 @@ namespace EZHolodotNet.Core
         }
         public void ProcessDepth()
         {
-            if (OriginalImage == null) return;
-            if (OriginalImage.Width == 0) return;
+            if (!IsOriginalImageLoaded) return;
             if (!IsModelLoaded) return;
             DepthImage = DepthEstimation.ProcessImage(OriginalImage);
             UpdateGradient();
@@ -3130,17 +3138,16 @@ namespace EZHolodotNet.Core
         // 异步版本：使用模型处理并更新深度图与梯度
         public async Task ProcessDepthAsync()
         {
-            if (OriginalImage == null) return;
-            if (OriginalImage.Width == 0) return;
+            if (!IsOriginalImageLoaded) return;
             if (!IsModelLoaded) return;
 
             IsNotImporting = false;
             try
             {
-                Mat depth = null;
-                await Task.Run(() => { depth = DepthEstimation.ProcessImage(OriginalImage); });
+                Mat? depth = null;
+                await Task.Run(() => { depth = DepthEstimation!.ProcessImage(OriginalImage); });
                 Application.Current.Dispatcher.Invoke(() => DepthImage = depth);
-                await UpdateGradientAsync();
+                
             }
             catch (Exception e)
             {
@@ -3625,8 +3632,9 @@ namespace EZHolodotNet.Core
         {
             if (DepthImage == null) return;
 
-            Mat gradMerged = null;
-            Mat gradMagnitude = null;
+            var mission = StartMission("更新深度梯度");
+            Mat? gradMerged = null;
+            Mat? gradMagnitude = null;
 
             await Task.Run(() =>
             {
@@ -3651,8 +3659,9 @@ namespace EZHolodotNet.Core
             {
                 GradientImage = gradMerged;
                 GradientModuleImage = gradMagnitude;
-                Trace.WriteLine(gradMagnitude.Type().ToString());
+                //Trace.WriteLine(gradMagnitude.Type().ToString());
             });
+            EndMission(mission);
         }
 
         private Vec2f GetGradientDirection(Point pos)
@@ -3847,10 +3856,9 @@ namespace EZHolodotNet.Core
             RefreshDisplay();
 
         }
-        public async void ProcessScratch()
+        public async Task ProcessScratch()
         {
-            if (OriginalImage == null) return;
-            if (OriginalImage.Width == 0) return;
+            if (!IsOriginalImageLoaded) return;
             if (!CheckOverflow()) return;
             ClearAllCache();
             Mat scratchImageL = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));//起点
@@ -3909,7 +3917,7 @@ namespace EZHolodotNet.Core
 
         public async Task<BitmapSource?> ProcessAndCacheScratchTick(float tick)
         {
-            if (OriginalImage == null || OriginalImage.Width == 0 || !CheckOverflow())
+            if (!IsOriginalImageLoaded || !CheckOverflow())
                 return null;
 
             //if(PathGeneratingMode==(int)GeneratingMode.Occulsion)
@@ -3993,10 +4001,10 @@ namespace EZHolodotNet.Core
 
             } // using语句确保Mat被释放
         }
+        [Obsolete]
         public async void ProcessScratchStepOLD()
         {
-            if (OriginalImage == null) return;
-            if (OriginalImage.Width == 0) return;
+            if (!IsOriginalImageLoaded) return;
             if (!CheckOverflow()) return;
 
             Mat scratchImageStep = new Mat(OriginalImage.Size(), MatType.CV_8UC4, new Scalar(0, 0, 0, 0));
@@ -4021,8 +4029,7 @@ namespace EZHolodotNet.Core
         int inverse = 1;
         public async void ProcessScratchStep3D()
         {
-            if (OriginalImage == null) return;
-            if (OriginalImage.Width == 0) return;
+            if (!IsOriginalImageLoaded) return;
             if (!CheckOverflow()) return;
 
             float step = PreviewStep * (1 - PreviewStepDistance);
@@ -4066,8 +4073,7 @@ namespace EZHolodotNet.Core
         }
         public async void ExportPath()
         {
-            if (OriginalImage == null) return;
-            if (OriginalImage.Width == 0) return;
+            if (!IsOriginalImageLoaded) return;
             if (!CheckOverflow()) return;
 
             IsNotProcessingSvg = false;

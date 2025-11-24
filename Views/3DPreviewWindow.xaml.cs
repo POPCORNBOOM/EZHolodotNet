@@ -20,8 +20,8 @@ namespace EZHolodotNet.Views
     /// </summary>
     public partial class ThreeDPreviewWindow
     {
-        public ImageProcesser Processer;
-        public ThreeDPreviewWindow(ImageProcesser mainProcesser)
+        public CoreProcesserViewModel Processer;
+        public ThreeDPreviewWindow(CoreProcesserViewModel mainProcesser)
         {
             InitializeComponent();
             Processer = mainProcesser;
