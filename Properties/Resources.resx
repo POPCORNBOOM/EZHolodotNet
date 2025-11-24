@@ -726,4 +726,13 @@
   <data name="Text_Export_Shaded_Scratch_Path" xml:space="preserve">
     <value>Render Occlusion Culled trajectory (.svg)</value>
   </data>
+  <data name="Toolbar_Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Tips_Warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="Tips_Info" xml:space="preserve">
+    <value>Tips</value>
+  </data>
 </root>

@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Wpf.Ui;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 using Image = System.Windows.Controls.Image;
@@ -77,6 +78,8 @@ namespace EZHolodotNet
         {
             try
             {
+                SystemThemeWatcher.Watch(this);
+                
                 InitializeComponent();
                 ImageProcesser = new(this);
                 DataContext = ImageProcesser;
@@ -89,6 +92,7 @@ namespace EZHolodotNet
                     }
 
                 }
+                ApplicationThemeManager.Apply((ApplicationTheme)ImageProcesser.Theme);
             }
             catch (Exception e)
             {

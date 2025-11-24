@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:EZHolodotNet"
         xmlns:core="clr-namespace:EZHolodotNet.Core" ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica" WindowCornerPreference="Default"
         mc:Ignorable="d" AllowDrop="True" DragEnter="Window_DragEnter" DragLeave="Window_DragLeave" Closing="Window_Closing"
-        Title="EZHolo" Height="720" Width="800" MinHeight="450" MinWidth="850" MouseMove="Window_MouseMove" MouseUp="Window_MouseUp" MouseLeave="Window_MouseLeave">
+        Title="EZHolo" Height="720" Width="1080" MinHeight="450" MinWidth="850" MouseMove="Window_MouseMove" MouseUp="Window_MouseUp" MouseLeave="Window_MouseLeave">
     <ui:FluentWindow.InputBindings>
         <!-- 文件操作 -->
         <KeyBinding Gesture="Ctrl+V" Command="{Binding ChooseImageCommand}" CommandParameter="FROMCLIPBOARD"/>
@@ -106,7 +106,7 @@
             <TextBlock IsHitTestVisible="False" Foreground="White" Text="{Binding TipsString}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8"/>
         </Border>
 
-        <ui:TitleBar Grid.Column="1" Grid.ColumnSpan="4" Title="EZHolo"/>
+        <ui:TitleBar Grid.Column="1" Grid.ColumnSpan="4"/>
         <Menu Grid.ColumnSpan="5">
             <ui:MenuItem Header="{Binding [Toolbar_File], Source={x:Static core:LanguageManager.Instance}}" Icon="{ui:SymbolIcon Symbol=Document24}">
                 <ui:MenuItem Header="{Binding [Toolbar_Open_New_Image], Source={x:Static core:LanguageManager.Instance}}" InputGestureText="Ctrl+R" Icon="{ui:SymbolIcon Symbol=ImageAdd24}" Command="{Binding ChooseImageCommand}"/>
@@ -168,6 +168,10 @@
                     <ui:MenuItem Header="Français" InputGestureText="fr" Command="{Binding SwitchLanguageCommand}" CommandParameter="fr"/>
                     <ui:MenuItem Header="Русский язык" InputGestureText="ru" Command="{Binding SwitchLanguageCommand}" CommandParameter="ru"/>
                     <ui:MenuItem Header="Deutsch" InputGestureText="de" Command="{Binding SwitchLanguageCommand}" CommandParameter="de"/>
+                </ui:MenuItem>
+                <ui:MenuItem Header="{Binding [Toolbar_Theme], Source={x:Static core:LanguageManager.Instance}}" Icon="{ui:SymbolIcon Symbol=DarkTheme24}">
+                    <ui:MenuItem Header="明亮" InputGestureText="Light" Command="{Binding SwitchThemeCommand}" CommandParameter="2"/>
+                    <ui:MenuItem Header="阴暗" InputGestureText="Dark" Command="{Binding SwitchThemeCommand}" CommandParameter="1"/>
                 </ui:MenuItem>
                 <Separator/>
                 <ui:MenuItem Header="{Binding [Toolbar_Open_Source_Info], Source={x:Static core:LanguageManager.Instance}}" Icon="{ui:SymbolIcon Symbol=BookInformation24}" Command="{Binding OpenCustomMessageBoxCommand}"/>
@@ -309,7 +313,7 @@
                 <StackPanel Grid.ColumnSpan="1" Grid.Row="2" Margin="8,0">
                     <ui:Button Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Click_to_Choose_Image], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ChooseImageCommand}"/>
                     <TextBlock Text="{Binding [Tips_Desired_Size_518px], Source={x:Static core:LanguageManager.Instance}}" Foreground="#D3D3D3" Margin="4,4,0,0" FontSize="12"/>
-
+                    <ui:InfoBar Severity="Warning" Title="{Binding [Tips_Warning], Source={x:Static core:LanguageManager.Instance}}" IsOpen="{Binding IsShowBadOriginalImageWarning}" Message="导入的图片尺寸不佳。可能会影响深度估算质量。推荐比例1:1，最佳边长518"/>
                 </StackPanel>
                 <Border Background="#E3559CE4" BorderThickness="3" BorderBrush="#80B9EE" 
                         Margin="4" 
@@ -1358,23 +1362,16 @@
                 <Run Text="手动点 -"/>
                 <Run Text="{Binding ExcludedPointCount,Mode=OneWay}"/>
                 <Run Text="排除点)"/>
-            </ui:TextBlock>
-            <ui:TextBlock Foreground="Gray" FontSize="8" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Run Text="{Binding [Text_Pixel], Source={x:Static core:LanguageManager.Instance}}"/>
                 <Run Foreground="{DynamicResource HyperlinkButtonForeground}" FontWeight="Bold" FontSize="12" Text="{Binding MousePointX,Mode=OneWay}"/>
                 <Run Text=","/>
-                <Run Foreground="{DynamicResource HyperlinkButtonForeground}" FontWeight="Bold" FontSize="12" Text="{Binding MousePointY,Mode=OneWay}"/>
-            </ui:TextBlock>
-            <ui:TextBlock Visibility="Collapsed" Grid.Column="2" VerticalAlignment="Center">
+                <Run Foreground="{DynamicResource HyperlinkButtonForeground}" FontWeight="Bold" FontSize="12" Text="{Binding MousePointY,Mode=OneWay}"/>                
                 <Run Text="   手动采样 P1"/>
                 <Run Text="{Binding StartMousePointX,Mode=OneWay}"/>
                 <Run Text="{Binding StartMousePointY,Mode=OneWay}"/>
                 <Run Text="P2"/>
                 <Run Text="{Binding MousePointX,Mode=OneWay}"/>
-                <Run Text="{Binding MousePointY,Mode=OneWay}"/>
-
-            </ui:TextBlock>
-            <ui:TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" Grid.Column="3" HorizontalAlignment="Center">
+                <Run Text="{Binding MousePointY,Mode=OneWay}"/>                
                 <Run Text="{Binding [Text_Height], Source={x:Static core:LanguageManager.Instance}}"/>
                 <Run Foreground="{DynamicResource HyperlinkButtonForeground}" FontWeight="Bold" FontSize="12" Text="{Binding MouseDepth,StringFormat={}{0:0.00},Mode=OneWay}"/>
             </ui:TextBlock>
@@ -1396,7 +1393,7 @@
 
             <Viewbox Margin="2,0,0,0" Grid.Column="6" Height="12">
                 <Grid Height="512" Width="512">
-                    <Ellipse Width="512" Height="512" Fill="#559CE4"/>
+                    <Ellipse Width="512" Height="512" Fill="{DynamicResource HyperlinkButtonForeground}"/>
                     <Line StrokeEndLineCap="Triangle" X1="255" X2="{Binding MouseGradientX,Mode=OneWay}" Y1="255" Y2="{Binding MouseGradientY,Mode=OneWay}" Stroke="Red" StrokeThickness="70" RenderTransformOrigin="0.5,0.5">
 
                     </Line>

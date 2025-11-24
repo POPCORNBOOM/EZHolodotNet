@@ -1501,6 +1501,15 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Tips 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Info {
+            get {
+                return ResourceManager.GetString("Tips_Info", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The depth image is empty and cannot be exported. 的本地化字符串。
         /// </summary>
         internal static string Tips_Null_Depth {
@@ -1614,6 +1623,15 @@ namespace EZHolodotNet.Properties {
         internal static string Tips_Time_Consuming_Operations {
             get {
                 return ResourceManager.GetString("Tips_Time_Consuming_Operations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Warning 的本地化字符串。
+        /// </summary>
+        internal static string Tips_Warning {
+            get {
+                return ResourceManager.GetString("Tips_Warning", resourceCulture);
             }
         }
         
@@ -1866,6 +1884,15 @@ namespace EZHolodotNet.Properties {
         internal static string Toolbar_Shortcut_Key_Reference {
             get {
                 return ResourceManager.GetString("Toolbar_Shortcut_Key_Reference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Theme 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Theme {
+            get {
+                return ResourceManager.GetString("Toolbar_Theme", resourceCulture);
             }
         }
         

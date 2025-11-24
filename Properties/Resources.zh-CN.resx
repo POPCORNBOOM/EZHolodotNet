@@ -726,4 +726,13 @@
   <data name="Text_Export_Shaded_Scratch_Path" xml:space="preserve">
     <value>渲染遮挡后的轨迹(.svg)</value>
   </data>
+  <data name="Toolbar_Theme" xml:space="preserve">
+    <value>主题</value>
+  </data>
+  <data name="Tips_Warning" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="Tips_Info" xml:space="preserve">
+    <value>提示</value>
+  </data>
 </root>

@@ -24,6 +24,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml.Serialization;
 using Wpf.Ui;
+using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
 using Wpf.Ui.Interop.WinDef;
@@ -303,7 +304,9 @@ namespace EZHolodotNet.Core
             }
         }
         public RelayCommand SwitchLanguageCommand => new RelayCommand((p) =>
-            CurrentCultureInfo = (string)p);
+            CurrentCultureInfo = (string)p);        
+        public RelayCommand SwitchThemeCommand => new RelayCommand((p) =>
+            Theme = int.Parse((string)p));
         public RelayCommand OpenFolderCommand => new RelayCommand((p) => Process.Start("explorer.exe", AppDomain.CurrentDomain.BaseDirectory));
         public RelayCommand RefreshModelCommand => new RelayCommand((p) => ReloadModel());
         public RelayCommand ConvertToManualCommand => new RelayCommand((p) => ConvertToManualPoint(p.ToString() ?? "c"));
@@ -376,7 +379,11 @@ namespace EZHolodotNet.Core
 
             }
         });
-        public RelayCommand Open3DPreviewCommand => new RelayCommand((p) => new ThreeDPreviewWindow(this).Show());
+        public RelayCommand Open3DPreviewCommand => new RelayCommand((p) => {
+            var window = new ThreeDPreviewWindow(this);
+            SystemThemeWatcher.Watch(window);
+            window.Show();
+            });
         public RelayCommand ChangePreviewCommand => new RelayCommand((p) => ChangePreviewExecute((string)p));
         public RelayCommand CloseWarningCommand => new RelayCommand((p) => mainWindow.WarningFlyout.Hide());
         public RelayCommand ChooseImageCommand => new RelayCommand(async (p) =>
@@ -571,6 +578,10 @@ namespace EZHolodotNet.Core
                 {
                     _originalImage?.Dispose();
                     _originalImage = value;
+                    float ratio = _originalImage.Width / _originalImage.Height;
+
+                    if ((ratio < 0.75f || ratio > 1.33f) && !DonotShowOriginalImageWarning)
+                        IsShowBadOriginalImageWarning = true;
                     OnPropertyChanged(nameof(OriginalImage));
                     OnPropertyChanged(nameof(IsOriginalImageLoaded));
                 }
@@ -859,7 +870,7 @@ namespace EZHolodotNet.Core
             set
             {
 
-                _mousePixelPosition = new(Math.Clamp(value.X, 0, OriginImageWidth), Math.Clamp(value.Y, 0, OriginImageHeight));
+                _mousePixelPosition = new(Math.Clamp(value.X, 0, OriginImageWidth-1), Math.Clamp(value.Y, 0, OriginImageHeight-1));
                 OnPropertyChanged(nameof(MousePixelPosition));
                 OnPropertyChanged(nameof(MouseDepth));
                 OnPropertyChanged(nameof(MouseDepthColor));
@@ -1811,6 +1822,20 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        private int _theme = 1;
+        public int Theme
+        {
+            get => _theme;
+            set
+            {
+                if (!Equals(_theme, value))
+                {
+                    _theme = value;
+                    OnPropertyChanged(nameof(Theme));
+                    ApplicationThemeManager.Apply((ApplicationTheme)value);
+                }
+            }
+        }
         public bool IsUsingOccusion
         {
             get => _pathGeneratingMode == (int)GeneratingMode.Occulsion;
@@ -2250,6 +2275,9 @@ namespace EZHolodotNet.Core
 
             FilePath = filepath;
             OriginalImage = new Mat(filepath);
+            float ratio = OriginalImage.Width / OriginalImage.Height;
+            if ((ratio < 3/5 || ratio > 5/3) && !DonotShowOriginalImageWarning)
+                IsShowBadOriginalImageWarning = true;
             OnPropertyChanged(nameof(OriginImageHeight));
             OnPropertyChanged(nameof(OriginImageWidth));
             OnPropertyChanged(nameof(RadiusMax));
@@ -2609,6 +2637,32 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+        private bool _isShowBadOriginalImageWarning = false;
+        public bool IsShowBadOriginalImageWarning
+        {
+            get => _isShowBadOriginalImageWarning;
+            set
+            {
+                if (!Equals(_isShowBadOriginalImageWarning, value))
+                {
+                    _isShowBadOriginalImageWarning = value;
+                    OnPropertyChanged(nameof(IsShowBadOriginalImageWarning));
+                }
+            }
+        }
+        private bool _donotShowOriginalImageWarning = false;
+        public bool DonotShowOriginalImageWarning
+        {
+            get => _donotShowOriginalImageWarning;
+            set
+            {
+                if (!Equals(_donotShowOriginalImageWarning, value))
+                {
+                    _donotShowOriginalImageWarning = value;
+                    OnPropertyChanged(nameof(DonotShowOriginalImageWarning));
+                }
+            }
+        }
         private bool _isNotImporting = true;
         public bool IsNotImporting
         {
@@ -2622,6 +2676,7 @@ namespace EZHolodotNet.Core
                 }
             }
         }
+
         private void ImportDepth()
         {
 
