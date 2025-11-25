@@ -211,7 +211,6 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
     private readonly Stack<Operation> _undoStack = new();
     private float _aFactor = 0.66f;
     private float _angleFactor = 45f;
-    private float _approximationFactor = 1;
     private float _autoPlayMaxFps = 30;
     private float _bFactor = 1400;
     private float _blurFactor = 3;
@@ -239,7 +238,9 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
     private WriteableBitmap? _displayImageScratchO;
     private WriteableBitmap? _displayImageScratchR;
     private BitmapSource? _displayImageScratchStep;
-    private bool _doNotShowOriginalImageWarning;
+    private bool _doNotShowOriginalImageWarning = false;
+    private bool _doNotShowUsingOcclusionTips = false;
+    private bool _isShowUsingOcclusionTips = false;
     private List<Point> _draftingPoints = new();
     private float _draftRadius = 25;
     private float _draftStrength = 0.01f;
@@ -286,7 +287,7 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
     private bool _isPreviewingOriginImage = true;
     private bool _isPreviewingRight;
     private bool _isPreviewingStep = true;
-    private bool _isShowBadOriginalImageWarning;
+    private bool _isShowBadOriginalImageWarning = false;
     private bool _isShowEnhancedMat;
     private bool _isShowMissionFlyout;
     private bool _isSmartEraserEnabled;
@@ -307,7 +308,7 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
             }
         }
     }*/
-    private bool _isWarningPointsOverflow;
+    private bool _isShowPointsOverflowFlyout;
     private Point? _lastPoint;
     private int _layerCount = 32;
     private int _lineDensity = 5;
@@ -338,8 +339,9 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
     private float _penPathLength;
 
     private List<Point> _postProcessedPointsCache = new();
-    private string _previewColorful = "#FFFFFF";
+    private string _previewColor = "FFFFFF";
     private int _previewDense = 150;
+    private int _previewColorMode = 0;
 
 
     private float _previewScaleFactor;
@@ -370,7 +372,7 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
 
     [XmlIgnore] public Vec2f MouseGradientVectorNormal = new();
 
-    public OccusionPathHelper OcclusionPathHelper = new();
+    public OcclusionPathHelper OcclusionPathHelper = new();
 
     [XmlIgnore] public Dictionary<string, BitmapSource> ScratchImageStepCache = new();
 
@@ -426,6 +428,7 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
     public RelayCommand RedoStepCommand => new(p => Redo());
     public RelayCommand SetManualToolCommand => new(p => ManualTool = int.Parse(p.ToString() ?? "0"));
     public RelayCommand ShowMissionFlyoutCommand => new(p => IsShowMissionFlyout = true);
+    public RelayCommand ShowOverflowFlyoutCommand => new(p => IsShowPointsOverflowFlyout = true);
 
     public RelayCommand ImportConfigCommand => new(p =>
     {
@@ -495,7 +498,7 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
     });
 
     public RelayCommand ChangePreviewCommand => new(p => ChangePreviewExecute((string)p));
-    public RelayCommand CloseWarningCommand => new(p => _mainWindow.WarningFlyout.Hide());
+    public RelayCommand CloseWarningCommand => new(p => IsShowPointsOverflowFlyout = false);
 
     public RelayCommand ChooseImageCommand => new(async p =>
     {
@@ -651,7 +654,7 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
                 if (IsOriginalImageLoaded)
                 {
                     float ratio = _originalImage!.Width / _originalImage!.Height;
-                    if ((ratio < 0.75f || ratio > 1.33f) && !DonotShowOriginalImageWarning)
+                    if ((ratio < 0.75f || ratio > 1.33f) && !DoNotShowOriginalImageWarning)
                         IsShowBadOriginalImageWarning = true;
                 }
 
@@ -925,7 +928,7 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
                 try
                 {
                     if (DepthImage != null && DepthImage.Cols > 0 && DepthImage.Rows > 0)
-                        depthVal = DepthImage.Get<float>(_mousePixelPosition.Y, _mousePixelPosition.X);
+                        depthVal = MatSafeGet<float>(DepthImage, _mousePixelPosition.X, _mousePixelPosition.Y, 0);
                 }
                 catch
                 {
@@ -1503,19 +1506,6 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
         }
     }
 
-    public float ApproximationFactor
-    {
-        get => _approximationFactor;
-        set
-        {
-            if (!Equals(_approximationFactor, value))
-            {
-                _approximationFactor = value;
-                OnPropertyChanged(nameof(ApproximationFactor));
-                RefreshDisplay();
-            }
-        }
-    }
 
     public float ManualDensity
     {
@@ -1526,7 +1516,6 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
             {
                 _manualDensity = value;
                 OnPropertyChanged(nameof(ManualDensity));
-                RefreshDisplay();
             }
         }
     }
@@ -1745,15 +1734,15 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
         }
     }
 
-    public bool IsWarningPointsOverflow
+    public bool IsShowPointsOverflowFlyout
     {
-        get => _isWarningPointsOverflow;
+        get => _isShowPointsOverflowFlyout;
         set
         {
-            if (!Equals(_isWarningPointsOverflow, value))
+            if (!Equals(_isShowPointsOverflowFlyout, value))
             {
-                _isWarningPointsOverflow = value;
-                OnPropertyChanged(nameof(IsWarningPointsOverflow));
+                _isShowPointsOverflowFlyout = value;
+                OnPropertyChanged(nameof(IsShowPointsOverflowFlyout));
             }
         }
     }
@@ -1878,18 +1867,48 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
             }
         }
     }
-
-    public string PreviewColorful
+    public int PreviewColorMode
     {
-        get => _previewColorful;
+        get => _previewColorMode;
         set
         {
-            if (!Equals(_previewColorful, value))
+            if (!Equals(_previewColorMode, value))
             {
-                _previewColorful = value;
-                OnPropertyChanged(nameof(PreviewColorful));
+                _previewColorMode = value;
+                OnPropertyChanged(nameof(PreviewColorMode));
                 if (IsAutoGeneratePreview)
                     ProcessScratch();
+            }
+        }
+    }
+    public string PreviewColor
+    {
+        get => _previewColor;
+        set
+        {
+            if (!Equals(_previewColor, value))
+            {
+                _previewColor = value;
+                OnPropertyChanged(nameof(PreviewColor));
+                if (IsAutoGeneratePreview)
+                    ProcessScratch();
+            }
+        }
+    }
+    public string PreviewColorful
+    {
+        get
+        {
+            switch (_previewColorMode)
+            {
+                case 0:
+                    return "#"+_previewColor;
+                case 1:
+                    return "c";
+                case 2:
+                    return "d";
+                default:
+                    return "#FFFFFF";
             }
         }
     }
@@ -1907,6 +1926,8 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(IsGeneratingHandCraftSketchMode));
                 if (IsAutoGeneratePreview)
                     ProcessScratch();
+                if (_pathGeneratingMode == 2 && !DoNotShowUsingOcclusionTips)
+                    IsShowUsingOcclusionTips = true;
             }
         }
     }
@@ -2305,7 +2326,7 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
         }
     }
 
-    public bool DonotShowOriginalImageWarning
+    public bool DoNotShowOriginalImageWarning
     {
         get => _doNotShowOriginalImageWarning;
         set
@@ -2313,7 +2334,32 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
             if (!Equals(_doNotShowOriginalImageWarning, value))
             {
                 _doNotShowOriginalImageWarning = value;
-                OnPropertyChanged(nameof(DonotShowOriginalImageWarning));
+                OnPropertyChanged(nameof(DoNotShowOriginalImageWarning));
+            }
+        }
+    }
+    public bool IsShowUsingOcclusionTips
+    {
+        get => _isShowUsingOcclusionTips;
+        set
+        {
+            if (!Equals(_isShowUsingOcclusionTips, value))
+            {
+                _isShowUsingOcclusionTips = value;
+                OnPropertyChanged(nameof(IsShowUsingOcclusionTips));
+            }
+        }
+    }
+
+    public bool DoNotShowUsingOcclusionTips
+    {
+        get => _doNotShowUsingOcclusionTips;
+        set
+        {
+            if (!Equals(_doNotShowUsingOcclusionTips, value))
+            {
+                _doNotShowUsingOcclusionTips = value;
+                OnPropertyChanged(nameof(DoNotShowUsingOcclusionTips));
             }
         }
     }
@@ -2547,7 +2593,7 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
         FilePath = filepath;
         OriginalImage = new Mat(filepath);
         float ratio = OriginalImage.Width / OriginalImage.Height;
-        if ((ratio < 3 / 5 || ratio > 5 / 3) && !DonotShowOriginalImageWarning)
+        if ((ratio < 3 / 5 || ratio > 5 / 3) && !DoNotShowOriginalImageWarning)
             IsShowBadOriginalImageWarning = true;
         OnPropertyChanged(nameof(OriginImageHeight));
         OnPropertyChanged(nameof(OriginImageWidth));
@@ -3340,7 +3386,7 @@ public class CoreProcesserViewModel : INotifyPropertyChanged
 
     private bool CheckOverflow()
     {
-        if (PointCount > MaximumPointCount) _mainWindow.WarningFlyout.Show();
+        if (PointCount > MaximumPointCount) IsShowPointsOverflowFlyout = true;
         return PointCount < MaximumPointCount;
     }
 

@@ -16,6 +16,10 @@
             <core:IntToBooleanConverter x:Key="IntToBooleanConverter"/>
             <core:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
             <core:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <SolidColorBrush x:Key="SliderPanel.TrackBrush" Color="#FFF0F0F0"/>
+            <SolidColorBrush x:Key="SliderPanel.TrackBorderBrush" Color="#FFBDBDBD"/>
+            <SolidColorBrush x:Key="SliderPanel.ThumbBrush" Color="#FF0078D7"/>
+            <SolidColorBrush x:Key="SliderPanel.ThumbBorderBrush" Color="#FF005A9E"/>
             <DrawingBrush x:Key="ChessboardBrush" ViewportUnits="Absolute"  Viewport="0,0,20,20" TileMode="Tile">
                 <DrawingBrush.Drawing>
                     <DrawingGroup>

@@ -121,7 +121,7 @@
     <value>EZHOLO</value>
   </data>
   <data name="Tips_Time_Consuming_Operations" xml:space="preserve">
-    <value>These are usually time-consuming operations, it is recommended to finish the above settings before starting.</value>
+    <value>These operations are generally time-consuming. It is recommended to complete the settings above before starting.</value>
   </data>
   <data name="Tips_Start_Your_Work" xml:space="preserve">
     <value>Start your work</value>
@@ -130,34 +130,64 @@
     <value>The number of sampling points exceeds the maximum limit (</value>
   </data>
   <data name="Tips_Open_Image_or_Click_to_Choose_Image" xml:space="preserve">
-    <value>File - Open New Image or "Click to Select Image"</value>
+    <value>File - Open new image or "Click to Select Image"</value>
   </data>
   <data name="Tips_OH" xml:space="preserve">
     <value>Oh!</value>
   </data>
   <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_7" xml:space="preserve">
-    <value>Or, you can adjust the maximum number of sampling points below.</value>
+    <value>Alternatively, you can adjust the maximum number of sampling points below.</value>
   </data>
   <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_6" xml:space="preserve">
     <value>Related factors</value>
   </data>
   <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_5" xml:space="preserve">
-    <value>Interval</value>
+    <value>"Interval"</value>
   </data>
   <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_4" xml:space="preserve">
     <value>and</value>
   </data>
   <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_3" xml:space="preserve">
-    <value>Density</value>
+    <value>"Density"</value>
+  </data>
+  <data name="ToolTip_ManualTool_Cursor" xml:space="preserve">
+    <value>Mouse — shortcut Q</value>
+  </data>
+  <data name="ToolTip_ManualTool_Pencil" xml:space="preserve">
+    <value>Undoable: Pencil — shortcut W. Drag or click in the Depth &amp; Sampling preview to add one or multiple sampling points.</value>
+  </data>
+  <data name="ToolTip_ManualTool_Eraser" xml:space="preserve">
+    <value>Undoable: Eraser — shortcut E. Drag or click in the Depth &amp; Sampling preview to remove one or multiple sampling points.</value>
+  </data>
+  <data name="ToolTip_ManualTool_Line" xml:space="preserve">
+    <value>Undoable: Line — shortcut A. Drag or click in the Depth &amp; Sampling preview to add one or multiple sampling points.</value>
+  </data>
+  <data name="ToolTip_ManualTool_Smear" xml:space="preserve">
+    <value>Undoable: Smudge — shortcut S. Drag or click in the Depth &amp; Sampling preview to fine‑tune sampling point positions.</value>
+  </data>
+  <data name="ToolTip_ManualTool_Drafting" xml:space="preserve">
+    <value>Undoable: Gradient offset — shortcut D. Drag or click in the Depth &amp; Sampling preview to offset sampling points along or against the gradient.</value>
+  </data>
+  <data name="ToolTip_ManualTool_Dedense" xml:space="preserve">
+    <value>Undoable: Density reduction — shortcut Z. Helps reduce manual sampling point count.</value>
+  </data>
+  <data name="ToolTip_ManualTool_Reserved1" xml:space="preserve">
+    <value>Undoable</value>
+  </data>
+  <data name="ToolTip_ManualTool_Reserved2" xml:space="preserve">
+    <value>Undoable</value>
+  </data>
+  <data name="ToolTip_ManualTool_ClearAll" xml:space="preserve">
+    <value>Undoable: Clear — remove all sampling points in manual sampling.</value>
   </data>
   <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_2" xml:space="preserve">
-    <value>Please try adjusting with</value>
+    <value>Please try adjusting these</value>
   </data>
   <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_1" xml:space="preserve">
-    <value>The number of sampling points determines the number of scratch marks; too many dense traces will affect image quality.</value>
+    <value>The number of sampling points determines the number of scratch paths; too many dense paths will reduce image quality.</value>
   </data>
   <data name="Tips_Import_from_Clipboard" xml:space="preserve">
-    <value>clipboard</value>
+    <value>Import from clipboard</value>
   </data>
   <data name="Tips_Desired_Size_518px" xml:space="preserve">
     <value>Recommended size: ~518x518 px</value>
@@ -190,7 +220,7 @@
     <value>Smudge radius</value>
   </data>
   <data name="Text_Shallowest_Preserving_Height" xml:space="preserve">
-    <value>Maximum retained depth</value>
+    <value>Maximum preserved depth</value>
   </data>
   <data name="Text_Shallowest" xml:space="preserve">
     <value>Shallowest erasable point height</value>
@@ -235,7 +265,7 @@
     <value>Import depth map</value>
   </data>
   <data name="Path_Generating_Mode" xml:space="preserve">
-    <value>Path Generating Mode</value>
+    <value>Path generating mode</value>
   </data>
   <data name="Text_External_Operation" xml:space="preserve">
     <value>External operations</value>
@@ -259,7 +289,7 @@
     <value>Density factor</value>
   </data>
   <data name="Text_Deepest_Preserving_Height" xml:space="preserve">
-    <value>Minimum retained depth</value>
+    <value>Minimum preserved depth</value>
   </data>
   <data name="Text_Deepest" xml:space="preserve">
     <value>Deepest erasable point height</value>
@@ -364,7 +394,7 @@
     <value>Export PNG point map (merged)</value>
   </data>
   <data name="Toolbar_Export_Handcraft_Blueprint" xml:space="preserve">
-    <value>Export hand-carved scratch trajectory drawing</value>
+    <value>Export hand-crafted scratch trajectory drawing</value>
   </data>
   <data name="Toolbar_Export_Depth" xml:space="preserve">
     <value>Export depth*</value>
@@ -403,7 +433,7 @@
     <value>Smart edge eraser</value>
   </data>
   <data name="Text_Show_Path_Density" xml:space="preserve">
-    <value>Show track density</value>
+    <value>Show path density</value>
   </data>
   <data name="Text_Show_Contour_Image" xml:space="preserve">
     <value>Show contour map</value>
@@ -469,7 +499,7 @@
     <value>Export point map</value>
   </data>
   <data name="Text_Export_Handcraft_Blueprint" xml:space="preserve">
-    <value>Export hand-carved drawing (.svg) [*beta]</value>
+    <value>Export hand-crafted drawing (.svg) [*beta]</value>
   </data>
   <data name="Text_Export_Depth" xml:space="preserve">
     <value>Export depth*</value>
@@ -511,7 +541,7 @@
     <value>Angle coefficient</value>
   </data>
   <data name="Text_3D_View" xml:space="preserve">
-    <value>3D View</value>
+    <value>3D view</value>
   </data>
   <data name="Globe_Sure" xml:space="preserve">
     <value>OK</value>
@@ -538,25 +568,25 @@
     <value>Try to control your eyes to merge the right image of the left dot and the left image of the right dot</value>
   </data>
   <data name="Tips_Eyes_5" xml:space="preserve">
-    <value>This will result in a double-image state. At this moment, the two red dots on the screen will split into four.</value>
+    <value>This will produce a double-image effect. At that moment, the two red dots on the screen will split into four.</value>
   </data>
   <data name="Tips_Eyes_4" xml:space="preserve">
-    <value>Maintain this feeling and turn your head toward the screen, you are in close-range vision</value>
+    <value>Keep that feeling and turn your head toward the screen—you are now in close-range vision.</value>
   </data>
   <data name="Tips_Eyes_3" xml:space="preserve">
-    <value>Looking into the distance, you may feel dazed.</value>
+    <value>When you look into the distance, you may feel a bit dazed.</value>
   </data>
   <data name="Tips_Eyes_2" xml:space="preserve">
-    <value>Adjust the red dot spacing on the screen ≤ your pupil distance</value>
+    <value>Set the red-dot spacing on the screen to be ≤ your pupil distance</value>
   </data>
   <data name="Tips_Eyes_1" xml:space="preserve">
-    <value>Measure the distance between your pupils and scale the window</value>
+    <value>Measure the distance between your pupils and scale the window accordingly</value>
   </data>
   <data name="Text_View" xml:space="preserve">
     <value>View</value>
   </data>
   <data name="Text_Smear_Settings" xml:space="preserve">
-    <value>Smudge settings</value>
+    <value>Smear settings</value>
   </data>
   <data name="Text_Scratch_Path_Preview" xml:space="preserve">
     <value>Scratch trajectory preview</value>
@@ -604,7 +634,7 @@
     <value>Gradient offset tool</value>
   </data>
   <data name="Text_Depth_and_Sampling_Preview" xml:space="preserve">
-    <value>Depth &amp; Sampling Preview</value>
+    <value>Depth &amp; sampling preview</value>
   </data>
   <data name="Text_Dedensing_Tool" xml:space="preserve">
     <value>Density reduction tool</value>
@@ -640,7 +670,7 @@
     <value>Switch to density reduction tool</value>
   </data>
   <data name="Shortcut_Switch_to_Cursor" xml:space="preserve">
-    <value>Switch to mouse</value>
+    <value>Switch to cursor</value>
   </data>
   <data name="Shortcut_Save_Config" xml:space="preserve">
     <value>Save software configuration</value>
@@ -691,10 +721,10 @@
     <value>Export</value>
   </data>
   <data name="Toolbar_Bad_Translation_Help_Us" xml:space="preserve">
-    <value>Poor translation? Click to help optimize translation</value>
+    <value>Poor translation? Click to help improve translations</value>
   </data>
   <data name="Title_Open_Source_Information" xml:space="preserve">
-    <value>Open Source Information</value>
+    <value>Open source information</value>
   </data>
   <data name="Globe_Got_It" xml:space="preserve">
     <value>Got it</value>
@@ -703,28 +733,28 @@
     <value>The depth image is empty and cannot be exported.</value>
   </data>
   <data name="Tips_Depth_Successfully_Exported" xml:space="preserve">
-    <value>The depth image was successfully exported.</value>
+    <value>The depth image was exported successfully.</value>
   </data>
   <data name="Tips_Fail_to_Export_Depth" xml:space="preserve">
     <value>An error occurred while exporting the depth image:</value>
   </data>
   <data name="Globe_File" xml:space="preserve">
-    <value>document</value>
+    <value>File</value>
   </data>
   <data name="Globe_All" xml:space="preserve">
-    <value>all</value>
+    <value>All</value>
   </data>
   <data name="Tips_Fail_to_Load_depth" xml:space="preserve">
     <value>Unable to read depth images</value>
   </data>
   <data name="Tips_Depth_Successfully_Imported" xml:space="preserve">
-    <value>Depth image is successfully imported</value>
+    <value>Depth image imported successfully</value>
   </data>
   <data name="Tips_Fail_to_Import_Depth" xml:space="preserve">
     <value>An error occurred while importing a depth image:</value>
   </data>
   <data name="Text_Export_Shaded_Scratch_Path" xml:space="preserve">
-    <value>Render Occlusion Culled trajectory (.svg)</value>
+    <value>Render occlusion-culled trajectory (.svg)</value>
   </data>
   <data name="Toolbar_Theme" xml:space="preserve">
     <value>Theme</value>
@@ -733,6 +763,36 @@
     <value>Warning</value>
   </data>
   <data name="Tips_Info" xml:space="preserve">
-    <value>Tips</value>
+    <value>Info</value>
+  </data>
+  <data name="Text_Do_Not_Show_Original_Image_Warning" xml:space="preserve">
+    <value>Do not show the original-image-size warning again</value>
+  </data>
+  <data name="Text_Do_Not_Show_Using_Occlusion_Tips" xml:space="preserve">
+    <value>Do not show occlusion-mode tips again</value>
+  </data>
+  <data name="Toolbar_Tips_Switch" xml:space="preserve">
+    <value>Toggle tips</value>
+  </data>
+  <data name="Text_Contour_Points" xml:space="preserve">
+    <value>Contour points</value>
+  </data>
+  <data name="Text_Brightness_Points" xml:space="preserve">
+    <value>Brightness points</value>
+  </data>
+  <data name="Text_Manual_Points" xml:space="preserve">
+    <value>Manual points</value>
+  </data>
+  <data name="Text_Excluded_Points" xml:space="preserve">
+    <value>Excluded points</value>
+  </data>
+  <data name="Text_Single_Color" xml:space="preserve">
+    <value>Single color</value>
+  </data>
+  <data name="Text_Original_Color" xml:space="preserve">
+    <value>Original color</value>
+  </data>
+  <data name="Text_Depth_Color" xml:space="preserve">
+    <value>Depth color</value>
   </data>
 </root>

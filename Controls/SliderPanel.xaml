@@ -1,0 +1,52 @@
+﻿<UserControl x:Class="EZHolodotNet.Controls.SliderPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:EZHolodotNet.Controls"
+             mc:Ignorable="d" 
+             Width="120" Height="120"
+             d:DesignHeight="120" d:DesignWidth="120">
+
+    <Grid>
+        <!-- 将 Border 作为容器并在内部添加一个 Rectangle 来绘制均匀点阵（被 Border 圆角裁切） -->
+        <Border
+            x:Name="PART_Track"
+            Margin="0"
+            BorderBrush="{DynamicResource TextControlElevationBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="4" SnapsToDevicePixels="True"
+            MouseLeftButtonDown="Track_MouseLeftButtonDown">
+            <!-- 在 Border 内部放一个 Rectangle，使用 DrawingBrush 生成平铺的小点 -->
+            <Border.Background>
+                <DrawingBrush TileMode="Tile"
+                                  Viewport="0,0,10,10" ViewportUnits="Absolute"
+                                  AlignmentX="Left" AlignmentY="Top">
+                    <DrawingBrush.Drawing>
+                        <DrawingGroup>
+                            <GeometryDrawing Brush="{DynamicResource TextControlBackground}">
+                                <GeometryDrawing.Geometry>
+                                    <RectangleGeometry Rect="0,0,10,10"/>
+                                </GeometryDrawing.Geometry>
+                            </GeometryDrawing>
+                            <GeometryDrawing Brush="{DynamicResource TextControlElevationBorderBrush}">
+                                <GeometryDrawing.Geometry>
+                                    <EllipseGeometry Center="5,5" RadiusX="1" RadiusY="1"/>
+                                </GeometryDrawing.Geometry>
+                            </GeometryDrawing>
+
+                        </DrawingGroup>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Border.Background>
+        </Border>
+
+        <Canvas>
+            <Thumb x:Name="PART_Thumb"
+                   Cursor="Hand" Style="{DynamicResource UiSliderThumbStyle}"
+                   DragDelta="Thumb_DragDelta"
+                   DragStarted="Thumb_DragStarted"
+                   DragCompleted="Thumb_DragCompleted"/>
+        </Canvas>
+    </Grid>
+</UserControl>

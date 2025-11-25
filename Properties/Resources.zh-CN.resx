@@ -144,6 +144,36 @@
   <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_5" xml:space="preserve">
     <value>“间隔”</value>
   </data>
+  <data name="ToolTip_ManualTool_Cursor" xml:space="preserve">
+    <value>鼠标，快捷键 Q</value>
+  </data>
+  <data name="ToolTip_ManualTool_Pencil" xml:space="preserve">
+    <value>【可撤销】铅笔，快捷键 W。在“深度/采样预览”中拖拽或单击，以添加一系列或单个采样点。</value>
+  </data>
+  <data name="ToolTip_ManualTool_Eraser" xml:space="preserve">
+    <value>【可撤销】橡皮擦，快捷键 E。在“深度/采样预览”中拖拽或单击，以移除一系列采样点。</value>
+  </data>
+  <data name="ToolTip_ManualTool_Line" xml:space="preserve">
+    <value>【可撤销】线条，快捷键 A。在“深度/采样预览”中拖拽或单击，以添加一系列或单个采样点。</value>
+  </data>
+  <data name="ToolTip_ManualTool_Smear" xml:space="preserve">
+    <value>【可撤销】涂抹，快捷键 S。在“深度/采样预览”中拖拽或单击，以微调采样点位置。</value>
+  </data>
+  <data name="ToolTip_ManualTool_Drafting" xml:space="preserve">
+    <value>【可撤销】梯度偏移，快捷键 D。在“深度/采样预览”中拖拽或单击，以对采样点沿梯度方向或反方向施加偏移。</value>
+  </data>
+  <data name="ToolTip_ManualTool_Dedense" xml:space="preserve">
+    <value>【可撤销】密度降低，快捷键 Z，辅助你降低手动采样点数量。</value>
+  </data>
+  <data name="ToolTip_ManualTool_Reserved1" xml:space="preserve">
+    <value>【可撤销】</value>
+  </data>
+  <data name="ToolTip_ManualTool_Reserved2" xml:space="preserve">
+    <value>【可撤销】</value>
+  </data>
+  <data name="ToolTip_ManualTool_ClearAll" xml:space="preserve">
+    <value>【可撤销】清空，移除手动采样中的所有采样点。</value>
+  </data>
   <data name="Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_4" xml:space="preserve">
     <value>和</value>
   </data>
@@ -734,5 +764,35 @@
   </data>
   <data name="Tips_Info" xml:space="preserve">
     <value>提示</value>
+  </data>
+  <data name="Text_Do_Not_Show_Original_Image_Warning" xml:space="preserve">
+    <value>请勿再次警告原图尺寸不佳</value>
+  </data>
+  <data name="Text_Do_Not_Show_Using_Occlusion_Tips" xml:space="preserve">
+    <value>请勿再次提示遮挡模式下的建议</value>
+  </data>
+  <data name="Toolbar_Tips_Switch" xml:space="preserve">
+    <value>提示开关</value>
+  </data>
+  <data name="Text_Contour_Points" xml:space="preserve">
+    <value>轮廓点</value>
+  </data>
+  <data name="Text_Brightness_Points" xml:space="preserve">
+    <value>明度点</value>
+  </data>
+  <data name="Text_Manual_Points" xml:space="preserve">
+    <value>手动点</value>
+  </data>
+  <data name="Text_Excluded_Points" xml:space="preserve">
+    <value>排除点</value>
+  </data>
+  <data name="Text_Single_Color" xml:space="preserve">
+    <value>单色</value>
+  </data>
+  <data name="Text_Original_Color" xml:space="preserve">
+    <value>原图颜色</value>
+  </data>
+  <data name="Text_Depth_Color" xml:space="preserve">
+    <value>深度颜色</value>
   </data>
 </root>

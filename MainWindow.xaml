@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:local="clr-namespace:EZHolodotNet"
-        xmlns:core="clr-namespace:EZHolodotNet.Core" ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica" WindowCornerPreference="Default"
+        xmlns:core="clr-namespace:EZHolodotNet.Core"
+        xmlns:controls="clr-namespace:EZHolodotNet.Controls"
+        ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica" WindowCornerPreference="Default"
         mc:Ignorable="d" AllowDrop="True" DragEnter="Window_DragEnter" DragLeave="Window_DragLeave" Closing="Window_Closing"
         Title="EZHolo" Height="720" Width="1080" MinHeight="450" MinWidth="850" MouseMove="Window_MouseMove" MouseUp="Window_MouseUp" MouseLeave="Window_MouseLeave">
     <ui:FluentWindow.InputBindings>
@@ -176,6 +178,10 @@
                 <Separator/>
                 <ui:MenuItem Header="{Binding [Toolbar_Open_Source_Info], Source={x:Static core:LanguageManager.Instance}}" Icon="{ui:SymbolIcon Symbol=BookInformation24}" Command="{Binding OpenCustomMessageBoxCommand}"/>
                 <Separator/>
+                <ui:MenuItem Header="{Binding [Toolbar_Tips_Switch], Source={x:Static core:LanguageManager.Instance}}" Icon="{ui:SymbolIcon Symbol=ChatHelp24}">
+                    <ui:ToggleSwitch Content="{Binding [Text_Do_Not_Show_Original_Image_Warning], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding DoNotShowOriginalImageWarning,Mode=TwoWay}"/>
+                    <ui:ToggleSwitch Content="{Binding [Text_Do_Not_Show_Using_Occlusion_Tips], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding DoNotShowUsingOcclusionTips,Mode=TwoWay}"/>
+                </ui:MenuItem>
                 <ui:MenuItem Header="{Binding [Toolbar_Shortcut_Key_Reference], Source={x:Static core:LanguageManager.Instance}}" Icon="{ui:SymbolIcon Symbol=Keyboard24}">
                     <!-- 文件操作 -->
                     <ui:MenuItem InputGestureText="Ctrl+V" Header="{Binding [Toolbar_Import_Image_from_Clipboard], Source={x:Static core:LanguageManager.Instance}}"/>
@@ -350,9 +356,9 @@
                 </TextBlock>
                 <GridSplitter Background="{DynamicResource ControlFillColorSecondaryBrush}" ResizeBehavior="PreviousAndNext" Grid.Row="1" ResizeDirection="Rows" Height="6" HorizontalAlignment="Stretch"/>
                 <StackPanel Grid.ColumnSpan="1" Grid.Row="2" Margin="8,0">
-                    <ui:Button Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Click_to_Choose_Image], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ChooseImageCommand}"/>
+                    <ui:Button Icon="{ui:SymbolIcon Symbol=Image24}" Appearance="Primary" HorizontalAlignment="Stretch" Content="{Binding [Text_Click_to_Choose_Image], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding ChooseImageCommand}"/>
                     <TextBlock Text="{Binding [Tips_Desired_Size_518px], Source={x:Static core:LanguageManager.Instance}}" Foreground="#D3D3D3" Margin="4,4,0,0" FontSize="12"/>
-                    <ui:InfoBar Margin="8,8,8,0" Severity="Warning" Title="{Binding [Tips_Warning], Source={x:Static core:LanguageManager.Instance}}" IsOpen="{Binding IsShowBadOriginalImageWarning}" Message="导入的图片尺寸不佳。可能会影响深度估算质量。推荐比例1:1，最佳边长518"/>
+                    <ui:InfoBar Margin="8,8,8,0" Severity="Warning" Title="{Binding [Tips_Warning], Source={x:Static core:LanguageManager.Instance}}" IsOpen="{Binding IsShowBadOriginalImageWarning}" Message="导入的图片尺寸不佳。可能会影响深度估算质量或计算速度。推荐比例1:1，最佳边长518"/>
                 </StackPanel>
                 <Border Background="#E3559CE4" BorderThickness="3" BorderBrush="#80B9EE" 
                         Margin="4" 
@@ -364,7 +370,7 @@
                         <Run Text="{Binding [Text_Import_Original_Image], Source={x:Static core:LanguageManager.Instance}}"/>
                     </TextBlock>
                 </Border>
-
+                
                 <ScrollViewer Grid.Row="3">
                     <StackPanel Margin="8">
                         <Expander Header="{Binding [Shortcut_Depth_Estimate], Source={x:Static core:LanguageManager.Instance}}" IsExpanded="True" Margin="8">
@@ -436,21 +442,30 @@
                                                 <Slider Minimum="1" Maximum="50"
                                         Value="{Binding BlurFactor}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
-                                                <ui:TextBlock>
-                                                    <Run Text="{Binding [Text_Lower_Boundary], Source={x:Static core:LanguageManager.Instance}}"/>
-                                                    <Run Text="{Binding Threshold1,StringFormat={}{0:0}}"/>
-                                                </ui:TextBlock>
-
-                                                <Slider Minimum="0" Maximum="255" 
+                                                
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="1*" />
+                                                        <ColumnDefinition Width="auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <ui:TextBlock>
+                                                            <Run Text="{Binding [Text_Lower_Boundary], Source={x:Static core:LanguageManager.Instance}}"/>
+                                                            <Run Text="{Binding Threshold1,StringFormat={}{0:0}}"/>
+                                                        </ui:TextBlock>
+                                                        <Slider Minimum="0" Maximum="255" 
                                         Value="{Binding Threshold1}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
-                                                <ui:TextBlock>
-                                                    <Run Text="{Binding [Text_Upper_Boundary], Source={x:Static core:LanguageManager.Instance}}"/>
-                                                    <Run Text="{Binding Threshold2,StringFormat={}{0:0}}"/>
-                                                </ui:TextBlock>
-                                                <Slider Minimum="0" Maximum="255" 
+                                                        <ui:TextBlock>
+                                                            <Run Text="{Binding [Text_Upper_Boundary], Source={x:Static core:LanguageManager.Instance}}"/>
+                                                            <Run Text="{Binding Threshold2,StringFormat={}{0:0}}"/>
+                                                        </ui:TextBlock>
+                                                        <Slider Minimum="0" Maximum="255" 
                                         Value="{Binding Threshold2}" 
                                         TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                                    </StackPanel>
+                                                    <controls:SliderPanel Margin="4,0,0,0" Grid.Column="1" Height="100" Width="100" MinimumX="0" MaximumX="255" MinimumY="0" MaximumY="255" XValue="{Binding Threshold1}" YValue="{Binding Threshold2}"/>
+                                                </Grid>
                                             </StackPanel>
                                         </Border>
                                         <Border BorderThickness="0" Margin="0" Padding="0">
@@ -520,6 +535,7 @@
                                         Value="{Binding BrightnessEnhanceGamma}" 
                                         TickFrequency="0.01" IsSnapToTickEnabled="True"/>
 
+
                                     </StackPanel>
                                 </Expander>
                                 <CheckBox Content="{Binding [Text_Manual_Sampling_Strategy], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding IsManualMethodEnabled}"/>
@@ -541,46 +557,56 @@
                                                 <RowDefinition Height="1*" />
                                             </Grid.RowDefinitions>
                                             <ToggleButton Padding="0,7" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,2,0" 
-                                                          ToolTip="鼠标，快捷键Q"  Command="{Binding SetManualToolCommand}" CommandParameter="0" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=0}">
+              ToolTip="{Binding [ToolTip_ManualTool_Cursor], Source={x:Static core:LanguageManager.Instance}}"
+              Command="{Binding SetManualToolCommand}" CommandParameter="0" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=0}">
                                                 <ui:SymbolIcon Symbol="Cursor24"/>
                                             </ToggleButton>
                                             <ToggleButton Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,0" Grid.Column="1" 
-                                                          ToolTip="【可撤销】铅笔，快捷键W，在“深度/采样预览图”中拖拽或单击，以在手动采样中添加一系列采样点或单个采样点"  Command="{Binding SetManualToolCommand}" CommandParameter="1" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=1}">
+              ToolTip="{Binding [ToolTip_ManualTool_Pencil], Source={x:Static core:LanguageManager.Instance}}"
+              Command="{Binding SetManualToolCommand}" CommandParameter="1" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=1}">
                                                 <ui:SymbolIcon Symbol="Pen24"/>
                                             </ToggleButton>
                                             <ToggleButton Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,0,0,0" Grid.Column="2" 
-                                                          ToolTip="【可撤销】橡皮擦，快捷键E，在“深度/采样预览图”中拖拽或单击，以在手动采样中移除一系列采样点" Command="{Binding SetManualToolCommand}" CommandParameter="2" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=2}">
+              ToolTip="{Binding [ToolTip_ManualTool_Eraser], Source={x:Static core:LanguageManager.Instance}}"
+              Command="{Binding SetManualToolCommand}" CommandParameter="2" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=2}">
                                                 <ui:SymbolIcon Symbol="Eraser24"/>
                                             </ToggleButton>
 
                                             <ToggleButton Padding="0,7" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,4,2,0" Grid.Row="1" Grid.Column="0" 
-                                                          ToolTip="【可撤销】线条，快捷键A，在“深度/采样预览图”中拖拽或单击，以在手动采样中添加一系列采样点或单个采样点" Command="{Binding SetManualToolCommand}" CommandParameter="3" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=3}">
+              ToolTip="{Binding [ToolTip_ManualTool_Line], Source={x:Static core:LanguageManager.Instance}}"
+              Command="{Binding SetManualToolCommand}" CommandParameter="3" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=3}">
                                                 <ui:SymbolIcon Symbol="Line24"/>
                                             </ToggleButton>
                                             <ToggleButton Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,4,2,0" Grid.Row="1" Grid.Column="1" 
-                                                          ToolTip="【可撤销】涂抹，快捷键S，在“深度/采样预览图”中拖拽或单击，以在手动采样中微调采样点的位置" Command="{Binding SetManualToolCommand}" CommandParameter="4" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=4}">
+              ToolTip="{Binding [ToolTip_ManualTool_Smear], Source={x:Static core:LanguageManager.Instance}}"
+              Command="{Binding SetManualToolCommand}" CommandParameter="4" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=4}">
                                                 <ui:SymbolIcon Symbol="HandDraw24"/>
                                             </ToggleButton>
                                             <ToggleButton Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,4,0,0" Grid.Row="1" Grid.Column="2" 
-                                                          ToolTip="【可撤销】梯度偏移，快捷键D，在“深度/采样预览图”中拖拽或单击，以在手动采样中对采样点向梯度方向/反方向施加偏移" Command="{Binding SetManualToolCommand}" CommandParameter="5" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=5}">
+              ToolTip="{Binding [ToolTip_ManualTool_Drafting], Source={x:Static core:LanguageManager.Instance}}"
+              Command="{Binding SetManualToolCommand}" CommandParameter="5" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=5}">
                                                 <ui:SymbolIcon Symbol="CalendarPattern20"/>
                                             </ToggleButton>
 
                                             <ToggleButton Padding="0,7" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,4,2,0" Grid.Row="2" Grid.Column="0" 
-                                                          ToolTip="【可撤销】密度降低，快捷键Z，辅助你降低手动采样点量" Command="{Binding SetManualToolCommand}" CommandParameter="6" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=6}">
+              ToolTip="{Binding [ToolTip_ManualTool_Dedense], Source={x:Static core:LanguageManager.Instance}}"
+              Command="{Binding SetManualToolCommand}" CommandParameter="6" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=6}">
                                                 <ui:SymbolIcon Symbol="ArrowSyncDismiss24"/>
                                             </ToggleButton>
                                             <ToggleButton Visibility="Collapsed" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,4,2,0" Grid.Row="2" Grid.Column="1" 
-                                                          ToolTip="【可撤销】" Command="{Binding SetManualToolCommand}" CommandParameter="7" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=7}">
+              ToolTip="{Binding [ToolTip_ManualTool_Reserved1], Source={x:Static core:LanguageManager.Instance}}"
+              Command="{Binding SetManualToolCommand}" CommandParameter="7" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=7}">
                                                 <ui:SymbolIcon Symbol="HandDraw24"/>
                                             </ToggleButton>
                                             <ToggleButton Visibility="Collapsed" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="2,4,0,0" Grid.Row="2" Grid.Column="2" 
-                                                          ToolTip="【可撤销】" Command="{Binding SetManualToolCommand}" CommandParameter="8" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=8}">
+              ToolTip="{Binding [ToolTip_ManualTool_Reserved2], Source={x:Static core:LanguageManager.Instance}}"
+              Command="{Binding SetManualToolCommand}" CommandParameter="8" IsChecked="{Binding ManualTool,Mode=OneWay,Converter={StaticResource IntToBooleanConverter},ConverterParameter=8}">
                                                 <ui:SymbolIcon Symbol="CalendarPattern20"/>
                                             </ToggleButton>
 
                                             <Button Grid.ColumnSpan="3" Background="#e44c55" Height="33" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,4,2,0" Grid.Row="3" Grid.Column="0" 
-                                                    ToolTip="【可撤销】清空，移除手动采样中所有采样点" Command="{Binding ClearManualPointsCommand}" CommandParameter="3">
+        ToolTip="{Binding [ToolTip_ManualTool_ClearAll], Source={x:Static core:LanguageManager.Instance}}"
+        Command="{Binding ClearManualPointsCommand}" CommandParameter="3">
                                                 <ui:SymbolIcon Symbol="Delete24"/>
                                             </Button>
 
@@ -755,7 +781,7 @@
                                     </StackPanel>
                                 </Expander>
                                 <CheckBox Content="{Binding [Text_Post_Process], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding IsPostProcessEnabled}"/>
-                                <TextBlock Foreground="#D3D3D3" FontSize="8" Text="{Binding [Tips_Time_Consuming_Operations], Source={x:Static core:LanguageManager.Instance}}"/>
+                                <TextBlock Foreground="#D3D3D3" FontSize="8" Text="{Binding [Tips_Time_Consuming_Operations], Source={x:Static core:LanguageManager.Instance}}" TextWrapping="WrapWithOverflow"/>
                                 <Expander Visibility="{Binding IsPostProcessEnabled,Converter={StaticResource BooleanToVisibilityConverter}}" IsExpanded="True" Header="{Binding [Text_Post_Process], Source={x:Static core:LanguageManager.Instance}}">
                                     <StackPanel>
                                         <!--<CheckBox Content="{Binding [Globe_Dedeplication], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding IsDublicateRemoveEnabled}"/>-->
@@ -1095,46 +1121,17 @@
                                 </ui:TextBlock>
 
                                 <ComboBox SelectedIndex="{Binding PathGeneratingMode}">
-                                    <ComboBoxItem Content="Default"></ComboBoxItem>
-                                    <ComboBoxItem Content="Handcraft"></ComboBoxItem>
-                                    <ComboBoxItem Content="Occlusion"></ComboBoxItem>
+                                    <ComboBoxItem Content="标准"></ComboBoxItem>
+                                    <ComboBoxItem Content="手刻"></ComboBoxItem>
+                                    <ComboBoxItem Content="遮挡计算"></ComboBoxItem>
                                 </ComboBox>
                                 <CheckBox Grid.Column="1" Content="{Binding [Text_Auto_Update_Preview], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding IsAutoGeneratePreview}"/>
 
                                 <Grid>
-                                    <ui:Flyout x:Name="WarningFlyout"
-                                            Placement="Top">
-                                        <StackPanel>
-
-                                            <TextBlock Text="{Binding [Tips_OH], Source={x:Static core:LanguageManager.Instance}}" FontWeight="Bold" FontSize="24" Margin="0,0,0,4"/>
-                                            <TextBlock LineHeight="20"
-                                            Width="280"
-                                            HorizontalAlignment="Left"
-                                            TextWrapping="WrapWithOverflow">
-                                            <Run Text="{Binding [Tips_Point_Count_Overflow], Source={x:Static core:LanguageManager.Instance}}"/>
-                                            <Run Text="{Binding PointCount,Mode=OneWay}"/>
-                                            <Run Text=" > "/>
-                                            <Run Text="{Binding MaximumPointCount,Mode=OneWay}"/>
-                                            <Run Text=")"/>
-                                            <LineBreak/>
-                                            <Run Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_1], Source={x:Static core:LanguageManager.Instance}}"/>
-                                            <LineBreak/>
-                                            <LineBreak/>
-                                            <Run Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_2], Source={x:Static core:LanguageManager.Instance}}"/>
-                                            <Run FontWeight="Bold" Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_3], Source={x:Static core:LanguageManager.Instance}}"/>
-                                            <Run Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_4], Source={x:Static core:LanguageManager.Instance}}"/>
-                                            <Run FontWeight="Bold" Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_5], Source={x:Static core:LanguageManager.Instance}}"/>
-                                            <Run Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_6], Source={x:Static core:LanguageManager.Instance}}"/>
-                                            <LineBreak/>
-                                            <Run Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_7], Source={x:Static core:LanguageManager.Instance}}"/>
-                                            </TextBlock>
-                                            <ui:NumberBox Value="{Binding MaximumPointCount,UpdateSourceTrigger=PropertyChanged}" Minimum="1"/>
-                                            <ui:Button Appearance="Primary" Margin="0,8,0,0" Content="{Binding [Globe_Sure], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding CloseWarningCommand}"/>
-                                        </StackPanel>
-                                    </ui:Flyout>
-                                    <ui:Button HorizontalAlignment="Stretch" Content="{Binding [Text_Generate_Preview_Path], Source={x:Static core:LanguageManager.Instance}}" Appearance="Primary" Command="{Binding CreateScratchCommand}"/>
+                                    <ui:Button Icon="{ui:SymbolIcon Symbol=EyeLines24}" HorizontalAlignment="Stretch" Content="{Binding [Text_Generate_Preview_Path], Source={x:Static core:LanguageManager.Instance}}" Appearance="Primary" Command="{Binding CreateScratchCommand}"/>
                                 </Grid>
                                 <Separator Margin="0,4"/>
+                                <ui:InfoBar Margin="0" Severity="Warning" Title="{Binding [Tips_Info], Source={x:Static core:LanguageManager.Instance}}" IsOpen="{Binding IsShowUsingOcclusionTips}" Message="建议您在标准轨迹生成模式下变更以下四个参数。&#10;它们的变更需要消耗不少时间重新计算遮挡"/>
 
                                 <ui:TextBlock>
                                     <Run Text="{Binding [Text_Ignoring_Range_of_Points_around_Zero_1], Source={x:Static core:LanguageManager.Instance}}"/>
@@ -1350,18 +1347,18 @@
                                             <ui:Button Padding="2" HorizontalAlignment="Stretch" Margin="2,0" Icon="{ui:SymbolIcon Symbol=ArrowRight24}" Grid.Column="3" Command="{Binding ChangePreviewCommand}" CommandParameter="2"/>
                                             <ui:Button Padding="2" HorizontalAlignment="Stretch" Margin="2,0" Icon="{ui:SymbolIcon Symbol=ArrowNext24}" Grid.Column="4" Command="{Binding ChangePreviewCommand}" CommandParameter="3"/>
                                         </Grid>
-                                        <Grid Margin="0,4">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="auto"/>
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock VerticalAlignment="Center">
-                                                <Run Text="{Binding [Text_Color_of_Points], Source={x:Static core:LanguageManager.Instance}}"/>
-                                                <ui:SymbolIcon Symbol="Question24" Margin="-2" ToolTip="单色HEX：#色号 原色：c 深度：d"/>
-                                            </TextBlock>
-                                            <ui:TextBox PlaceholderText="# / c / d" Grid.Column="1" Visibility="{Binding IsPreviewingStep,Converter={StaticResource BooleanToVisibilityConverter}}"
-                                            Text="{Binding PreviewColorful,UpdateSourceTrigger=LostFocus}"/>
-                                        </Grid>
+
+                                        <TextBlock>
+                                            <Run Text="{Binding [Text_Color_of_Points], Source={x:Static core:LanguageManager.Instance}}"/>
+                                        </TextBlock>
+
+                                        <ComboBox Margin="0,0,0,4" SelectedIndex="{Binding PreviewColorMode}">
+                                            <ComboBoxItem Content="{Binding [Text_Single_Color], Source={x:Static core:LanguageManager.Instance}}"/>
+                                            <ComboBoxItem Content="{Binding [Text_Original_Color], Source={x:Static core:LanguageManager.Instance}}"/>
+                                            <ComboBoxItem Content="{Binding [Text_Depth_Color], Source={x:Static core:LanguageManager.Instance}}"/>
+                                        </ComboBox>
+                                        <ui:TextBox Icon="{ui:SymbolIcon Symbol=NumberSymbol24}" Visibility="{Binding PreviewColorMode,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=0}" PlaceholderText="#" Margin="0,0,0,4"
+                                                    Text="{Binding PreviewColor,UpdateSourceTrigger=LostFocus}"/>
                                         <ui:Button Content="{Binding [Text_3D_View], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding Open3DPreviewCommand}">
                                             <ui:Button.Icon>
                                                 <ui:SymbolIcon FontWeight="Bold" Symbol="Glasses24">
@@ -1417,45 +1414,79 @@
                                 ToolTip="在 Bilibili 上查看教学视频"
                                 NavigateUri="https://www.bilibili.com/video/BV1moCHYxEPk"/>
             <TextBlock Foreground="LightGray" FontSize="8" VerticalAlignment="Center">
-                <Run Text="EZHolo @ hs2.0"/>
+                <Run Text="EZHolo @ v2.0"/>
                 <LineBreak/>
                 <Run Text="Copyright © 2025 Yigu Wang"/>
             </TextBlock>
-            <TextBlock Margin="8,0" Foreground="LightGray" FontSize="8" VerticalAlignment="Center">
-                <Run Text="{Binding [Text_Output_Maximum], Source={x:Static core:LanguageManager.Instance}}"/>
-                <Run Text="{Binding MaximumPointCount}"/>
-                <Run Text="{Binding [Globe_Point], Source={x:Static core:LanguageManager.Instance}}"/>
-            </TextBlock>
         </StackPanel>
-        <Grid Margin="0,0,8,0" Grid.Row="2" Grid.ColumnSpan="5" HorizontalAlignment="Right">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto" />
-                <ColumnDefinition Width="auto" />
-                <ColumnDefinition Width="1*" />
-                <ColumnDefinition Width="auto" />
-                <ColumnDefinition Width="auto" />
-            </Grid.ColumnDefinitions>
+        <StackPanel Margin="0,0,8,0" Grid.Row="2" Grid.ColumnSpan="5" HorizontalAlignment="Right" Orientation="Horizontal">
+
             <ui:TextBlock Foreground="Gray" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Run Text="{Binding [Text_Total_Point_Count], Source={x:Static core:LanguageManager.Instance}}"/>
-                <Run Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding PointCount,Mode=OneWay}"/>
+            </ui:TextBlock>
+            <Grid Width="0">
+                    <ui:Flyout Placement="Top" IsOpen="{Binding IsShowPointsOverflowFlyout,Mode=TwoWay}">
+                        <StackPanel>
+
+                            <TextBlock Text="{Binding [Tips_OH], Source={x:Static core:LanguageManager.Instance}}" FontWeight="Bold" FontSize="24" Margin="0,0,0,4"/>
+                            <TextBlock LineHeight="20"
+                                            Width="280"
+                                            HorizontalAlignment="Left"
+                                            TextWrapping="WrapWithOverflow">
+                                            <Run Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_1], Source={x:Static core:LanguageManager.Instance}}"/>
+                                            <LineBreak/>
+                                            <LineBreak/>
+                                            <Run Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_2], Source={x:Static core:LanguageManager.Instance}}"/>
+                                            <Run FontWeight="Bold" Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_3], Source={x:Static core:LanguageManager.Instance}}"/>
+                                            <Run Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_4], Source={x:Static core:LanguageManager.Instance}}"/>
+                                            <Run FontWeight="Bold" Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_5], Source={x:Static core:LanguageManager.Instance}}"/>
+                                            <Run Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_6], Source={x:Static core:LanguageManager.Instance}}"/>
+                                            <LineBreak/>
+                                            <Run Text="{Binding [Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_7], Source={x:Static core:LanguageManager.Instance}}"/>
+                            </TextBlock>
+                            <ui:NumberBox Value="{Binding MaximumPointCount,UpdateSourceTrigger=PropertyChanged}" Minimum="1"/>
+                            <ui:Button Appearance="Primary" Margin="0,8,0,0" Content="{Binding [Globe_Sure], Source={x:Static core:LanguageManager.Instance}}" Command="{Binding CloseWarningCommand}"/>
+                        </StackPanel>
+                    </ui:Flyout>
+
+                </Grid>
+                <ui:Button Margin="2,0,0,0" Padding="0" Appearance="Secondary" Icon="{ui:SymbolIcon Symbol=GridDots24 }"
+                       Height="20"
+                       Command="{Binding ShowOverflowFlyoutCommand}">
+                    <TextBlock Margin="-6,0,4,0" FontSize="8">
+                    <Run Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding PointCount,Mode=OneWay}"/>
+                    <Run Text="/"/>
+                    <Run Text="{Binding MaximumPointCount,Mode=OneWay}"/>
+                    </TextBlock>
+
+                </ui:Button>
+                <ui:TextBlock Foreground="Gray" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Run Text="("/>
                 <Run Text="{Binding ContourPointCount,Mode=OneWay}"/>
-                <Run Text="轮廓点 +"/>
+                <Run Text="{Binding [Text_Contour_Points], Source={x:Static core:LanguageManager.Instance}}"/>
+                <Run Text="+"/>
                 <Run Text="{Binding BrightnessPointCount,Mode=OneWay}"/>
-                <Run Text="明度点 +"/>
+                <Run Text="{Binding [Text_Brightness_Points], Source={x:Static core:LanguageManager.Instance}}"/>
+                <Run Text="+"/>
                 <Run Text="{Binding ManualPointCount,Mode=OneWay}"/>
-                <Run Text="手动点 -"/>
+                <Run Text="{Binding [Text_Manual_Points], Source={x:Static core:LanguageManager.Instance}}"/>
+                <Run Text="-"/>
                 <Run Text="{Binding ExcludedPointCount,Mode=OneWay}"/>
-                <Run Text="排除点)"/>
+                <Run Text="{Binding [Text_Excluded_Points], Source={x:Static core:LanguageManager.Instance}}"/>
+                <Run Text=")"/>
+            </ui:TextBlock>
+
+            <ui:TextBlock Foreground="Gray" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+
                 <Run Text="{Binding [Text_Pixel], Source={x:Static core:LanguageManager.Instance}}"/>
                 <Run Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding MousePointX,Mode=OneWay}"/>
                 <Run Text=","/>
-                <Run Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding MousePointY,Mode=OneWay}"/>                      
+                <Run Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding MousePointY,Mode=OneWay}"/>
                 <Run Text="{Binding [Text_Height], Source={x:Static core:LanguageManager.Instance}}"/>
                 <Run Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding MouseDepth,StringFormat={}{0:0.00},Mode=OneWay}"/>
             </ui:TextBlock>
 
-            <Viewbox Grid.Column="1" Height="12">
+            <Viewbox Height="12">
                 <Grid Height="255" Width="255">
                     <Image Width="200" HorizontalAlignment="Center" Source="{Binding GradientColor}" Stretch="Fill"/>
                     <Line X1="0" X2="255" Y1="{Binding MouseDepth,Mode=OneWay}" Y2="{Binding MouseDepth,Mode=OneWay}" Stroke="Red" StrokeThickness="30" RenderTransformOrigin="0.5,0.5">
@@ -1465,12 +1496,12 @@
                     </Line>
                 </Grid>
             </Viewbox>
-            <ui:TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" Grid.Column="2" HorizontalAlignment="Center">
+            <ui:TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <Run Text="{Binding [Text_Gradient], Source={x:Static core:LanguageManager.Instance}}"/>
                 <Run Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding MouseGradient,StringFormat={}{0:0.00},Mode=OneWay}"/>
             </ui:TextBlock>
 
-            <Viewbox Margin="2,0,0,0" Grid.Column="3" Height="12">
+            <Viewbox Margin="2,0,0,0" Height="12">
                 <Grid Height="512" Width="512">
                     <Ellipse Width="512" Height="512" Fill="{DynamicResource HyperlinkButtonForeground}"/>
                     <Line StrokeEndLineCap="Triangle" X1="255" X2="{Binding MouseGradientX,Mode=OneWay}" Y1="255" Y2="{Binding MouseGradientY,Mode=OneWay}" Stroke="White" StrokeThickness="30" RenderTransformOrigin="0.5,0.5">
@@ -1478,7 +1509,8 @@
                     </Line>
                 </Grid>
             </Viewbox>
-            <ui:Flyout Grid.Column="4"
+            <Grid Width="0">
+            <ui:Flyout
                 IsOpen="{Binding IsShowMissionFlyout,Mode=TwoWay}"
                 Placement="Top">
                 <StackPanel Width="300">
@@ -1531,16 +1563,17 @@
 
                     </Grid>
                 </StackPanel>
-            </ui:Flyout>
+                </ui:Flyout>
+            </Grid>
             <ui:Button Margin="2,0,0,0" Padding="0" Appearance="Primary" Icon="{ui:SymbolIcon Symbol=PersonRunning20 }"
-                    Grid.Column="4" Height="20" Width="30"
+                    Height="20" Width="30"
                     Command="{Binding ShowMissionFlyoutCommand}">
                 <TextBlock Margin="-6,0,0,0" FontSize="8" Text="{Binding ProgressedMissionsCount}">
 
                 </TextBlock>
 
             </ui:Button>
-        </Grid>
+        </StackPanel>
 
     </Grid>
 </ui:FluentWindow>

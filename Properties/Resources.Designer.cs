@@ -61,7 +61,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 all 的本地化字符串。
+        ///   查找类似 All 的本地化字符串。
         /// </summary>
         internal static string Globe_All {
             get {
@@ -88,7 +88,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 document 的本地化字符串。
+        ///   查找类似 File 的本地化字符串。
         /// </summary>
         internal static string Globe_File {
             get {
@@ -160,7 +160,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Path Generating Mode 的本地化字符串。
+        ///   查找类似 Path generating mode 的本地化字符串。
         /// </summary>
         internal static string Path_Generating_Mode {
             get {
@@ -304,7 +304,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Switch to mouse 的本地化字符串。
+        ///   查找类似 Switch to cursor 的本地化字符串。
         /// </summary>
         internal static string Shortcut_Switch_to_Cursor {
             get {
@@ -376,7 +376,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 3D View 的本地化字符串。
+        ///   查找类似 3D view 的本地化字符串。
         /// </summary>
         internal static string Text_3D_View {
             get {
@@ -457,6 +457,15 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Brightness points 的本地化字符串。
+        /// </summary>
+        internal static string Text_Brightness_Points {
+            get {
+                return ResourceManager.GetString("Text_Brightness_Points", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Brightness sampling strategy 的本地化字符串。
         /// </summary>
         internal static string Text_Brightness_Sampling_Strategy {
@@ -507,6 +516,15 @@ namespace EZHolodotNet.Properties {
         internal static string Text_Contour {
             get {
                 return ResourceManager.GetString("Text_Contour", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Contour points 的本地化字符串。
+        /// </summary>
+        internal static string Text_Contour_Points {
+            get {
+                return ResourceManager.GetString("Text_Contour_Points", resourceCulture);
             }
         }
         
@@ -610,7 +628,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Minimum retained depth 的本地化字符串。
+        ///   查找类似 Minimum preserved depth 的本地化字符串。
         /// </summary>
         internal static string Text_Deepest_Preserving_Height {
             get {
@@ -628,11 +646,20 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Depth &amp; Sampling Preview 的本地化字符串。
+        ///   查找类似 Depth &amp; sampling preview 的本地化字符串。
         /// </summary>
         internal static string Text_Depth_and_Sampling_Preview {
             get {
                 return ResourceManager.GetString("Text_Depth_and_Sampling_Preview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Depth color 的本地化字符串。
+        /// </summary>
+        internal static string Text_Depth_Color {
+            get {
+                return ResourceManager.GetString("Text_Depth_Color", resourceCulture);
             }
         }
         
@@ -642,6 +669,24 @@ namespace EZHolodotNet.Properties {
         internal static string Text_Detail_Factor {
             get {
                 return ResourceManager.GetString("Text_Detail_Factor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Do not show the original-image-size warning again 的本地化字符串。
+        /// </summary>
+        internal static string Text_Do_Not_Show_Original_Image_Warning {
+            get {
+                return ResourceManager.GetString("Text_Do_Not_Show_Original_Image_Warning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Do not show occlusion-mode tips again 的本地化字符串。
+        /// </summary>
+        internal static string Text_Do_Not_Show_Using_Occlusion_Tips {
+            get {
+                return ResourceManager.GetString("Text_Do_Not_Show_Using_Occlusion_Tips", resourceCulture);
             }
         }
         
@@ -718,6 +763,15 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Excluded points 的本地化字符串。
+        /// </summary>
+        internal static string Text_Excluded_Points {
+            get {
+                return ResourceManager.GetString("Text_Excluded_Points", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Export depth* 的本地化字符串。
         /// </summary>
         internal static string Text_Export_Depth {
@@ -727,7 +781,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Export hand-carved drawing (.svg) [*beta] 的本地化字符串。
+        ///   查找类似 Export hand-crafted drawing (.svg) [*beta] 的本地化字符串。
         /// </summary>
         internal static string Text_Export_Handcraft_Blueprint {
             get {
@@ -754,7 +808,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Render Occlusion Culled trajectory (.svg) 的本地化字符串。
+        ///   查找类似 Render occlusion-culled trajectory (.svg) 的本地化字符串。
         /// </summary>
         internal static string Text_Export_Shaded_Scratch_Path {
             get {
@@ -889,6 +943,15 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Manual points 的本地化字符串。
+        /// </summary>
+        internal static string Text_Manual_Points {
+            get {
+                return ResourceManager.GetString("Text_Manual_Points", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Manual sampling strategy 的本地化字符串。
         /// </summary>
         internal static string Text_Manual_Sampling_Strategy {
@@ -948,6 +1011,15 @@ namespace EZHolodotNet.Properties {
         internal static string Text_Optional_Erasing {
             get {
                 return ResourceManager.GetString("Text_Optional_Erasing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Original color 的本地化字符串。
+        /// </summary>
+        internal static string Text_Original_Color {
+            get {
+                return ResourceManager.GetString("Text_Original_Color", resourceCulture);
             }
         }
         
@@ -1177,7 +1249,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Maximum retained depth 的本地化字符串。
+        ///   查找类似 Maximum preserved depth 的本地化字符串。
         /// </summary>
         internal static string Text_Shallowest_Preserving_Height {
             get {
@@ -1195,11 +1267,20 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Show track density 的本地化字符串。
+        ///   查找类似 Show path density 的本地化字符串。
         /// </summary>
         internal static string Text_Show_Path_Density {
             get {
                 return ResourceManager.GetString("Text_Show_Path_Density", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Single color 的本地化字符串。
+        /// </summary>
+        internal static string Text_Single_Color {
+            get {
+                return ResourceManager.GetString("Text_Single_Color", resourceCulture);
             }
         }
         
@@ -1222,7 +1303,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Smudge settings 的本地化字符串。
+        ///   查找类似 Smear settings 的本地化字符串。
         /// </summary>
         internal static string Text_Smear_Settings {
             get {
@@ -1375,7 +1456,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 The depth image was successfully exported. 的本地化字符串。
+        ///   查找类似 The depth image was exported successfully. 的本地化字符串。
         /// </summary>
         internal static string Tips_Depth_Successfully_Exported {
             get {
@@ -1384,7 +1465,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Depth image is successfully imported 的本地化字符串。
+        ///   查找类似 Depth image imported successfully 的本地化字符串。
         /// </summary>
         internal static string Tips_Depth_Successfully_Imported {
             get {
@@ -1402,7 +1483,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Measure the distance between your pupils and scale the window 的本地化字符串。
+        ///   查找类似 Measure the distance between your pupils and scale the window accordingly 的本地化字符串。
         /// </summary>
         internal static string Tips_Eyes_1 {
             get {
@@ -1411,7 +1492,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Adjust the red dot spacing on the screen ≤ your pupil distance 的本地化字符串。
+        ///   查找类似 Set the red-dot spacing on the screen to be ≤ your pupil distance 的本地化字符串。
         /// </summary>
         internal static string Tips_Eyes_2 {
             get {
@@ -1420,7 +1501,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Looking into the distance, you may feel dazed. 的本地化字符串。
+        ///   查找类似 When you look into the distance, you may feel a bit dazed. 的本地化字符串。
         /// </summary>
         internal static string Tips_Eyes_3 {
             get {
@@ -1429,7 +1510,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Maintain this feeling and turn your head toward the screen, you are in close-range vision 的本地化字符串。
+        ///   查找类似 Keep that feeling and turn your head toward the screen—you are now in close-range vision. 的本地化字符串。
         /// </summary>
         internal static string Tips_Eyes_4 {
             get {
@@ -1438,7 +1519,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 This will result in a double-image state. At this moment, the two red dots on the screen will split into four. 的本地化字符串。
+        ///   查找类似 This will produce a double-image effect. At that moment, the two red dots on the screen will split into four. 的本地化字符串。
         /// </summary>
         internal static string Tips_Eyes_5 {
             get {
@@ -1492,7 +1573,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 clipboard 的本地化字符串。
+        ///   查找类似 Import from clipboard 的本地化字符串。
         /// </summary>
         internal static string Tips_Import_from_Clipboard {
             get {
@@ -1501,7 +1582,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Tips 的本地化字符串。
+        ///   查找类似 Info 的本地化字符串。
         /// </summary>
         internal static string Tips_Info {
             get {
@@ -1519,7 +1600,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 The number of sampling points determines the number of scratch marks; too many dense traces will affect image quality. 的本地化字符串。
+        ///   查找类似 The number of sampling points determines the number of scratch paths; too many dense paths will reduce image quality. 的本地化字符串。
         /// </summary>
         internal static string Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_1 {
             get {
@@ -1528,7 +1609,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Please try adjusting with 的本地化字符串。
+        ///   查找类似 Please try adjusting these 的本地化字符串。
         /// </summary>
         internal static string Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_2 {
             get {
@@ -1537,7 +1618,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Density 的本地化字符串。
+        ///   查找类似 &quot;Density&quot; 的本地化字符串。
         /// </summary>
         internal static string Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_3 {
             get {
@@ -1555,7 +1636,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Interval 的本地化字符串。
+        ///   查找类似 &quot;Interval&quot; 的本地化字符串。
         /// </summary>
         internal static string Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_5 {
             get {
@@ -1573,7 +1654,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Or, you can adjust the maximum number of sampling points below. 的本地化字符串。
+        ///   查找类似 Alternatively, you can adjust the maximum number of sampling points below. 的本地化字符串。
         /// </summary>
         internal static string Tips_Number_of_Scratch_Paths_is_Determined_by_Point_Count_7 {
             get {
@@ -1591,7 +1672,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 File - Open New Image or &quot;Click to Select Image&quot; 的本地化字符串。
+        ///   查找类似 File - Open new image or &quot;Click to Select Image&quot; 的本地化字符串。
         /// </summary>
         internal static string Tips_Open_Image_or_Click_to_Choose_Image {
             get {
@@ -1618,7 +1699,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 These are usually time-consuming operations, it is recommended to finish the above settings before starting. 的本地化字符串。
+        ///   查找类似 These operations are generally time-consuming. It is recommended to complete the settings above before starting. 的本地化字符串。
         /// </summary>
         internal static string Tips_Time_Consuming_Operations {
             get {
@@ -1645,7 +1726,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Open Source Information 的本地化字符串。
+        ///   查找类似 Open source information 的本地化字符串。
         /// </summary>
         internal static string Title_Open_Source_Information {
             get {
@@ -1654,7 +1735,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Poor translation? Click to help optimize translation 的本地化字符串。
+        ///   查找类似 Poor translation? Click to help improve translations 的本地化字符串。
         /// </summary>
         internal static string Toolbar_Bad_Translation_Help_Us {
             get {
@@ -1699,7 +1780,7 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Export hand-carved scratch trajectory drawing 的本地化字符串。
+        ///   查找类似 Export hand-crafted scratch trajectory drawing 的本地化字符串。
         /// </summary>
         internal static string Toolbar_Export_Handcraft_Blueprint {
             get {
@@ -1897,6 +1978,15 @@ namespace EZHolodotNet.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Toggle tips 的本地化字符串。
+        /// </summary>
+        internal static string Toolbar_Tips_Switch {
+            get {
+                return ResourceManager.GetString("Toolbar_Tips_Switch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Tools (_T) 的本地化字符串。
         /// </summary>
         internal static string Toolbar_Tools {
@@ -1911,6 +2001,96 @@ namespace EZHolodotNet.Properties {
         internal static string Toolbar_Undo {
             get {
                 return ResourceManager.GetString("Toolbar_Undo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Undoable: Clear — remove all sampling points in manual sampling. 的本地化字符串。
+        /// </summary>
+        internal static string ToolTip_ManualTool_ClearAll {
+            get {
+                return ResourceManager.GetString("ToolTip_ManualTool_ClearAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Mouse — shortcut Q 的本地化字符串。
+        /// </summary>
+        internal static string ToolTip_ManualTool_Cursor {
+            get {
+                return ResourceManager.GetString("ToolTip_ManualTool_Cursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Undoable: Density reduction — shortcut Z. Helps reduce manual sampling point count. 的本地化字符串。
+        /// </summary>
+        internal static string ToolTip_ManualTool_Dedense {
+            get {
+                return ResourceManager.GetString("ToolTip_ManualTool_Dedense", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Undoable: Gradient offset — shortcut D. Drag or click in the Depth &amp; Sampling preview to offset sampling points along or against the gradient. 的本地化字符串。
+        /// </summary>
+        internal static string ToolTip_ManualTool_Drafting {
+            get {
+                return ResourceManager.GetString("ToolTip_ManualTool_Drafting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Undoable: Eraser — shortcut E. Drag or click in the Depth &amp; Sampling preview to remove one or multiple sampling points. 的本地化字符串。
+        /// </summary>
+        internal static string ToolTip_ManualTool_Eraser {
+            get {
+                return ResourceManager.GetString("ToolTip_ManualTool_Eraser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Undoable: Line — shortcut A. Drag or click in the Depth &amp; Sampling preview to add one or multiple sampling points. 的本地化字符串。
+        /// </summary>
+        internal static string ToolTip_ManualTool_Line {
+            get {
+                return ResourceManager.GetString("ToolTip_ManualTool_Line", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Undoable: Pencil — shortcut W. Drag or click in the Depth &amp; Sampling preview to add one or multiple sampling points. 的本地化字符串。
+        /// </summary>
+        internal static string ToolTip_ManualTool_Pencil {
+            get {
+                return ResourceManager.GetString("ToolTip_ManualTool_Pencil", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Undoable 的本地化字符串。
+        /// </summary>
+        internal static string ToolTip_ManualTool_Reserved1 {
+            get {
+                return ResourceManager.GetString("ToolTip_ManualTool_Reserved1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Undoable 的本地化字符串。
+        /// </summary>
+        internal static string ToolTip_ManualTool_Reserved2 {
+            get {
+                return ResourceManager.GetString("ToolTip_ManualTool_Reserved2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Undoable: Smudge — shortcut S. Drag or click in the Depth &amp; Sampling preview to fine‑tune sampling point positions. 的本地化字符串。
+        /// </summary>
+        internal static string ToolTip_ManualTool_Smear {
+            get {
+                return ResourceManager.GetString("ToolTip_ManualTool_Smear", resourceCulture);
             }
         }
     }

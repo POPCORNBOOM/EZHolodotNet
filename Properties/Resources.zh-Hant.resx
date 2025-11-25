@@ -727,4 +727,7 @@
   <data name="Text_Export_Shaded_Scratch_Path" type="System.Resources.ResXNullRef, System.Windows.Forms">
     <value />
   </data>
+  <data name="Text_Depth_Color" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
 </root>

@@ -14,7 +14,7 @@ using Wpf.Ui.Controls;
 
 namespace EZHolodotNet.Core
 {
-    public class OccusionPathHelper
+    public class OcclusionPathHelper
     {
         public void debug(float tick)
         {
