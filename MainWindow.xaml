@@ -38,7 +38,7 @@
         <!-- 工具操作 -->
         <KeyBinding Gesture="F5" Command="{Binding ProcessDepthCommand}"/>
         <KeyBinding Gesture="Ctrl+G" Command="{Binding CreateScratchCommand}"/>
-        <KeyBinding Gesture="F12" Command="{Binding DebugCommand}" CommandParameter="DepthContourMapContrust"/>
+        <KeyBinding Gesture="F12" Command="{Binding DebugCommand}" CommandParameter="DepthContourMapContrast"/>
         
         <!--手动采样工具 -->
         <KeyBinding Key="Q" Command="{Binding SetManualToolCommand}" CommandParameter="0"/>
@@ -225,7 +225,7 @@
                 </ui:MenuItem>
 
                 <Separator/>
-                <ui:MenuItem Header="{Binding [Shortcut_Debug], Source={x:Static core:LanguageManager.Instance}}" InputGestureText="F12" Command="{Binding DebugCommand}" CommandParameter="DepthContourMapContrust"/>
+                <ui:MenuItem Header="{Binding [Shortcut_Debug], Source={x:Static core:LanguageManager.Instance}}" InputGestureText="F12" Command="{Binding DebugCommand}" CommandParameter="DepthContourMapContrast"/>
             </ui:MenuItem>
         </Menu>
         <Border Grid.Row="1">
@@ -1097,7 +1097,7 @@
                                 <ComboBox SelectedIndex="{Binding PathGeneratingMode}">
                                     <ComboBoxItem Content="Default"></ComboBoxItem>
                                     <ComboBoxItem Content="Handcraft"></ComboBoxItem>
-                                    <ComboBoxItem Content="Occulsion"></ComboBoxItem>
+                                    <ComboBoxItem Content="Occlusion"></ComboBoxItem>
                                 </ComboBox>
                                 <CheckBox Grid.Column="1" Content="{Binding [Text_Auto_Update_Preview], Source={x:Static core:LanguageManager.Instance}}" IsChecked="{Binding IsAutoGeneratePreview}"/>
 
