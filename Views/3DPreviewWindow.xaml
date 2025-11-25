@@ -171,17 +171,17 @@
                             <ui:Button Padding="2" HorizontalAlignment="Stretch" Margin="2,0" Icon="{ui:SymbolIcon Symbol=ArrowRight24}" Grid.Column="3" Command="{Binding ChangePreviewCommand}" CommandParameter="8"/>
                             <ui:Button Padding="2" HorizontalAlignment="Stretch" Margin="2,0" Icon="{ui:SymbolIcon Symbol=ArrowNext24}" Grid.Column="4" Command="{Binding ChangePreviewCommand}" CommandParameter="9"/>
                         </Grid>
-                        <Grid Margin="0,4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto"/>
-                                <ColumnDefinition Width="auto"/>
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock VerticalAlignment="Center" Text="{Binding [Text_Color_of_Points], Source={x:Static core:LanguageManager.Instance}}"/>
-                            <ui:Button Margin="4,0" Icon="{ui:SymbolIcon Symbol=Question24}" Appearance="Transparent" Grid.Column="1" Padding="0" ToolTip="单色HEX：#色号 原色：c 深度：d"/>
-                            <ui:TextBox PlaceholderText="# / c / d" Grid.Column="2" Visibility="{Binding IsPreviewingStep,Converter={StaticResource BooleanToVisibilityConverter}}"
-                                            Text="{Binding PreviewColorful,UpdateSourceTrigger=LostFocus}"/>
-                        </Grid>
+                        <TextBlock>
+                            <Run Text="{Binding [Text_Color_of_Points], Source={x:Static core:LanguageManager.Instance}}"/>
+                        </TextBlock>
+
+                        <ComboBox Margin="0,0,0,4" SelectedIndex="{Binding PreviewColorMode}">
+                            <ComboBoxItem Content="{Binding [Text_Single_Color], Source={x:Static core:LanguageManager.Instance}}"/>
+                            <ComboBoxItem Content="{Binding [Text_Original_Color], Source={x:Static core:LanguageManager.Instance}}"/>
+                            <ComboBoxItem Content="{Binding [Text_Depth_Color], Source={x:Static core:LanguageManager.Instance}}"/>
+                        </ComboBox>
+                        <ui:TextBox Icon="{ui:SymbolIcon Symbol=NumberSymbol24}" Visibility="{Binding PreviewColorMode,Converter={StaticResource IntToVisibilityConverter},ConverterParameter=0}" PlaceholderText="#" Margin="0,0,0,4"
+                                    Text="{Binding PreviewColor,UpdateSourceTrigger=LostFocus}"/>
                     </StackPanel>
                 </Expander>
                 <Expander Header="播放设置" IsExpanded="{Binding IsAutoPlay3D,Mode=OneWay}">
